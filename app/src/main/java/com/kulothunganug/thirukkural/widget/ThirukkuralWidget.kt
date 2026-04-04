@@ -61,16 +61,17 @@ class ThirukkuralWidget : GlanceAppWidget() {
 
     @Composable
     private fun WidgetContent(id: Int, adhigaram: String, text: String) {
+        val formattedKural = formatKural(text)
         Box(
             modifier = GlanceModifier
                 .fillMaxSize()
                 .background(GlanceTheme.colors.background)
                 .padding(16.dp)
                 .clickable(actionRunCallback<RefreshKuralAction>()),
-            contentAlignment = Alignment.Center
+            contentAlignment = Alignment.CenterStart
         ) {
             Column(
-                horizontalAlignment = Alignment.CenterHorizontally,
+                horizontalAlignment = Alignment.Start,
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 if (id != 0) {
@@ -80,20 +81,31 @@ class ThirukkuralWidget : GlanceAppWidget() {
                             color = GlanceTheme.colors.onSurface,
                             fontWeight = FontWeight.Bold,
                             fontSize = 14.sp,
-                            textAlign = TextAlign.Center
+                            textAlign = TextAlign.Start
                         )
                     )
                 }
                 Text(
-                    text = text.replace("<br />", "\n"),
+                    text = formattedKural,
                     style = TextStyle(
                         color = GlanceTheme.colors.onSurface,
                         fontSize = 16.sp,
-                        textAlign = TextAlign.Center
+                        textAlign = TextAlign.Start
                     ),
                     modifier = GlanceModifier.padding(top = 8.dp)
                 )
             }
+        }
+    }
+
+    private fun formatKural(text: String): String {
+        val words = text.replace("<br />", " ").split(Regex("\\s+")).filter { it.isNotBlank() }
+        return if (words.size >= 7) {
+            val firstLine = words.take(4).joinToString(" ")
+            val secondLine = words.slice(4 until 7).joinToString(" ")
+            "$firstLine\n$secondLine"
+        } else {
+            text.replace("<br />", "\n")
         }
     }
 }
@@ -106,7 +118,7 @@ class RefreshKuralAction : ActionCallback {
     ) {
         val db = ThirukkuralDatabase.get(context)
         val randomId = Random.nextInt(1, 1331)
-        val kural = db.dao().getByKural(randomId)
+        val kural = db.dao().getById(randomId)
 
         updateAppWidgetState(context, PreferencesGlanceStateDefinition, glanceId) { prefs ->
             prefs.toMutablePreferences().apply {

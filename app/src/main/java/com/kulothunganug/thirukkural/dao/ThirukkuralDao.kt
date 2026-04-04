@@ -17,6 +17,6 @@ interface ThirukkuralDao {
     @Query("SELECT * FROM records WHERE Adhigaram_ID = :id")
     fun getByAdhigaram(id: Int): Flow<List<ThirukkuralModel>>
 
-    @Query("SELECT * FROM records WHERE Kural = :number")
-    suspend fun getByKural(number: Int): ThirukkuralModel
+    @Query("SELECT * FROM records WHERE ID = :number")
+    suspend fun getById(number: Int): ThirukkuralModel
 }
