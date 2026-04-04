@@ -1,4 +1,4 @@
-package com.kulothunganug.thirukkural.screens
+package com.kulothunganug.thirukkural.views
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
