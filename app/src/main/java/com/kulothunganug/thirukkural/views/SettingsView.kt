@@ -10,6 +10,8 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.filled.List
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -25,6 +27,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.kulothunganug.thirukkural.viewmodels.SettingsViewModel
 import androidx.core.graphics.toColorInt
+import androidx.navigation.NavController
 import sh.calvin.reorderable.ReorderableItem
 import sh.calvin.reorderable.rememberReorderableLazyListState
 
@@ -35,7 +38,7 @@ data class ElementSettingItem(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SettingsView(vm: SettingsViewModel) {
+fun SettingsView(navController: NavController, vm: SettingsViewModel) {
     val state by vm.uiState.collectAsState()
     val haptic = LocalHapticFeedback.current
 
@@ -71,11 +74,22 @@ fun SettingsView(vm: SettingsViewModel) {
     }
 
     Scaffold(
-        topBar = { TopAppBar(title = { Text("Widget Customization") }) }
+        topBar = {
+            TopAppBar(navigationIcon = {
+                IconButton(onClick = { navController.popBackStack() }) {
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                        contentDescription = "Go back"
+                    )
+                }
+            }, title = { Text("Widget Customization") })
+        }
     ) { padding ->
         LazyColumn(
             state = lazyListState,
-            modifier = Modifier.padding(padding).fillMaxSize(),
+            modifier = Modifier
+                .padding(padding)
+                .fillMaxSize(),
             contentPadding = PaddingValues(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
@@ -84,13 +98,21 @@ fun SettingsView(vm: SettingsViewModel) {
             }
 
             item {
-                ColorSettings("Background Color", state.bgColor, listOf("#FFFFFF", "#F5F5DC", "#E6F3FF", "#FFF0F5", "#000000")) {
+                ColorSettings(
+                    "Background Color",
+                    state.bgColor,
+                    listOf("#FFFFFF", "#F5F5DC", "#E6F3FF", "#FFF0F5", "#000000")
+                ) {
                     vm.updateBgColor(it)
                 }
             }
 
             item {
-                ColorSettings("Text Color", state.textColor, listOf("#000000", "#333333", "#555555", "#FFFFFF", "#FF5722")) {
+                ColorSettings(
+                    "Text Color",
+                    state.textColor,
+                    listOf("#000000", "#333333", "#555555", "#FFFFFF", "#FF5722")
+                ) {
                     vm.updateTextColor(it)
                 }
             }
@@ -110,35 +132,59 @@ fun SettingsView(vm: SettingsViewModel) {
                             Box(modifier = Modifier.weight(1f)) {
                                 when (item.id) {
                                     "PAAL" -> ElementSettingsCard(
-                                        item.label, state.showPaal, state.paalSize, state.paalAlign, state.paalBold,
+                                        item.label,
+                                        state.showPaal,
+                                        state.paalSize,
+                                        state.paalAlign,
+                                        state.paalBold,
                                         onShowChange = { vm.updatePaalSettings(show = it) },
                                         onSizeChange = { vm.updatePaalSettings(size = it) },
                                         onAlignChange = { vm.updatePaalSettings(align = it) },
                                         onBoldChange = { vm.updatePaalSettings(bold = it) }
                                     )
+
                                     "IYAL" -> ElementSettingsCard(
-                                        item.label, state.showIyal, state.iyalSize, state.iyalAlign, state.iyalBold,
+                                        item.label,
+                                        state.showIyal,
+                                        state.iyalSize,
+                                        state.iyalAlign,
+                                        state.iyalBold,
                                         onShowChange = { vm.updateIyalSettings(show = it) },
                                         onSizeChange = { vm.updateIyalSettings(size = it) },
                                         onAlignChange = { vm.updateIyalSettings(align = it) },
                                         onBoldChange = { vm.updateIyalSettings(bold = it) }
                                     )
+
                                     "ADHIGARAM" -> ElementSettingsCard(
-                                        item.label, state.showAdhigaram, state.adhigaramSize, state.adhigaramAlign, state.adhigaramBold,
+                                        item.label,
+                                        state.showAdhigaram,
+                                        state.adhigaramSize,
+                                        state.adhigaramAlign,
+                                        state.adhigaramBold,
                                         onShowChange = { vm.updateAdhigaramSettings(show = it) },
                                         onSizeChange = { vm.updateAdhigaramSettings(size = it) },
                                         onAlignChange = { vm.updateAdhigaramSettings(align = it) },
                                         onBoldChange = { vm.updateAdhigaramSettings(bold = it) }
                                     )
+
                                     "KURAL" -> ElementSettingsCard(
-                                        item.label, state.showKural, state.kuralSize, state.kuralAlign, state.kuralBold,
+                                        item.label,
+                                        state.showKural,
+                                        state.kuralSize,
+                                        state.kuralAlign,
+                                        state.kuralBold,
                                         onShowChange = { vm.updateKuralSettings(show = it) },
                                         onSizeChange = { vm.updateKuralSettings(size = it) },
                                         onAlignChange = { vm.updateKuralSettings(align = it) },
                                         onBoldChange = { vm.updateKuralSettings(bold = it) }
                                     )
+
                                     "TRANSLITERATION" -> ElementSettingsCard(
-                                        item.label, state.showTranslit, state.translitSize, state.translitAlign, state.translitBold,
+                                        item.label,
+                                        state.showTranslit,
+                                        state.translitSize,
+                                        state.translitAlign,
+                                        state.translitBold,
                                         onShowChange = { vm.updateTranslitSettings(show = it) },
                                         onSizeChange = { vm.updateTranslitSettings(size = it) },
                                         onAlignChange = { vm.updateTranslitSettings(align = it) },
@@ -149,7 +195,11 @@ fun SettingsView(vm: SettingsViewModel) {
 
                             IconButton(
                                 modifier = Modifier.draggableHandle(
-                                    onDragStarted = { haptic.performHapticFeedback(HapticFeedbackType.GestureThresholdActivate) },
+                                    onDragStarted = {
+                                        haptic.performHapticFeedback(
+                                            HapticFeedbackType.GestureThresholdActivate
+                                        )
+                                    },
                                     onDragStopped = {
                                         haptic.performHapticFeedback(HapticFeedbackType.GestureEnd)
                                         vm.updateContentOrder(elements.joinToString(",") { it.id })
@@ -157,7 +207,7 @@ fun SettingsView(vm: SettingsViewModel) {
                                 ),
                                 onClick = {}
                             ) {
-                                Icon(Icons.Filled.List, contentDescription = "Reorder")
+                                Icon(Icons.AutoMirrored.Filled.List, contentDescription = "Reorder")
                             }
                         }
                     }
@@ -170,21 +220,59 @@ fun SettingsView(vm: SettingsViewModel) {
 @Composable
 fun WidgetPreview(state: com.kulothunganug.thirukkural.viewmodels.SettingsUiState) {
     Card(
-        modifier = Modifier.fillMaxWidth().heightIn(min = 150.dp),
+        modifier = Modifier
+            .fillMaxWidth()
+            .heightIn(min = 150.dp),
         colors = CardDefaults.cardColors(containerColor = Color(state.bgColor.toColorInt()))
     ) {
         Column(
-            modifier = Modifier.fillMaxSize().padding(12.dp),
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(12.dp),
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             state.contentOrder.split(",").forEach { item ->
                 when (item) {
-                    "PAAL" -> if (state.showPaal) PreviewText("அறத்துப்பால்", state.textColor, state.paalSize, state.paalAlign, state.paalBold)
-                    "IYAL" -> if (state.showIyal) PreviewText("பாயிரவியல்", state.textColor, state.iyalSize, state.iyalAlign, state.iyalBold)
-                    "ADHIGARAM" -> if (state.showAdhigaram) PreviewText("1 - கடவுள் வாழ்த்து", state.textColor, state.adhigaramSize, state.adhigaramAlign, state.adhigaramBold)
-                    "KURAL" -> if (state.showKural) PreviewText("அகர முதல எழுத்தெல்லாம் ஆதி\nபகவன் முதற்றே உலகு.", state.textColor, state.kuralSize, state.kuralAlign, state.kuralBold)
-                    "TRANSLITERATION" -> if (state.showTranslit) PreviewText("Akara Muthala Ezhuthellam Aadhi\nPakavan Muthatre Ulaku.", state.textColor, state.translitSize, state.translitAlign, state.translitBold)
+                    "PAAL" -> if (state.showPaal) PreviewText(
+                        "அறத்துப்பால்",
+                        state.textColor,
+                        state.paalSize,
+                        state.paalAlign,
+                        state.paalBold
+                    )
+
+                    "IYAL" -> if (state.showIyal) PreviewText(
+                        "பாயிரவியல்",
+                        state.textColor,
+                        state.iyalSize,
+                        state.iyalAlign,
+                        state.iyalBold
+                    )
+
+                    "ADHIGARAM" -> if (state.showAdhigaram) PreviewText(
+                        "1 - கடவுள் வாழ்த்து",
+                        state.textColor,
+                        state.adhigaramSize,
+                        state.adhigaramAlign,
+                        state.adhigaramBold
+                    )
+
+                    "KURAL" -> if (state.showKural) PreviewText(
+                        "அகர முதல எழுத்தெல்லாம் ஆதி\nபகவன் முதற்றே உலகு.",
+                        state.textColor,
+                        state.kuralSize,
+                        state.kuralAlign,
+                        state.kuralBold
+                    )
+
+                    "TRANSLITERATION" -> if (state.showTranslit) PreviewText(
+                        "Akara Muthala Ezhuthellam Aadhi\nPakavan Muthatre Ulaku.",
+                        state.textColor,
+                        state.translitSize,
+                        state.translitAlign,
+                        state.translitBold
+                    )
                 }
             }
         }
@@ -203,13 +291,20 @@ fun PreviewText(text: String, color: String, size: Int, align: String, bold: Boo
             "RIGHT" -> TextAlign.Right
             else -> TextAlign.Center
         },
-        modifier = Modifier.fillMaxWidth().padding(top = 2.dp),
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(top = 2.dp),
         lineHeight = (size + 4).sp
     )
 }
 
 @Composable
-fun ColorSettings(label: String, selectedColor: String, colors: List<String>, onColorSelected: (String) -> Unit) {
+fun ColorSettings(
+    label: String,
+    selectedColor: String,
+    colors: List<String>,
+    onColorSelected: (String) -> Unit
+) {
     Column {
         Text(label, style = MaterialTheme.typography.labelLarge)
         Row(
@@ -223,7 +318,13 @@ fun ColorSettings(label: String, selectedColor: String, colors: List<String>, on
                         .clip(CircleShape)
                         .background(Color(color.toColorInt()))
                         .clickable { onColorSelected(color) }
-                        .then(if (selectedColor == color) Modifier.border(2.dp, MaterialTheme.colorScheme.primary, CircleShape) else Modifier)
+                        .then(
+                            if (selectedColor == color) Modifier.border(
+                                2.dp,
+                                MaterialTheme.colorScheme.primary,
+                                CircleShape
+                            ) else Modifier
+                        )
                 )
             }
         }
@@ -242,12 +343,20 @@ fun ElementSettingsCard(
             Text(label, style = MaterialTheme.typography.titleSmall)
             Spacer(Modifier.weight(1f))
             IconButton(onClick = { onBoldChange(!bold) }) {
-                Text("B", fontWeight = if (bold) FontWeight.Bold else FontWeight.Normal, color = if(bold) MaterialTheme.colorScheme.primary else LocalContentColor.current)
+                Text(
+                    "B",
+                    fontWeight = if (bold) FontWeight.Bold else FontWeight.Normal,
+                    color = if (bold) MaterialTheme.colorScheme.primary else LocalContentColor.current
+                )
             }
         }
         if (show) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Text("Size: $size", modifier = Modifier.width(60.dp), style = MaterialTheme.typography.bodySmall)
+                Text(
+                    "Size: $size",
+                    modifier = Modifier.width(60.dp),
+                    style = MaterialTheme.typography.bodySmall
+                )
                 Slider(
                     value = size.toFloat(),
                     onValueChange = { onSizeChange(it.toInt()) },
