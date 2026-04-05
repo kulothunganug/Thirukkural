@@ -26,7 +26,7 @@ class HomeViewModel(
     @OptIn(ExperimentalCoroutinesApi::class)
     val uiState = _adhigaramId
         .flatMapLatest { id ->
-            repository.getByAdhigaram(id).map { kurals ->
+            repository.getByAdhigaramId(id).map { kurals ->
                 HomeUiState(adhigaramId = id, kurals = kurals, isLoading = false)
             }
         }

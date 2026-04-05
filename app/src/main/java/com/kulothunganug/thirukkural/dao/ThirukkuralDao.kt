@@ -15,7 +15,7 @@ interface ThirukkuralDao {
     fun getByPaal(paal: String): Flow<List<ThirukkuralModel>>
 
     @Query("SELECT * FROM records WHERE Adhigaram_ID = :id")
-    fun getByAdhigaram(id: Int): Flow<List<ThirukkuralModel>>
+    fun getByAdhigaramId(id: Int): Flow<List<ThirukkuralModel>>
 
     @Query("SELECT * FROM records WHERE ID = :number")
     suspend fun getById(number: Int): ThirukkuralModel

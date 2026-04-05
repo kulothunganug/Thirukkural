@@ -59,7 +59,7 @@ fun HomeView(vm: HomeViewModel, navController: NavController) {
                     }
                 },
                 title = {
-                    Text("Thirukural")
+                    Text("Thirukkural")
                 }
             )
         },
@@ -121,9 +121,14 @@ fun HomeView(vm: HomeViewModel, navController: NavController) {
                 verticalArrangement = Arrangement.spacedBy(8.dp),
             ) {
                 items(uiState.kurals.size) { i ->
-                    Card(onClick = {}) {
+                    val kural = uiState.kurals[i]
+                    Card(
+                        onClick = {
+                            navController.navigate("kural_detail/${kural.id}")
+                        }
+                    ) {
                         Text(
-                            uiState.kurals[i].kural.replace("<br />", "\n"),
+                            kural.kural.replace("<br />", "\n"),
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .padding(12.dp),
