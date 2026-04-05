@@ -1,5 +1,6 @@
 package com.kulothunganug.thirukkural.widget
 
+import android.annotation.SuppressLint
 import android.content.Context
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
@@ -25,6 +26,7 @@ import androidx.glance.layout.Alignment
 import androidx.glance.layout.Box
 import androidx.glance.layout.Column
 import androidx.glance.layout.fillMaxSize
+import androidx.glance.layout.fillMaxWidth
 import androidx.glance.layout.padding
 import androidx.glance.state.GlanceStateDefinition
 import androidx.glance.state.PreferencesGlanceStateDefinition
@@ -34,88 +36,131 @@ import androidx.glance.text.TextAlign
 import androidx.glance.text.TextStyle
 import androidx.glance.unit.ColorProvider
 import com.kulothunganug.thirukkural.ThirukkuralDatabase
+import com.kulothunganug.thirukkural.datastore.SettingsDatastore
+import com.kulothunganug.thirukkural.viewmodels.SettingsUiState
+import kotlinx.coroutines.flow.first
 import kotlin.random.Random
+import androidx.core.graphics.toColorInt
 
 object ThirukkuralWidgetKeys {
     val KURAL_TEXT = stringPreferencesKey("kural_text")
     val KURAL_ID = intPreferencesKey("kural_id")
+    val PAAL = stringPreferencesKey("paal")
+    val IYAL = stringPreferencesKey("iyal")
     val ADHIGARAM = stringPreferencesKey("adhigaram")
+    val TRANSLITERATION = stringPreferencesKey("transliteration")
 }
 
 class ThirukkuralWidget : GlanceAppWidget() {
-
     override val stateDefinition: GlanceStateDefinition<*> = PreferencesGlanceStateDefinition
 
     override suspend fun provideGlance(context: Context, id: GlanceId) {
+        val datastore = SettingsDatastore(context)
+        
+        // Read all settings from SettingsDatastore
+        val settings = SettingsUiState(
+            bgColor = datastore.widgetBgColor.first(),
+            textColor = datastore.widgetTextColor.first(),
+            contentOrder = datastore.widgetContentOrder.first(),
+            showPaal = datastore.showPaal.first(),
+            paalSize = datastore.paalFontSize.first(),
+            paalAlign = datastore.paalAlignment.first(),
+            paalBold = datastore.paalIsBold.first(),
+            showIyal = datastore.showIyal.first(),
+            iyalSize = datastore.iyalFontSize.first(),
+            iyalAlign = datastore.iyalAlignment.first(),
+            iyalBold = datastore.iyalIsBold.first(),
+            showAdhigaram = datastore.showAdhigaram.first(),
+            adhigaramSize = datastore.adhigaramFontSize.first(),
+            adhigaramAlign = datastore.adhigaramAlignment.first(),
+            adhigaramBold = datastore.adhigaramIsBold.first(),
+            showKural = datastore.showKural.first(),
+            kuralSize = datastore.kuralFontSize.first(),
+            kuralAlign = datastore.kuralAlignment.first(),
+            kuralBold = datastore.kuralIsBold.first(),
+            showTranslit = datastore.showTransliteration.first(),
+            translitSize = datastore.transliterationFontSize.first(),
+            translitAlign = datastore.transliterationAlignment.first(),
+            translitBold = datastore.transliterationIsBold.first()
+        )
+
         provideContent {
             GlanceTheme {
                 val prefs = currentState<Preferences>()
                 val kuralText = prefs[ThirukkuralWidgetKeys.KURAL_TEXT] ?: "Tap to load Kural"
                 val kuralId = prefs[ThirukkuralWidgetKeys.KURAL_ID] ?: 0
+                val paal = prefs[ThirukkuralWidgetKeys.PAAL] ?: ""
+                val iyal = prefs[ThirukkuralWidgetKeys.IYAL] ?: ""
                 val adhigaram = prefs[ThirukkuralWidgetKeys.ADHIGARAM] ?: ""
+                val transliteration = prefs[ThirukkuralWidgetKeys.TRANSLITERATION] ?: ""
 
-                WidgetContent(kuralId, adhigaram, kuralText)
-            }
-        }
-    }
-
-    @Composable
-    private fun WidgetContent(id: Int, adhigaram: String, text: String) {
-        val formattedKural = formatKural(text)
-        Box(
-            modifier = GlanceModifier
-                .fillMaxSize()
-                .background(GlanceTheme.colors.background)
-                .padding(16.dp)
-                .clickable(actionRunCallback<RefreshKuralAction>()),
-            contentAlignment = Alignment.CenterStart
-        ) {
-            Column(
-                horizontalAlignment = Alignment.Start,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                if (id != 0) {
-                    Text(
-                        text = "$id - $adhigaram",
-                        style = TextStyle(
-                            color = GlanceTheme.colors.onSurface,
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 14.sp,
-                            textAlign = TextAlign.Start
-                        )
-                    )
-                }
-                Text(
-                    text = formattedKural,
-                    style = TextStyle(
-                        color = GlanceTheme.colors.onSurface,
-                        fontSize = 16.sp,
-                        textAlign = TextAlign.Start
-                    ),
-                    modifier = GlanceModifier.padding(top = 8.dp)
+                WidgetContent(
+                    kuralId, paal, iyal, adhigaram, kuralText, transliteration,
+                    settings
                 )
             }
         }
     }
 
-    private fun formatKural(text: String): String {
-        val words = text.replace("<br />", " ").split(Regex("\\s+")).filter { it.isNotBlank() }
-        return if (words.size >= 7) {
-            val firstLine = words.take(4).joinToString(" ")
-            val secondLine = words.slice(4 until 7).joinToString(" ")
-            "$firstLine\n$secondLine"
-        } else {
-            text.replace("<br />", "\n")
+    @Composable
+    private fun WidgetContent(
+        id: Int, paal: String, iyal: String, adhigaram: String, text: String, transliteration: String,
+        settings: SettingsUiState
+    ) {
+        val backgroundColor = Color(settings.bgColor.toColorInt())
+        val contentColor = Color(settings.textColor.toColorInt())
+
+        Box(
+            modifier = GlanceModifier.fillMaxSize().background(backgroundColor).padding(12.dp)
+                .clickable(actionRunCallback<RefreshKuralAction>()),
+            contentAlignment = Alignment.Center
+        ) {
+            Column(modifier = GlanceModifier.fillMaxSize(), horizontalAlignment = Alignment.CenterHorizontally, verticalAlignment = Alignment.CenterVertically) {
+                settings.contentOrder.split(",").forEach { item ->
+                    when (item) {
+                        "PAAL" -> if (settings.showPaal && paal.isNotEmpty()) {
+                            RenderText(paal, contentColor, settings.paalSize, settings.paalAlign, settings.paalBold)
+                        }
+                        "IYAL" -> if (settings.showIyal && iyal.isNotEmpty()) {
+                            RenderText(iyal, contentColor, settings.iyalSize, settings.iyalAlign, settings.iyalBold)
+                        }
+                        "ADHIGARAM" -> if (settings.showAdhigaram && id != 0) {
+                            RenderText("$id - $adhigaram", contentColor, settings.adhigaramSize, settings.adhigaramAlign, settings.adhigaramBold)
+                        }
+                        "KURAL" -> if (settings.showKural && text.isNotEmpty()) {
+                            RenderText(text.replace("<br />", "\n"), contentColor, settings.kuralSize, settings.kuralAlign, settings.kuralBold)
+                        }
+                        "TRANSLITERATION" -> if (settings.showTranslit && transliteration.isNotEmpty()) {
+                            RenderText(transliteration, contentColor, settings.translitSize, settings.translitAlign, settings.translitBold)
+                        }
+                    }
+                }
+            }
         }
+    }
+
+    @SuppressLint("RestrictedApi")
+    @Composable
+    private fun RenderText(text: String, color: Color, fontSize: Int, alignment: String, isBold: Boolean) {
+        Text(
+            text = text,
+            style = TextStyle(
+                color = ColorProvider(color),
+                fontWeight = if (isBold) FontWeight.Bold else FontWeight.Normal,
+                fontSize = fontSize.sp,
+                textAlign = when (alignment) {
+                    "LEFT" -> TextAlign.Start
+                    "RIGHT" -> TextAlign.End
+                    else -> TextAlign.Center
+                }
+            ),
+            modifier = GlanceModifier.fillMaxWidth().padding(top = 2.dp)
+        )
     }
 }
 
 class RefreshKuralAction : ActionCallback {
-    override suspend fun onAction(
-        context: Context,
-        glanceId: GlanceId,
-        parameters: ActionParameters
-    ) {
+    override suspend fun onAction(context: Context, glanceId: GlanceId, parameters: ActionParameters) {
         val db = ThirukkuralDatabase.get(context)
         val randomId = Random.nextInt(1, 1331)
         val kural = db.dao().getById(randomId)
@@ -124,7 +169,10 @@ class RefreshKuralAction : ActionCallback {
             prefs.toMutablePreferences().apply {
                 this[ThirukkuralWidgetKeys.KURAL_TEXT] = kural.kural
                 this[ThirukkuralWidgetKeys.KURAL_ID] = kural.id
+                this[ThirukkuralWidgetKeys.PAAL] = kural.paal
+                this[ThirukkuralWidgetKeys.IYAL] = kural.iyal
                 this[ThirukkuralWidgetKeys.ADHIGARAM] = kural.adhigaram
+                this[ThirukkuralWidgetKeys.TRANSLITERATION] = kural.transliteration
             }
         }
         ThirukkuralWidget().update(context, glanceId)
