@@ -2,7 +2,11 @@ package com.kulothunganug.thirukkural.widget
 
 import android.annotation.SuppressLint
 import android.content.Context
+import android.content.Intent
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -38,9 +42,14 @@ import androidx.glance.unit.ColorProvider
 import com.kulothunganug.thirukkural.ThirukkuralDatabase
 import com.kulothunganug.thirukkural.datastore.SettingsDatastore
 import com.kulothunganug.thirukkural.viewmodels.SettingsUiState
-import kotlinx.coroutines.flow.first
 import kotlin.random.Random
 import androidx.core.graphics.toColorInt
+import androidx.core.net.toUri
+import androidx.glance.Image
+import androidx.glance.ImageProvider
+import androidx.glance.appwidget.action.actionStartActivity
+import com.kulothunganug.thirukkural.MainActivity
+import com.kulothunganug.thirukkural.R
 
 object ThirukkuralWidgetKeys {
     val KURAL_TEXT = stringPreferencesKey("kural_text")
@@ -55,36 +64,9 @@ class ThirukkuralWidget : GlanceAppWidget() {
     override val stateDefinition: GlanceStateDefinition<*> = PreferencesGlanceStateDefinition
 
     override suspend fun provideGlance(context: Context, id: GlanceId) {
-        val datastore = SettingsDatastore(context)
-        
-        // Read all settings from SettingsDatastore
-        val settings = SettingsUiState(
-            bgColor = datastore.widgetBgColor.first(),
-            textColor = datastore.widgetTextColor.first(),
-            contentOrder = datastore.widgetContentOrder.first(),
-            showPaal = datastore.showPaal.first(),
-            paalSize = datastore.paalFontSize.first(),
-            paalAlign = datastore.paalAlignment.first(),
-            paalBold = datastore.paalIsBold.first(),
-            showIyal = datastore.showIyal.first(),
-            iyalSize = datastore.iyalFontSize.first(),
-            iyalAlign = datastore.iyalAlignment.first(),
-            iyalBold = datastore.iyalIsBold.first(),
-            showAdhigaram = datastore.showAdhigaram.first(),
-            adhigaramSize = datastore.adhigaramFontSize.first(),
-            adhigaramAlign = datastore.adhigaramAlignment.first(),
-            adhigaramBold = datastore.adhigaramIsBold.first(),
-            showKural = datastore.showKural.first(),
-            kuralSize = datastore.kuralFontSize.first(),
-            kuralAlign = datastore.kuralAlignment.first(),
-            kuralBold = datastore.kuralIsBold.first(),
-            showTranslit = datastore.showTransliteration.first(),
-            translitSize = datastore.transliterationFontSize.first(),
-            translitAlign = datastore.transliterationAlignment.first(),
-            translitBold = datastore.transliterationIsBold.first()
-        )
-
         provideContent {
+            val datastore = remember { SettingsDatastore(context) }
+            val settings by datastore.allSettings.collectAsState(initial = SettingsUiState())
             GlanceTheme {
                 val prefs = currentState<Preferences>()
                 val kuralText = prefs[ThirukkuralWidgetKeys.KURAL_TEXT] ?: "Tap to load Kural"
@@ -96,7 +78,8 @@ class ThirukkuralWidget : GlanceAppWidget() {
 
                 WidgetContent(
                     kuralId, paal, iyal, adhigaram, kuralText, transliteration,
-                    settings
+                    settings,
+                    context,
                 )
             }
         }
@@ -104,17 +87,37 @@ class ThirukkuralWidget : GlanceAppWidget() {
 
     @Composable
     private fun WidgetContent(
-        id: Int, paal: String, iyal: String, adhigaram: String, text: String, transliteration: String,
-        settings: SettingsUiState
+        id: Int,
+        paal: String,
+        iyal: String,
+        adhigaram: String,
+        text: String,
+        transliteration: String,
+        settings: SettingsUiState,
+        context: Context,
     ) {
         val backgroundColor = Color(settings.bgColor.toColorInt())
         val contentColor = Color(settings.textColor.toColorInt())
 
         Box(
-            modifier = GlanceModifier.fillMaxSize().background(backgroundColor).padding(12.dp)
-                .clickable(actionRunCallback<RefreshKuralAction>()),
-            contentAlignment = Alignment.Center
+            modifier = GlanceModifier.fillMaxSize().background(backgroundColor).padding(12.dp).clickable(
+                actionStartActivity(
+                    Intent(
+                        Intent.ACTION_VIEW,
+                        "thirukkural_app://kural/$id".toUri(),
+                        context,
+                        MainActivity::class.java
+                    ).apply {
+                        flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP}
+                )
+            ),
+            contentAlignment = Alignment.BottomEnd
         ) {
+            Image(
+                provider = ImageProvider(R.drawable.refresh_24px),
+                contentDescription = "Refresh",
+                        modifier = GlanceModifier.clickable(actionRunCallback<RefreshKuralAction>())
+            )
             Column(modifier = GlanceModifier.fillMaxSize(), horizontalAlignment = Alignment.CenterHorizontally, verticalAlignment = Alignment.CenterVertically) {
                 settings.contentOrder.split(",").forEach { item ->
                     when (item) {
@@ -125,7 +128,7 @@ class ThirukkuralWidget : GlanceAppWidget() {
                             RenderText(iyal, contentColor, settings.iyalSize, settings.iyalAlign, settings.iyalBold)
                         }
                         "ADHIGARAM" -> if (settings.showAdhigaram && id != 0) {
-                            RenderText("$id - $adhigaram", contentColor, settings.adhigaramSize, settings.adhigaramAlign, settings.adhigaramBold)
+                            RenderText(adhigaram, contentColor, settings.adhigaramSize, settings.adhigaramAlign, settings.adhigaramBold)
                         }
                         "KURAL" -> if (settings.showKural && text.isNotEmpty()) {
                             RenderText(text.replace("<br />", "\n"), contentColor, settings.kuralSize, settings.kuralAlign, settings.kuralBold)
@@ -156,6 +159,23 @@ class ThirukkuralWidget : GlanceAppWidget() {
             ),
             modifier = GlanceModifier.fillMaxWidth().padding(top = 2.dp)
         )
+    }
+}
+
+class OpenKuralAction(private val kuralId: Int) : ActionCallback {
+    override suspend fun onAction(
+        context: Context,
+        glanceId: GlanceId,
+        parameters: ActionParameters
+    ) {
+        val uri = "thirukkural_app://kural/$kuralId".toUri()
+
+        // Create an intent to open your main activity
+        val intent = Intent(Intent.ACTION_VIEW, uri, context, MainActivity::class.java).apply {
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
+        }
+
+        context.startActivity(intent)
     }
 }
 
