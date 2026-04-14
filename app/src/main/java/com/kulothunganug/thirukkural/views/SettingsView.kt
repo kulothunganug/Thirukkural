@@ -12,6 +12,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.List
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.List
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -28,6 +29,10 @@ import androidx.compose.ui.unit.sp
 import com.kulothunganug.thirukkural.viewmodels.SettingsViewModel
 import androidx.core.graphics.toColorInt
 import androidx.navigation.NavController
+import com.github.skydoves.colorpicker.compose.AlphaSlider
+import com.github.skydoves.colorpicker.compose.ColorEnvelope
+import com.github.skydoves.colorpicker.compose.HsvColorPicker
+import com.github.skydoves.colorpicker.compose.rememberColorPickerController
 import sh.calvin.reorderable.ReorderableItem
 import sh.calvin.reorderable.rememberReorderableLazyListState
 
@@ -83,6 +88,13 @@ fun SettingsView(navController: NavController, vm: SettingsViewModel) {
                     )
                 }
             }, title = { Text("Widget Customization") })
+        },
+        floatingActionButton = {
+            ExtendedFloatingActionButton(
+                onClick = { vm.saveSettings() },
+                icon = { Icon(Icons.Default.Check, contentDescription = null) },
+                text = { Text("Save Changes") }
+            )
         }
     ) { padding ->
         LazyColumn(
@@ -98,21 +110,13 @@ fun SettingsView(navController: NavController, vm: SettingsViewModel) {
             }
 
             item {
-                ColorSettings(
-                    "Background Color",
-                    state.bgColor,
-                    listOf("#FFFFFF", "#F5F5DC", "#E6F3FF", "#FFF0F5", "#000000")
-                ) {
+                ColorSettings("Background Color", state.bgColor) {
                     vm.updateBgColor(it)
                 }
             }
 
             item {
-                ColorSettings(
-                    "Text Color",
-                    state.textColor,
-                    listOf("#000000", "#333333", "#555555", "#FFFFFF", "#FF5722")
-                ) {
+                ColorSettings("Text Color", state.textColor) {
                     vm.updateTextColor(it)
                 }
             }
@@ -251,7 +255,7 @@ fun WidgetPreview(state: com.kulothunganug.thirukkural.viewmodels.SettingsUiStat
                     )
 
                     "ADHIGARAM" -> if (state.showAdhigaram) PreviewText(
-                        "1 - கடவுள் வாழ்த்து",
+                        "கடவுள் வாழ்த்து",
                         state.textColor,
                         state.adhigaramSize,
                         state.adhigaramAlign,
@@ -301,33 +305,37 @@ fun PreviewText(text: String, color: String, size: Int, align: String, bold: Boo
 @Composable
 fun ColorSettings(
     label: String,
-    selectedColor: String,
-    colors: List<String>,
+    initialColor: String,
     onColorSelected: (String) -> Unit
 ) {
     Column {
         Text(label, style = MaterialTheme.typography.labelLarge)
-        Row(
-            modifier = Modifier.padding(top = 8.dp),
-            horizontalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-            colors.forEach { color ->
-                Box(
-                    modifier = Modifier
-                        .size(36.dp)
-                        .clip(CircleShape)
-                        .background(Color(color.toColorInt()))
-                        .clickable { onColorSelected(color) }
-                        .then(
-                            if (selectedColor == color) Modifier.border(
-                                2.dp,
-                                MaterialTheme.colorScheme.primary,
-                                CircleShape
-                            ) else Modifier
-                        )
-                )
-            }
+
+        val controller = rememberColorPickerController()
+
+        LaunchedEffect(initialColor) {
+            controller.selectByColor(Color(initialColor.toColorInt()), false)
         }
+
+        HsvColorPicker(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(250.dp)
+                .padding(10.dp),
+            controller = controller,
+            onColorChanged = { colorEnvelope: ColorEnvelope ->
+                if (colorEnvelope.fromUser) {
+                    onColorSelected("#${colorEnvelope.hexCode}")
+                }
+            }
+        )
+        AlphaSlider(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(10.dp)
+                .height(35.dp),
+            controller = controller,
+        )
     }
 }
 
