@@ -8,7 +8,9 @@ import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
+import com.kulothunganug.thirukkural.viewmodels.SettingsUiState
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
 
 val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "settings")
@@ -84,34 +86,71 @@ class SettingsDatastore(private val context: Context) {
     val transliterationAlignment: Flow<String> = context.dataStore.data.map { it[TRANSLITERATION_ALIGNMENT] ?: DEFAULT_ALIGNMENT }
     val transliterationIsBold: Flow<Boolean> = context.dataStore.data.map { it[TRANSLITERATION_IS_BOLD] ?: false }
 
-    // Save functions
-    suspend fun saveWidgetBgColor(color: String) = context.dataStore.edit { it[WIDGET_BG_COLOR] = color }
-    suspend fun saveWidgetTextColor(color: String) = context.dataStore.edit { it[WIDGET_TEXT_COLOR] = color }
-    suspend fun saveWidgetContentOrder(order: String) = context.dataStore.edit { it[WIDGET_CONTENT_ORDER] = order }
+    val allSettings: Flow<SettingsUiState> = combine(
+        widgetBgColor, widgetTextColor, widgetContentOrder,
+        showPaal, paalFontSize, paalAlignment, paalIsBold,
+        showIyal, iyalFontSize, iyalAlignment, iyalIsBold,
+        showAdhigaram, adhigaramFontSize, adhigaramAlignment, adhigaramIsBold,
+        showKural, kuralFontSize, kuralAlignment, kuralIsBold,
+        showTransliteration, transliterationFontSize, transliterationAlignment, transliterationIsBold
+    ) { args: Array<Any?> ->
+        SettingsUiState(
+            bgColor = args[0] as String,
+            textColor = args[1] as String,
+            contentOrder = args[2] as String,
+            showPaal = args[3] as Boolean,
+            paalSize = args[4] as Int,
+            paalAlign = args[5] as String,
+            paalBold = args[6] as Boolean,
+            showIyal = args[7] as Boolean,
+            iyalSize = args[8] as Int,
+            iyalAlign = args[9] as String,
+            iyalBold = args[10] as Boolean,
+            showAdhigaram = args[11] as Boolean,
+            adhigaramSize = args[12] as Int,
+            adhigaramAlign = args[13] as String,
+            adhigaramBold = args[14] as Boolean,
+            showKural = args[15] as Boolean,
+            kuralSize = args[16] as Int,
+            kuralAlign = args[17] as String,
+            kuralBold = args[18] as Boolean,
+            showTranslit = args[19] as Boolean,
+            translitSize = args[20] as Int,
+            translitAlign = args[21] as String,
+            translitBold = args[22] as Boolean
+        )
+    }
 
-    suspend fun saveShowPaal(show: Boolean) = context.dataStore.edit { it[SHOW_PAAL] = show }
-    suspend fun saveShowIyal(show: Boolean) = context.dataStore.edit { it[SHOW_IYAL] = show }
-    suspend fun saveShowAdhigaram(show: Boolean) = context.dataStore.edit { it[SHOW_ADHIGARAM] = show }
-    suspend fun saveShowKural(show: Boolean) = context.dataStore.edit { it[SHOW_KURAL] = show }
-    suspend fun saveShowTransliteration(show: Boolean) = context.dataStore.edit { it[SHOW_TRANSLITERATION] = show }
+    suspend fun saveAll(settings: SettingsUiState) {
+        context.dataStore.edit { prefs ->
+            prefs[WIDGET_BG_COLOR] = settings.bgColor
+            prefs[WIDGET_TEXT_COLOR] = settings.textColor
+            prefs[WIDGET_CONTENT_ORDER] = settings.contentOrder
 
-    suspend fun savePaalFontSize(size: Int) = context.dataStore.edit { it[PAAL_FONT_SIZE] = size }
-    suspend fun savePaalAlignment(align: String) = context.dataStore.edit { it[PAAL_ALIGNMENT] = align }
-    suspend fun savePaalIsBold(bold: Boolean) = context.dataStore.edit { it[PAAL_IS_BOLD] = bold }
+            prefs[SHOW_PAAL] = settings.showPaal
+            prefs[PAAL_FONT_SIZE] = settings.paalSize
+            prefs[PAAL_ALIGNMENT] = settings.paalAlign
+            prefs[PAAL_IS_BOLD] = settings.paalBold
 
-    suspend fun saveIyalFontSize(size: Int) = context.dataStore.edit { it[IYAL_FONT_SIZE] = size }
-    suspend fun saveIyalAlignment(align: String) = context.dataStore.edit { it[IYAL_ALIGNMENT] = align }
-    suspend fun saveIyalIsBold(bold: Boolean) = context.dataStore.edit { it[IYAL_IS_BOLD] = bold }
+            prefs[SHOW_IYAL] = settings.showIyal
+            prefs[IYAL_FONT_SIZE] = settings.iyalSize
+            prefs[IYAL_ALIGNMENT] = settings.iyalAlign
+            prefs[IYAL_IS_BOLD] = settings.iyalBold
 
-    suspend fun saveAdhigaramFontSize(size: Int) = context.dataStore.edit { it[ADHIGARAM_FONT_SIZE] = size }
-    suspend fun saveAdhigaramAlignment(align: String) = context.dataStore.edit { it[ADHIGARAM_ALIGNMENT] = align }
-    suspend fun saveAdhigaramIsBold(bold: Boolean) = context.dataStore.edit { it[ADHIGARAM_IS_BOLD] = bold }
+            prefs[SHOW_ADHIGARAM] = settings.showAdhigaram
+            prefs[ADHIGARAM_FONT_SIZE] = settings.adhigaramSize
+            prefs[ADHIGARAM_ALIGNMENT] = settings.adhigaramAlign
+            prefs[ADHIGARAM_IS_BOLD] = settings.adhigaramBold
 
-    suspend fun saveKuralFontSize(size: Int) = context.dataStore.edit { it[KURAL_FONT_SIZE] = size }
-    suspend fun saveKuralAlignment(align: String) = context.dataStore.edit { it[KURAL_ALIGNMENT] = align }
-    suspend fun saveKuralIsBold(bold: Boolean) = context.dataStore.edit { it[KURAL_IS_BOLD] = bold }
+            prefs[SHOW_KURAL] = settings.showKural
+            prefs[KURAL_FONT_SIZE] = settings.kuralSize
+            prefs[KURAL_ALIGNMENT] = settings.kuralAlign
+            prefs[KURAL_IS_BOLD] = settings.kuralBold
 
-    suspend fun saveTransliterationFontSize(size: Int) = context.dataStore.edit { it[TRANSLITERATION_FONT_SIZE] = size }
-    suspend fun saveTransliterationAlignment(align: String) = context.dataStore.edit { it[TRANSLITERATION_ALIGNMENT] = align }
-    suspend fun saveTransliterationIsBold(bold: Boolean) = context.dataStore.edit { it[TRANSLITERATION_IS_BOLD] = bold }
+            prefs[SHOW_TRANSLITERATION] = settings.showTranslit
+            prefs[TRANSLITERATION_FONT_SIZE] = settings.translitSize
+            prefs[TRANSLITERATION_ALIGNMENT] = settings.translitAlign
+            prefs[TRANSLITERATION_IS_BOLD] = settings.translitBold
+        }
+    }
 }
