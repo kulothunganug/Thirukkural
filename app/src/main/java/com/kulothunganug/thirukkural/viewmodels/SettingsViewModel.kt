@@ -1,11 +1,13 @@
 package com.kulothunganug.thirukkural.viewmodels
 
 import android.content.Context
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.kulothunganug.thirukkural.datastore.SettingsDatastore
 import com.kulothunganug.thirukkural.widget.ThirukkuralWidget
 import androidx.glance.appwidget.GlanceAppWidgetManager
+import androidx.glance.appwidget.updateAll
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 
@@ -69,112 +71,127 @@ class SettingsViewModel(
         datastore.showTransliteration, datastore.transliterationFontSize, datastore.transliterationAlignment, datastore.transliterationIsBold
     ) { show, size, align, bold -> ElementState(show, size, align, bold) }
 
-    val uiState: StateFlow<SettingsUiState> = combine(
-        globalStateFlow,
-        paalStateFlow,
-        iyalStateFlow,
-        adhigaramStateFlow,
-        kuralStateFlow,
-        translitStateFlow
-    ) { args: Array<Any?> ->
-        val global = args[0] as GlobalState
-        val paal = args[1] as ElementState
-        val iyal = args[2] as ElementState
-        val adhigaram = args[3] as ElementState
-        val kural = args[4] as ElementState
-        val translit = args[5] as ElementState
-        
-        SettingsUiState(
-            bgColor = global.bgColor,
-            textColor = global.textColor,
-            contentOrder = global.contentOrder,
-            showPaal = paal.show,
-            paalSize = paal.size,
-            paalAlign = paal.align,
-            paalBold = paal.bold,
-            showIyal = iyal.show,
-            iyalSize = iyal.size,
-            iyalAlign = iyal.align,
-            iyalBold = iyal.bold,
-            showAdhigaram = adhigaram.show,
-            adhigaramSize = adhigaram.size,
-            adhigaramAlign = adhigaram.align,
-            adhigaramBold = adhigaram.bold,
-            showKural = kural.show,
-            kuralSize = kural.size,
-            kuralAlign = kural.align,
-            kuralBold = kural.bold,
-            showTranslit = translit.show,
-            translitSize = translit.size,
-            translitAlign = translit.align,
-            translitBold = translit.bold
-        )
-    }.stateIn(
-        scope = viewModelScope,
-        started = SharingStarted.WhileSubscribed(5000),
-        initialValue = SettingsUiState()
-    )
+    private val _uiState = MutableStateFlow(SettingsUiState())
+    val uiState: StateFlow<SettingsUiState> = _uiState.asStateFlow()
 
-    fun updateBgColor(color: String) = viewModelScope.launch {
-        datastore.saveWidgetBgColor(color)
-        syncWidget()
-    }
+    init {
+        viewModelScope.launch {
+            combine(
+                globalStateFlow,
+                paalStateFlow,
+                iyalStateFlow,
+                adhigaramStateFlow,
+                kuralStateFlow,
+                translitStateFlow
+            ) { args ->
+                val global = args[0] as GlobalState
+                val paal = args[1] as ElementState
+                val iyal = args[2] as ElementState
+                val adhigaram = args[3] as ElementState
+                val kural = args[4] as ElementState
+                val translit = args[5] as ElementState
 
-    fun updateTextColor(color: String) = viewModelScope.launch {
-        datastore.saveWidgetTextColor(color)
-        syncWidget()
-    }
-
-    fun updateContentOrder(order: String) = viewModelScope.launch {
-        datastore.saveWidgetContentOrder(order)
-        syncWidget()
-    }
-
-    fun updatePaalSettings(show: Boolean? = null, size: Int? = null, align: String? = null, bold: Boolean? = null) = viewModelScope.launch {
-        show?.let { datastore.saveShowPaal(it) }
-        size?.let { datastore.savePaalFontSize(it) }
-        align?.let { datastore.savePaalAlignment(it) }
-        bold?.let { datastore.savePaalIsBold(it) }
-        syncWidget()
-    }
-
-    fun updateIyalSettings(show: Boolean? = null, size: Int? = null, align: String? = null, bold: Boolean? = null) = viewModelScope.launch {
-        show?.let { datastore.saveShowIyal(it) }
-        size?.let { datastore.saveIyalFontSize(it) }
-        align?.let { datastore.saveIyalAlignment(it) }
-        bold?.let { datastore.saveIyalIsBold(it) }
-        syncWidget()
-    }
-
-    fun updateAdhigaramSettings(show: Boolean? = null, size: Int? = null, align: String? = null, bold: Boolean? = null) = viewModelScope.launch {
-        show?.let { datastore.saveShowAdhigaram(it) }
-        size?.let { datastore.saveAdhigaramFontSize(it) }
-        align?.let { datastore.saveAdhigaramAlignment(it) }
-        bold?.let { datastore.saveAdhigaramIsBold(it) }
-        syncWidget()
-    }
-
-    fun updateKuralSettings(show: Boolean? = null, size: Int? = null, align: String? = null, bold: Boolean? = null) = viewModelScope.launch {
-        show?.let { datastore.saveShowKural(it) }
-        size?.let { datastore.saveKuralFontSize(it) }
-        align?.let { datastore.saveKuralAlignment(it) }
-        bold?.let { datastore.saveKuralIsBold(it) }
-        syncWidget()
-    }
-
-    fun updateTranslitSettings(show: Boolean? = null, size: Int? = null, align: String? = null, bold: Boolean? = null) = viewModelScope.launch {
-        show?.let { datastore.saveShowTransliteration(it) }
-        size?.let { datastore.saveTransliterationFontSize(it) }
-        align?.let { datastore.saveTransliterationAlignment(it) }
-        bold?.let { datastore.saveTransliterationIsBold(it) }
-        syncWidget()
-    }
-
-    private suspend fun syncWidget() {
-        val manager = GlanceAppWidgetManager(context)
-        val ids = manager.getGlanceIds(ThirukkuralWidget::class.java)
-        ids.forEach { id ->
-            ThirukkuralWidget().update(context, id)
+                SettingsUiState(
+                    bgColor = global.bgColor,
+                    textColor = global.textColor,
+                    contentOrder = global.contentOrder,
+                    showPaal = paal.show,
+                    paalSize = paal.size,
+                    paalAlign = paal.align,
+                    paalBold = paal.bold,
+                    showIyal = iyal.show,
+                    iyalSize = iyal.size,
+                    iyalAlign = iyal.align,
+                    iyalBold = iyal.bold,
+                    showAdhigaram = adhigaram.show,
+                    adhigaramSize = adhigaram.size,
+                    adhigaramAlign = adhigaram.align,
+                    adhigaramBold = adhigaram.bold,
+                    showKural = kural.show,
+                    kuralSize = kural.size,
+                    kuralAlign = kural.align,
+                    kuralBold = kural.bold,
+                    showTranslit = translit.show,
+                    translitSize = translit.size,
+                    translitAlign = translit.align,
+                    translitBold = translit.bold
+                )
+            }.first().let {
+                _uiState.value = it
+            }
         }
     }
+
+    fun updateBgColor(color: String) {
+        _uiState.update { it.copy(bgColor = color) }
+    }
+
+    fun updateTextColor(color: String) {
+        _uiState.update { it.copy(textColor = color) }
+    }
+
+    fun updateContentOrder(order: String) {
+        _uiState.update { it.copy(contentOrder = order) }
+    }
+
+    fun updatePaalSettings(show: Boolean? = null, size: Int? = null, align: String? = null, bold: Boolean? = null) {
+        _uiState.update { current ->
+            current.copy(
+                showPaal = show ?: current.showPaal,
+                paalSize = size ?: current.paalSize,
+                paalAlign = align ?: current.paalAlign,
+                paalBold = bold ?: current.paalBold
+            )
+        }
+    }
+
+    fun updateIyalSettings(show: Boolean? = null, size: Int? = null, align: String? = null, bold: Boolean? = null) {
+        _uiState.update { current ->
+            current.copy(
+                showIyal = show ?: current.showIyal,
+                iyalSize = size ?: current.iyalSize,
+                iyalAlign = align ?: current.iyalAlign,
+                iyalBold = bold ?: current.iyalBold
+            )
+        }
+    }
+
+    fun updateAdhigaramSettings(show: Boolean? = null, size: Int? = null, align: String? = null, bold: Boolean? = null) {
+        _uiState.update { current ->
+            current.copy(
+                showAdhigaram = show ?: current.showAdhigaram,
+                adhigaramSize = size ?: current.adhigaramSize,
+                adhigaramAlign = align ?: current.adhigaramAlign,
+                adhigaramBold = bold ?: current.adhigaramBold
+            )
+        }
+    }
+
+    fun updateKuralSettings(show: Boolean? = null, size: Int? = null, align: String? = null, bold: Boolean? = null) {
+        _uiState.update { current ->
+            current.copy(
+                showKural = show ?: current.showKural,
+                kuralSize = size ?: current.kuralSize,
+                kuralAlign = align ?: current.kuralAlign,
+                kuralBold = bold ?: current.kuralBold
+            )
+        }
+    }
+
+    fun updateTranslitSettings(show: Boolean? = null, size: Int? = null, align: String? = null, bold: Boolean? = null) {
+        _uiState.update { current ->
+            current.copy(
+                showTranslit = show ?: current.showTranslit,
+                translitSize = size ?: current.translitSize,
+                translitAlign = align ?: current.translitAlign,
+                translitBold = bold ?: current.translitBold
+            )
+        }
+    }
+
+    fun saveSettings() = viewModelScope.launch {
+        datastore.saveAll(uiState.value)
+        ThirukkuralWidget().updateAll(context)
+    }
+
 }
