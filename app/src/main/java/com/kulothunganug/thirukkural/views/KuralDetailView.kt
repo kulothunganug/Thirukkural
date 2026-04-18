@@ -26,6 +26,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import com.kulothunganug.thirukkural.formatTransliteration
 import com.kulothunganug.thirukkural.viewmodels.KuralDetailViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -39,15 +40,6 @@ fun KuralDetailView(
 
     LaunchedEffect(kuralId) {
         vm.loadKural(kuralId)
-    }
-
-    fun formatTransliteration(text: String): String {
-        val words = text.split(Regex("\\s+"))
-
-        val firstLine = words.take(4).joinToString(" ")
-        val secondLine = words.slice(4 until 7).joinToString(" ")
-        return "$firstLine\n$secondLine"
-
     }
 
     Scaffold(
