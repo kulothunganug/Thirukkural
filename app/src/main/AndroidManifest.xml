@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
     <application
         android:allowBackup="true"
@@ -29,6 +28,15 @@
             </intent-filter>
 
         </activity>
+
+        <activity android:name=".WidgetConfigurationActivity"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_CONFIGURE"/>
+            </intent-filter>
+        </activity>
+
+
         <receiver android:name=".widget.ThirukkuralWidgetReceiver"
             android:exported="true">
             <intent-filter>

@@ -4,4 +4,7 @@
     android:minHeight="110dp"
     android:resizeMode="horizontal|vertical"
     android:updatePeriodMillis="0"
-    android:widgetCategory="home_screen" />
+    android:widgetCategory="home_screen"
+    android:configure="com.kulothunganug.thirukkural.WidgetConfigurationActivity"
+    android:widgetFeatures="reconfigurable"
+    />
