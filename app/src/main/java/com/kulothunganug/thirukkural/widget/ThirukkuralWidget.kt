@@ -27,6 +27,7 @@ import androidx.glance.appwidget.GlanceAppWidget
 import androidx.glance.appwidget.GlanceAppWidgetReceiver
 import androidx.glance.appwidget.action.ActionCallback
 import androidx.glance.appwidget.action.actionRunCallback
+import androidx.glance.appwidget.cornerRadius
 import androidx.glance.appwidget.provideContent
 import androidx.glance.appwidget.state.updateAppWidgetState
 import androidx.glance.background
@@ -116,7 +117,8 @@ class ThirukkuralWidget : GlanceAppWidget() {
             Image(
                 provider = ImageProvider(R.drawable.refresh_24px),
                 contentDescription = "Refresh",
-                modifier = GlanceModifier.clickable(actionRunCallback<RefreshKuralAction>())
+                modifier = GlanceModifier.cornerRadius(12.dp).padding(6.dp)
+                    .clickable(actionRunCallback<RefreshKuralAction>())
             )
             Column(
                 modifier = GlanceModifier.fillMaxSize(),
