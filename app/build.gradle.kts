@@ -55,6 +55,7 @@ dependencies {
     implementation(libs.compose.material.icons)
     implementation(libs.androidx.activity.compose)
     implementation(libs.androidx.glance.appwidget)
+    implementation(libs.androidx.glance.appwidget.preview)
     implementation(libs.androidx.room.runtime)
     implementation(libs.androidx.navigation.compose)
     implementation(libs.androidx.lifecycle.viewmodel.ktx)

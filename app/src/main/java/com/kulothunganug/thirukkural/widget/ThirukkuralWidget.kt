@@ -66,6 +66,27 @@ object ThirukkuralWidgetKeys {
 class ThirukkuralWidget : GlanceAppWidget() {
     override val stateDefinition: GlanceStateDefinition<*> = PreferencesGlanceStateDefinition
 
+    override suspend fun providePreview(context: Context, widgetCategory: Int) {
+        provideContent {
+            val datastore = remember { SettingsDatastore(context) }
+            val settings by datastore.allSettings.collectAsState(initial = SettingsUiState())
+            GlanceTheme {
+                val prefs = currentState<Preferences>()
+                val kuralText = prefs[ThirukkuralWidgetKeys.KURAL_TEXT] ?: "Tap to load Kural"
+                val kuralId = prefs[ThirukkuralWidgetKeys.KURAL_ID] ?: 0
+                val paal = prefs[ThirukkuralWidgetKeys.PAAL] ?: ""
+                val iyal = prefs[ThirukkuralWidgetKeys.IYAL] ?: ""
+                val adhigaram = prefs[ThirukkuralWidgetKeys.ADHIGARAM] ?: ""
+                val transliteration = prefs[ThirukkuralWidgetKeys.TRANSLITERATION] ?: ""
+
+                WidgetContent(
+                    kuralId, paal, iyal, adhigaram, kuralText, transliteration,
+                    settings,
+                )
+            }
+        }
+    }
+
     override suspend fun provideGlance(context: Context, id: GlanceId) {
         provideContent {
             val datastore = remember { SettingsDatastore(context) }
@@ -82,7 +103,6 @@ class ThirukkuralWidget : GlanceAppWidget() {
                 WidgetContent(
                     kuralId, paal, iyal, adhigaram, kuralText, transliteration,
                     settings,
-                    context,
                 )
             }
         }
@@ -98,7 +118,6 @@ class ThirukkuralWidget : GlanceAppWidget() {
         text: String,
         transliteration: String,
         settings: SettingsUiState,
-        context: Context,
     ) {
         val backgroundColor = Color(settings.bgColor.toColorInt())
         val contentColor = Color(settings.textColor.toColorInt())

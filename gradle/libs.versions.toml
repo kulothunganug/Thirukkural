@@ -1,6 +1,6 @@
 [versions]
 agp = "9.1.0"
-glanceAppwidget = "1.1.1"
+glanceAppwidget = "1.2.0-rc01"
 kotlin = "2.3.20"
 coreKtx = "1.18.0"
 junit = "4.13.2"
@@ -12,7 +12,7 @@ composeBom = "2026.03.01"
 navigationCompose = "2.9.7"
 room = "2.8.4"
 ksp = "2.3.4"
-koin-bom = "4.2.0"
+koin-bom = "4.2.1"
 koin-plugin = "0.6.2"
 reorderable = "3.0.0"
 colorpicker = "1.1.3"
@@ -20,6 +20,7 @@ colorpicker = "1.1.3"
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
 androidx-glance-appwidget = { module = "androidx.glance:glance-appwidget", version.ref = "glanceAppwidget" }
+androidx-glance-appwidget-preview = { module = "androidx.glance:glance-appwidget-preview", version.ref = "glanceAppwidget" }
 androidx-lifecycle-viewmodel-ktx = { module = "androidx.lifecycle:lifecycle-viewmodel-ktx", version.ref = "lifecycleRuntimeKtx" }
 androidx-navigation-compose = { module = "androidx.navigation:navigation-compose", version.ref = "navigationCompose" }
 androidx-room-compiler = { module = "androidx.room:room-compiler", version.ref = "room" }
