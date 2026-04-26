@@ -37,7 +37,7 @@ import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.LocalContentColor
+import androidx.compose.material3.LocalMinimumInteractiveComponentSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Slider
@@ -45,6 +45,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -72,6 +73,9 @@ import com.kulothunganug.thirukkural.ui.theme.ThirukkuralTheme
 import com.kulothunganug.thirukkural.viewmodels.SettingsUiState
 import com.kulothunganug.thirukkural.viewmodels.WidgetConfigurationViewModel
 import com.kulothunganug.thirukkural.views.ElementSettingItem
+import com.kulothunganug.thirukkural.widget.ContentType
+import com.kulothunganug.thirukkural.widget.SectionConfig
+import com.kulothunganug.thirukkural.widget.WidgetTextAlign
 import org.koin.androidx.compose.koinViewModel
 import org.koin.core.parameter.parametersOf
 import sh.calvin.reorderable.ReorderableItem
@@ -119,19 +123,12 @@ fun WidgetConfiguration(
     val haptic = LocalHapticFeedback.current
 
     // Local state for reordering to provide immediate feedback
-    var elements by remember(state.contentOrder) {
+    var elements by remember(state.config.contentOrder) {
         mutableStateOf(
-            state.contentOrder.split(",").map { id ->
+            state.config.contentOrder.map { section ->
                 ElementSettingItem(
-                    id = id,
-                    label = when (id) {
-                        "PAAL" -> "Section (Paal)"
-                        "IYAL" -> "Chapter Group (Iyal)"
-                        "ADHIGARAM" -> "Chapter (Adhigaram)"
-                        "KURAL" -> "Kural Text"
-                        "TRANSLITERATION" -> "Transliteration"
-                        else -> id
-                    }
+                    id = section.type.name,
+                    label = section.type.name
                 )
             }
         )
@@ -180,20 +177,20 @@ fun WidgetConfiguration(
                     .padding(padding)
                     .fillMaxSize(),
                 contentPadding = PaddingValues(16.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp)
+                verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 item {
                     WidgetPreview(state)
                 }
 
                 item {
-                    ColorSettings("Background Color", state.bgColor) {
+                    ColorSettings("Background Color", state.config.bgColor) {
                         vm.updateBgColor(it)
                     }
                 }
 
                 item {
-                    ColorSettings("Text Color", state.textColor) {
+                    ColorSettings("Text Color", state.config.textColor) {
                         vm.updateTextColor(it)
                     }
                 }
@@ -208,6 +205,7 @@ fun WidgetConfiguration(
                 items(elements, key = { it.id }) { item ->
                     ReorderableItem(reorderableState, key = item.id) { isDragging ->
                         val elevation by animateDpAsState(if (isDragging) 8.dp else 0.dp)
+                        val sectionConfig = state.config.contentOrder.first { it.type.name == item.id }
 
                         Surface(
                             shadowElevation = elevation,
@@ -216,55 +214,34 @@ fun WidgetConfiguration(
                         ) {
                             Row(verticalAlignment = Alignment.CenterVertically) {
                                 Box(modifier = Modifier.weight(1f)) {
-                                    when (item.id) {
-                                        "PAAL" -> ElementSettingsCard(
-                                            item.label,
-                                            state.showPaal,
-                                            state.paalSize,
-                                            state.paalAlign,
-                                            state.paalBold,
-                                            onShowChange = { vm.updatePaalSettings(show = it) },
-                                            onSizeChange = { vm.updatePaalSettings(size = it) },
-                                            onAlignChange = { vm.updatePaalSettings(align = it) },
-                                            onBoldChange = { vm.updatePaalSettings(bold = it) }
-                                        )
-
-                                        "IYAL" -> ElementSettingsCard(
-                                            item.label,
-                                            state.showIyal,
-                                            state.iyalSize,
-                                            state.iyalAlign,
-                                            state.iyalBold,
-                                            onShowChange = { vm.updateIyalSettings(show = it) },
-                                            onSizeChange = { vm.updateIyalSettings(size = it) },
-                                            onAlignChange = { vm.updateIyalSettings(align = it) },
-                                            onBoldChange = { vm.updateIyalSettings(bold = it) }
-                                        )
-
-                                        "ADHIGARAM" -> ElementSettingsCard(
-                                            item.label,
-                                            state.showAdhigaram,
-                                            state.adhigaramSize,
-                                            state.adhigaramAlign,
-                                            state.adhigaramBold,
-                                            onShowChange = { vm.updateAdhigaramSettings(show = it) },
-                                            onSizeChange = { vm.updateAdhigaramSettings(size = it) },
-                                            onAlignChange = { vm.updateAdhigaramSettings(align = it) },
-                                            onBoldChange = { vm.updateAdhigaramSettings(bold = it) }
-                                        )
-
-                                        "KURAL" -> ElementSettingsCard(
-                                            item.label,
-                                            state.showKural,
-                                            state.kuralSize,
-                                            "LEFT",
-                                            state.kuralBold,
-                                            onShowChange = { vm.updateKuralSettings(show = it) },
-                                            onSizeChange = { vm.updateKuralSettings(size = it) },
-                                            onAlignChange = { vm.updateKuralSettings(align = it) },
-                                            onBoldChange = { vm.updateKuralSettings(bold = it) }
-                                        )
-                                    }
+                                    ElementSettingsCard(
+                                        item.label,
+                                        sectionConfig,
+                                        onShowChange = {
+                                            vm.updateSectionSettings(
+                                                sectionConfig.type,
+                                                show = it
+                                            )
+                                        },
+                                        onSizeChange = {
+                                            vm.updateSectionSettings(
+                                                sectionConfig.type,
+                                                size = it
+                                            )
+                                        },
+                                        onAlignChange = {
+                                            vm.updateSectionSettings(
+                                                sectionConfig.type,
+                                                align = it
+                                            )
+                                        },
+                                        onBoldChange = {
+                                            vm.updateSectionSettings(
+                                                sectionConfig.type,
+                                                bold = it
+                                            )
+                                        }
+                                    )
                                 }
 
                                 IconButton(
@@ -276,7 +253,10 @@ fun WidgetConfiguration(
                                         },
                                         onDragStopped = {
                                             haptic.performHapticFeedback(HapticFeedbackType.GestureEnd)
-                                            vm.updateContentOrder(elements.joinToString(",") { it.id })
+                                            val newOrder = elements.map { element ->
+                                                state.config.contentOrder.first { it.type.name == element.id }
+                                            }
+                                            vm.updateContentOrder(newOrder)
                                         }
                                     ),
                                     onClick = {}
@@ -302,7 +282,7 @@ fun WidgetPreview(state: SettingsUiState) {
         modifier = Modifier
             .fillMaxWidth()
             .heightIn(min = 150.dp),
-        colors = CardDefaults.cardColors(containerColor = Color(state.bgColor.toColorInt()))
+        colors = CardDefaults.cardColors(containerColor = Color(state.config.bgColor.toColorInt()))
     ) {
         Column(
             modifier = Modifier
@@ -311,56 +291,37 @@ fun WidgetPreview(state: SettingsUiState) {
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            state.contentOrder.split(",").forEach { item ->
-                when (item) {
-                    "PAAL" -> if (state.showPaal) PreviewText(
-                        "அறத்துப்பால்",
-                        state.textColor,
-                        state.paalSize,
-                        state.paalAlign,
-                        state.paalBold
-                    )
-
-                    "IYAL" -> if (state.showIyal) PreviewText(
-                        "பாயிரவியல்",
-                        state.textColor,
-                        state.iyalSize,
-                        state.iyalAlign,
-                        state.iyalBold
-                    )
-
-                    "ADHIGARAM" -> if (state.showAdhigaram) PreviewText(
-                        "கடவுள் வாழ்த்து",
-                        state.textColor,
-                        state.adhigaramSize,
-                        state.adhigaramAlign,
-                        state.adhigaramBold
-                    )
-
-                    "KURAL" -> if (state.showKural) PreviewText(
-                        "அகர முதல எழுத்தெல்லாம் ஆதி\nபகவன் முதற்றே உலகு.",
-                        state.textColor,
-                        state.kuralSize,
-                        "LEFT",
-                        state.kuralBold
-                    )
+            state.config.contentOrder.filter { it.show }.forEach { section ->
+                val text = when (section.type) {
+                    ContentType.Paal -> "அறத்துப்பால்"
+                    ContentType.Iyal -> "பாயிரவியல்"
+                    ContentType.Adhigaram -> "கடவுள் வாழ்த்து"
+                    ContentType.Kural -> "அகர முதல எழுத்தெல்லாம் ஆதி\nபகவன் முதற்றே உலகு."
+                    ContentType.Transliteration -> "Akara Mudhala Ezhuththellam Aadhi..."
                 }
+                PreviewText(
+                    text,
+                    state.config.textColor,
+                    section.size,
+                    section.align,
+                    section.bold
+                )
             }
         }
     }
 }
 
 @Composable
-fun PreviewText(text: String, color: String, size: Int, align: String, bold: Boolean) {
+fun PreviewText(text: String, color: String, size: Int, align: WidgetTextAlign, bold: Boolean) {
     Text(
         text = text,
         color = Color(color.toColorInt()),
         fontSize = size.sp,
         fontWeight = if (bold) FontWeight.Bold else FontWeight.Normal,
         textAlign = when (align) {
-            "LEFT" -> TextAlign.Left
-            "RIGHT" -> TextAlign.Right
-            else -> TextAlign.Center
+            WidgetTextAlign.Start -> TextAlign.Left
+            WidgetTextAlign.End -> TextAlign.Right
+            WidgetTextAlign.Center -> TextAlign.Center
         },
         modifier = Modifier
             .fillMaxWidth()
@@ -427,46 +388,102 @@ fun ColorSettings(
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ElementSettingsCard(
-    label: String, show: Boolean, size: Int, align: String, bold: Boolean,
-    onShowChange: (Boolean) -> Unit, onSizeChange: (Int) -> Unit,
-    onAlignChange: (String) -> Unit, onBoldChange: (Boolean) -> Unit
+    label: String,
+    sectionConfig: SectionConfig,
+    onShowChange: (Boolean) -> Unit,
+    onSizeChange: (Int) -> Unit,
+    onAlignChange: (WidgetTextAlign) -> Unit,
+    onBoldChange: (Boolean) -> Unit
 ) {
-    Column(modifier = Modifier.padding(12.dp)) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Checkbox(checked = show, onCheckedChange = onShowChange)
-            Text(label, style = MaterialTheme.typography.titleSmall)
-            Spacer(Modifier.weight(1f))
-            IconButton(onClick = { onBoldChange(!bold) }) {
+    CompositionLocalProvider(LocalMinimumInteractiveComponentSize provides 0.dp) {
+        Column(modifier = Modifier.padding(12.dp)) {
+
+            // Header
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Checkbox(
+                    checked = sectionConfig.show,
+                    onCheckedChange = onShowChange
+                )
+                Spacer(modifier = Modifier.width(8.dp))
                 Text(
-                    "B",
-                    fontWeight = if (bold) FontWeight.Bold else FontWeight.Normal,
-                    color = if (bold) MaterialTheme.colorScheme.primary else LocalContentColor.current
+                    text = label,
+                    style = MaterialTheme.typography.titleSmall
                 )
             }
-        }
-        if (show) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Text(
-                    "Size: $size",
-                    modifier = Modifier.width(60.dp),
-                    style = MaterialTheme.typography.bodySmall
-                )
-                Slider(
-                    value = size.toFloat(),
-                    onValueChange = { onSizeChange(it.toInt()) },
-                    valueRange = 10f..24f,
-                    modifier = Modifier.weight(1f)
-                )
-            }
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                listOf("LEFT", "CENTER", "RIGHT").forEach {
-                    FilterChip(
-                        selected = align == it,
-                        onClick = { onAlignChange(it) },
-                        label = { Text(it, fontSize = 10.sp) }
+
+            if (sectionConfig.show) {
+
+                // Bold row
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 4.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Text(
+                        "Bold", style = MaterialTheme.typography.bodySmall
                     )
+                    Checkbox(
+                        checked = sectionConfig.bold,
+                        onCheckedChange = onBoldChange
+                    )
+                }
+
+                // Size row
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 4.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        "Size: ${sectionConfig.size}",
+                        modifier = Modifier.width(70.dp),
+                        style = MaterialTheme.typography.bodySmall
+                    )
+                    Slider(
+                        value = sectionConfig.size.toFloat(),
+                        onValueChange = { onSizeChange(it.toInt()) },
+                        valueRange = 10f..24f,
+                    )
+                }
+
+                // Align row
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 4.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Text(
+                        "Align", style = MaterialTheme.typography.bodySmall
+                    )
+
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(4.dp)
+                    ) {
+                        WidgetTextAlign.entries.forEach {
+                            FilterChip(
+                                selected = sectionConfig.align == it,
+                                onClick = { onAlignChange(it) },
+                                label = {
+                                    Text(
+                                        it.name.uppercase(),
+                                        fontSize = 10.sp
+                                    )
+                                }
+                            )
+                        }
+                    }
                 }
             }
         }

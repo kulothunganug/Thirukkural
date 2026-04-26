@@ -4,10 +4,8 @@ import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.produceState
-import androidx.compose.runtime.remember
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -51,38 +49,42 @@ import com.kulothunganug.thirukkural.MainActivity
 import com.kulothunganug.thirukkural.R
 import com.kulothunganug.thirukkural.ThirukkuralDatabase
 import com.kulothunganug.thirukkural.models.ThirukkuralModel
-import com.kulothunganug.thirukkural.formatTransliteration
-import com.kulothunganug.thirukkural.viewmodels.SettingsUiState
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.Json
 import kotlin.random.Random
+
+@Serializable
+enum class ContentType { Paal, Iyal, Adhigaram, Kural, Transliteration }
+
+@Serializable
+enum class WidgetTextAlign { Start, Center, End }
+
+@Serializable
+data class WidgetConfig(
+    val bgColor: String = "#FFFFFF",
+    val textColor: String = "#000000",
+    val contentOrder: List<SectionConfig> = listOf(
+        SectionConfig(type = ContentType.Paal, show = false),
+        SectionConfig(type = ContentType.Iyal, show = false),
+        SectionConfig(type = ContentType.Adhigaram, show = true, size = 15, bold = true),
+        SectionConfig(type = ContentType.Kural, show = true, size = 14),
+        SectionConfig(type = ContentType.Transliteration, show = false)
+    )
+)
+
+@Serializable
+data class SectionConfig(
+    val type: ContentType,
+    val show: Boolean = false,
+    val size: Int = 12,
+    val align: WidgetTextAlign = WidgetTextAlign.Center,
+    val bold: Boolean = false
+)
+
+val CONFIG = stringPreferencesKey("widget_config")
 
 object ThirukkuralWidgetKeys {
     val KURAL_ID = intPreferencesKey("kural_id")
-    val BG_COLOR = stringPreferencesKey("widget_bg_color")
-    val TEXT_COLOR = stringPreferencesKey("widget_text_color")
-    val CONTENT_ORDER = stringPreferencesKey("widget_content_order")
-
-    val SHOW_PAAL = booleanPreferencesKey("show_paal")
-    val PAAL_SIZE = intPreferencesKey("paal_size")
-    val PAAL_ALIGN = stringPreferencesKey("paal_align")
-    val PAAL_BOLD = booleanPreferencesKey("paal_bold")
-
-    val SHOW_IYAL = booleanPreferencesKey("show_iyal")
-    val IYAL_SIZE = intPreferencesKey("iyal_size")
-    val IYAL_ALIGN = stringPreferencesKey("iyal_align")
-    val IYAL_BOLD = booleanPreferencesKey("iyal_bold")
-
-    val SHOW_ADHIGARAM = booleanPreferencesKey("show_adhigaram")
-    val ADHIGARAM_SIZE = intPreferencesKey("adhigaram_size")
-    val ADHIGARAM_ALIGN = stringPreferencesKey("adhigaram_align")
-    val ADHIGARAM_BOLD = booleanPreferencesKey("adhigaram_bold")
-
-    val SHOW_KURAL = booleanPreferencesKey("show_kural")
-    val KURAL_SIZE = intPreferencesKey("kural_size")
-    val KURAL_BOLD = booleanPreferencesKey("kural_bold")
-
-    const val DEFAULT_BG_COLOR = "#FFFFFF"
-    const val DEFAULT_TEXT_COLOR = "#000000"
-    const val DEFAULT_CONTENT_ORDER = "PAAL,IYAL,ADHIGARAM,KURAL,TRANSLITERATION"
 }
 
 
@@ -102,27 +104,11 @@ class ThirukkuralWidget : GlanceAppWidget() {
         GlanceTheme {
             val prefs = currentState<Preferences>()
             val kuralId = prefs[ThirukkuralWidgetKeys.KURAL_ID] ?: 0
+            val json = prefs[CONFIG]
+            val config = json?.let {
+                Json.decodeFromString<WidgetConfig>(it)
+            } ?: WidgetConfig()
 
-            val settings = SettingsUiState(
-                bgColor = prefs[ThirukkuralWidgetKeys.BG_COLOR] ?: ThirukkuralWidgetKeys.DEFAULT_BG_COLOR,
-                textColor = prefs[ThirukkuralWidgetKeys.TEXT_COLOR] ?: ThirukkuralWidgetKeys.DEFAULT_TEXT_COLOR,
-                contentOrder = prefs[ThirukkuralWidgetKeys.CONTENT_ORDER] ?: ThirukkuralWidgetKeys.DEFAULT_CONTENT_ORDER,
-                showPaal = prefs[ThirukkuralWidgetKeys.SHOW_PAAL] ?: false,
-                paalSize = prefs[ThirukkuralWidgetKeys.PAAL_SIZE] ?: 12,
-                paalAlign = prefs[ThirukkuralWidgetKeys.PAAL_ALIGN] ?: "CENTER",
-                paalBold = prefs[ThirukkuralWidgetKeys.PAAL_BOLD] ?: false,
-                showIyal = prefs[ThirukkuralWidgetKeys.SHOW_IYAL] ?: false,
-                iyalSize = prefs[ThirukkuralWidgetKeys.IYAL_SIZE] ?: 12,
-                iyalAlign = prefs[ThirukkuralWidgetKeys.IYAL_ALIGN] ?: "CENTER",
-                iyalBold = prefs[ThirukkuralWidgetKeys.IYAL_BOLD] ?: false,
-                showAdhigaram = prefs[ThirukkuralWidgetKeys.SHOW_ADHIGARAM] ?: true,
-                adhigaramSize = prefs[ThirukkuralWidgetKeys.ADHIGARAM_SIZE] ?: 15,
-                adhigaramAlign = prefs[ThirukkuralWidgetKeys.ADHIGARAM_ALIGN] ?: "CENTER",
-                adhigaramBold = prefs[ThirukkuralWidgetKeys.ADHIGARAM_BOLD] ?: true,
-                showKural = prefs[ThirukkuralWidgetKeys.SHOW_KURAL] ?: true,
-                kuralSize = prefs[ThirukkuralWidgetKeys.KURAL_SIZE] ?: 14,
-                kuralBold = prefs[ThirukkuralWidgetKeys.KURAL_BOLD] ?: false,
-            )
 
             val kural by produceState<ThirukkuralModel?>(initialValue = null, kuralId) {
                 value = if (kuralId != 0) {
@@ -134,11 +120,8 @@ class ThirukkuralWidget : GlanceAppWidget() {
 
             WidgetContent(
                 kuralId,
-                kural?.paal ?: "",
-                kural?.iyal ?: "",
-                kural?.adhigaram ?: "",
-                kural?.kural ?: "Tap to load Kural",
-                settings,
+                kural,
+                config,
             )
         }
     }
@@ -147,14 +130,11 @@ class ThirukkuralWidget : GlanceAppWidget() {
     @Composable
     private fun WidgetContent(
         id: Int,
-        paal: String,
-        iyal: String,
-        adhigaram: String,
-        text: String,
-        settings: SettingsUiState,
+        kural: ThirukkuralModel?,
+        config: WidgetConfig,
     ) {
-        val backgroundColor = Color(settings.bgColor.toColorInt())
-        val contentColor = Color(settings.textColor.toColorInt())
+        val backgroundColor = Color(config.bgColor.toColorInt())
+        val contentColor = Color(config.textColor.toColorInt())
 
         Box(
             modifier = GlanceModifier.fillMaxSize().background(backgroundColor).padding(12.dp)
@@ -178,47 +158,16 @@ class ThirukkuralWidget : GlanceAppWidget() {
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                settings.contentOrder.split(",").forEach { item ->
-                    when (item) {
-                        "PAAL" -> if (settings.showPaal && paal.isNotEmpty()) {
-                            RenderText(
-                                paal,
-                                contentColor,
-                                settings.paalSize,
-                                settings.paalAlign,
-                                settings.paalBold
-                            )
-                        }
-
-                        "IYAL" -> if (settings.showIyal && iyal.isNotEmpty()) {
-                            RenderText(
-                                iyal,
-                                contentColor,
-                                settings.iyalSize,
-                                settings.iyalAlign,
-                                settings.iyalBold
-                            )
-                        }
-
-                        "ADHIGARAM" -> if (settings.showAdhigaram && id != 0) {
-                            RenderText(
-                                adhigaram,
-                                contentColor,
-                                settings.adhigaramSize,
-                                settings.adhigaramAlign,
-                                settings.adhigaramBold
-                            )
-                        }
-
-                        "KURAL" -> if (settings.showKural && text.isNotEmpty()) {
-                            RenderText(
-                                text.replace("<br />", "\n"),
-                                contentColor,
-                                settings.kuralSize,
-                                "LEFT",
-                                settings.kuralBold
-                            )
-                        }
+                config.contentOrder.filter { it.show }.forEach { section ->
+                    val text = when (section.type) {
+                        ContentType.Paal -> kural?.paal ?: ""
+                        ContentType.Iyal -> kural?.iyal ?: ""
+                        ContentType.Adhigaram -> kural?.adhigaram ?: ""
+                        ContentType.Kural -> kural?.kural ?: "Tap to load Kural"
+                        ContentType.Transliteration -> kural?.transliteration ?: ""
+                    }
+                    if (text.isNotEmpty()) {
+                        RenderText(text, contentColor, section)
                     }
                 }
             }
@@ -230,20 +179,18 @@ class ThirukkuralWidget : GlanceAppWidget() {
     private fun RenderText(
         text: String,
         color: Color,
-        fontSize: Int,
-        alignment: String,
-        isBold: Boolean
+        sectionConfig: SectionConfig
     ) {
         Text(
             text = text,
             style = TextStyle(
                 color = ColorProvider(color),
-                fontWeight = if (isBold) FontWeight.Bold else FontWeight.Normal,
-                fontSize = fontSize.sp,
-                textAlign = when (alignment) {
-                    "LEFT" -> TextAlign.Start
-                    "RIGHT" -> TextAlign.End
-                    else -> TextAlign.Center
+                fontWeight = if (sectionConfig.bold) FontWeight.Bold else FontWeight.Normal,
+                fontSize = sectionConfig.size.sp,
+                textAlign = when (sectionConfig.align) {
+                    WidgetTextAlign.Start -> TextAlign.Start
+                    WidgetTextAlign.Center -> TextAlign.Center
+                    WidgetTextAlign.End -> TextAlign.End
                 }
             ),
             modifier = GlanceModifier.fillMaxWidth().padding(top = 2.dp)
