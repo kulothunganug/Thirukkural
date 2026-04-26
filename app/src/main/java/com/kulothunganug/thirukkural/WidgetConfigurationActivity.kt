@@ -70,9 +70,10 @@ import com.github.skydoves.colorpicker.compose.HsvColorPicker
 import com.github.skydoves.colorpicker.compose.rememberColorPickerController
 import com.kulothunganug.thirukkural.ui.theme.ThirukkuralTheme
 import com.kulothunganug.thirukkural.viewmodels.SettingsUiState
-import com.kulothunganug.thirukkural.viewmodels.SettingsViewModel
+import com.kulothunganug.thirukkural.viewmodels.WidgetConfigurationViewModel
 import com.kulothunganug.thirukkural.views.ElementSettingItem
 import org.koin.androidx.compose.koinViewModel
+import org.koin.core.parameter.parametersOf
 import sh.calvin.reorderable.ReorderableItem
 import sh.calvin.reorderable.rememberReorderableLazyListState
 
@@ -112,7 +113,7 @@ fun WidgetConfiguration(
     appWidgetId: Int,
     onDone: (Int) -> Unit,
 ) {
-    val vm: SettingsViewModel = koinViewModel()
+    val vm: WidgetConfigurationViewModel = koinViewModel(parameters = { parametersOf(appWidgetId) })
 
     val state by vm.uiState.collectAsState()
     val haptic = LocalHapticFeedback.current
@@ -256,24 +257,12 @@ fun WidgetConfiguration(
                                             item.label,
                                             state.showKural,
                                             state.kuralSize,
-                                            state.kuralAlign,
+                                            "LEFT",
                                             state.kuralBold,
                                             onShowChange = { vm.updateKuralSettings(show = it) },
                                             onSizeChange = { vm.updateKuralSettings(size = it) },
                                             onAlignChange = { vm.updateKuralSettings(align = it) },
                                             onBoldChange = { vm.updateKuralSettings(bold = it) }
-                                        )
-
-                                        "TRANSLITERATION" -> ElementSettingsCard(
-                                            item.label,
-                                            state.showTranslit,
-                                            state.translitSize,
-                                            state.translitAlign,
-                                            state.translitBold,
-                                            onShowChange = { vm.updateTranslitSettings(show = it) },
-                                            onSizeChange = { vm.updateTranslitSettings(size = it) },
-                                            onAlignChange = { vm.updateTranslitSettings(align = it) },
-                                            onBoldChange = { vm.updateTranslitSettings(bold = it) }
                                         )
                                     }
                                 }
@@ -352,16 +341,8 @@ fun WidgetPreview(state: SettingsUiState) {
                         "அகர முதல எழுத்தெல்லாம் ஆதி\nபகவன் முதற்றே உலகு.",
                         state.textColor,
                         state.kuralSize,
-                        state.kuralAlign,
+                        "LEFT",
                         state.kuralBold
-                    )
-
-                    "TRANSLITERATION" -> if (state.showTranslit) PreviewText(
-                        "Akara Muthala Ezhuthellam Aadhi\nPakavan Muthatre Ulaku.",
-                        state.textColor,
-                        state.translitSize,
-                        state.translitAlign,
-                        state.translitBold
                     )
                 }
             }
