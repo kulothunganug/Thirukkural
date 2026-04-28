@@ -81,7 +81,7 @@ fun KuralDetailView(
                 HorizontalDivider()
                 Spacer(modifier = Modifier.height(16.dp))
 
-                DetailItem(label = "Transliteration", value = formatTransliteration(k.transliteration))
+                DetailItem(label = "Transliteration", value = k.transliteration.replace("<br />", "\n"))
                 DetailItem(label = "விளக்கம் (Meaning)", value = k.vilakam)
                 DetailItem(label = "Couplet", value = k.couplet)
                 

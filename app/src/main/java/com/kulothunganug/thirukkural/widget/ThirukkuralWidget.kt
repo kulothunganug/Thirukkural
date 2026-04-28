@@ -15,6 +15,7 @@ import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
+import androidx.glance.ColorFilter
 import androidx.glance.GlanceId
 import androidx.glance.GlanceModifier
 import androidx.glance.GlanceTheme
@@ -44,7 +45,6 @@ import androidx.glance.text.FontWeight
 import androidx.glance.text.Text
 import androidx.glance.text.TextAlign
 import androidx.glance.text.TextStyle
-import androidx.glance.unit.ColorProvider
 import com.kulothunganug.thirukkural.MainActivity
 import com.kulothunganug.thirukkural.R
 import com.kulothunganug.thirukkural.ThirukkuralDatabase
@@ -52,6 +52,7 @@ import com.kulothunganug.thirukkural.models.ThirukkuralModel
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import kotlin.random.Random
+import androidx.glance.color.ColorProvider
 
 @Serializable
 enum class ContentType { Paal, Iyal, Adhigaram, Kural, Transliteration }
@@ -136,6 +137,11 @@ class ThirukkuralWidget : GlanceAppWidget() {
         val backgroundColor = Color(config.bgColor.toColorInt())
         val contentColor = Color(config.textColor.toColorInt())
 
+        if (kural == null) {
+            Text("No kural")
+            return
+        }
+
         Box(
             modifier = GlanceModifier.fillMaxSize().background(backgroundColor).padding(12.dp)
                 .clickable(
@@ -150,8 +156,15 @@ class ThirukkuralWidget : GlanceAppWidget() {
             Image(
                 provider = ImageProvider(R.drawable.refresh_24px),
                 contentDescription = "Refresh",
+                colorFilter = ColorFilter.tint(
+                    ColorProvider(
+                        day = contentColor,
+                        night = contentColor
+                    )
+                ),
                 modifier = GlanceModifier.cornerRadius(12.dp).padding(6.dp)
                     .clickable(actionRunCallback<RefreshKuralAction>())
+
             )
             Column(
                 modifier = GlanceModifier.fillMaxSize(),
@@ -160,11 +173,11 @@ class ThirukkuralWidget : GlanceAppWidget() {
             ) {
                 config.contentOrder.filter { it.show }.forEach { section ->
                     val text = when (section.type) {
-                        ContentType.Paal -> kural?.paal ?: ""
-                        ContentType.Iyal -> kural?.iyal ?: ""
-                        ContentType.Adhigaram -> kural?.adhigaram ?: ""
-                        ContentType.Kural -> kural?.kural ?: "Tap to load Kural"
-                        ContentType.Transliteration -> kural?.transliteration ?: ""
+                        ContentType.Paal -> kural.paal
+                        ContentType.Iyal -> kural.iyal
+                        ContentType.Adhigaram -> kural.adhigaram
+                        ContentType.Kural -> kural.kural.replace("<br />", "\n")
+                        ContentType.Transliteration -> kural.transliteration
                     }
                     if (text.isNotEmpty()) {
                         RenderText(text, contentColor, section)
@@ -184,7 +197,10 @@ class ThirukkuralWidget : GlanceAppWidget() {
         Text(
             text = text,
             style = TextStyle(
-                color = ColorProvider(color),
+                color = ColorProvider(
+                    day = color,
+                    night = color
+                ),
                 fontWeight = if (sectionConfig.bold) FontWeight.Bold else FontWeight.Normal,
                 fontSize = sectionConfig.size.sp,
                 textAlign = when (sectionConfig.align) {
