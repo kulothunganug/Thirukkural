@@ -12,7 +12,7 @@ import com.kulothunganug.thirukkural.viewmodels.WidgetConfigurationViewModel
 import androidx.navigation.NavController
 
 data class ElementSettingItem(
-    val id: String,
+    val idx: Int,
     val label: String
 )
 

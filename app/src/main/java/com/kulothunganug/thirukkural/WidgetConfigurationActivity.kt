@@ -8,6 +8,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -29,6 +30,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.sharp.Star
+import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Checkbox
@@ -37,8 +40,10 @@ import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.ListItem
 import androidx.compose.material3.LocalMinimumInteractiveComponentSize
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Slider
 import androidx.compose.material3.Surface
@@ -62,6 +67,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Dialog
 import androidx.core.graphics.toColorInt
 import com.github.skydoves.colorpicker.compose.AlphaSlider
 import com.github.skydoves.colorpicker.compose.AlphaTile
@@ -81,6 +87,93 @@ import org.koin.core.parameter.parametersOf
 import sh.calvin.reorderable.ReorderableItem
 import sh.calvin.reorderable.rememberReorderableLazyListState
 
+@Composable
+fun ColorChooserDialog(
+    label: String,
+    initialColor: String,
+    onColorSelected: (String) -> Unit,
+    onDismissRequest: () -> Unit
+) {
+
+    val controller = rememberColorPickerController()
+    var hexCode by remember { mutableStateOf("") }
+    var textColor by remember { mutableStateOf(Color.Transparent) }
+
+    LaunchedEffect(initialColor) {
+        controller.selectByColor(Color(initialColor.toColorInt()), false)
+    }
+
+    Dialog(onDismissRequest = { onDismissRequest() }) {
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(500.dp),
+            shape = RoundedCornerShape(16.dp),
+        ) {
+            Column(
+                verticalArrangement = Arrangement.spacedBy(4.dp),
+                modifier = Modifier.padding(start = 12.dp, end = 12.dp, top = 16.dp, bottom = 12.dp)
+            ) {
+                Text(
+                    label,
+                    modifier = Modifier.fillMaxWidth(),
+                    textAlign = TextAlign.Center,
+                    style = MaterialTheme.typography.titleMedium
+                )
+
+                HsvColorPicker(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(250.dp)
+                        .padding(10.dp),
+                    controller = controller,
+                    onColorChanged = { colorEnvelope: ColorEnvelope ->
+                        hexCode = colorEnvelope.hexCode
+                        textColor = colorEnvelope.color
+                    }
+                )
+                AlphaSlider(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(35.dp),
+                    controller = controller,
+                )
+                BrightnessSlider(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(35.dp),
+                    controller = controller,
+                )
+
+                Row(horizontalArrangement = Arrangement.spacedBy(4.dp), verticalAlignment = Alignment.CenterVertically) {
+                    AlphaTile(
+                        modifier = Modifier
+                            .size(40.dp)
+                            .clip(RoundedCornerShape(6.dp)),
+                        controller = controller,
+                    )
+                    Text(
+                        "#$hexCode",
+                        color = textColor,
+
+                    )
+                }
+
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(4.dp),
+                    modifier = Modifier.align(Alignment.End)
+                ) {
+                    OutlinedButton(onClick = { onDismissRequest() }) { Text("Cancel") }
+                    Button(onClick = { onColorSelected("#${hexCode}"); onDismissRequest() }) {
+                        Text(
+                            "Ok"
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
 
 class WidgetConfigurationActivity : ComponentActivity() {
     @OptIn(ExperimentalMaterial3Api::class)
@@ -120,15 +213,22 @@ fun WidgetConfiguration(
     val vm: WidgetConfigurationViewModel = koinViewModel(parameters = { parametersOf(appWidgetId) })
 
     val state by vm.uiState.collectAsState()
+
+    val openBgColorChooser by vm.openBgColorChooser.collectAsState()
+    val openTextColorChooser by vm.openTextColorChooser.collectAsState()
     val haptic = LocalHapticFeedback.current
 
-    // Local state for reordering to provide immediate feedback
-    var elements by remember(state.config.contentOrder) {
+    // Local state for reordering to provide immediate feedback.
+    // We only re-initialize when the set of sections changes, not when their properties (like size) change.
+    val sectionTypes = remember(state.config.contentOrder) {
+        state.config.contentOrder.map { it.type }
+    }
+    var elements by remember(sectionTypes) {
         mutableStateOf(
-            state.config.contentOrder.map { section ->
+            sectionTypes.map { type ->
                 ElementSettingItem(
-                    id = section.type.name,
-                    label = section.type.name
+                    idx = type.ordinal,
+                    label = type.name
                 )
             }
         )
@@ -136,9 +236,10 @@ fun WidgetConfiguration(
 
     val lazyListState = rememberLazyListState()
     val reorderableState = rememberReorderableLazyListState(lazyListState) { from, to ->
-        val fromIndex = from.index - 4
-        val toIndex = to.index - 4
-        if (fromIndex in elements.indices && toIndex in elements.indices) {
+        val fromIndex = elements.indexOfFirst { it.label == from.key }
+        val toIndex = elements.indexOfFirst { it.label == to.key }
+
+        if (fromIndex != -1 && toIndex != -1) {
             elements = elements.toMutableList().apply {
                 add(toIndex, removeAt(fromIndex))
             }
@@ -146,7 +247,34 @@ fun WidgetConfiguration(
         }
     }
 
+    // Derived order for real-time preview update during drag
+    val currentOrder = remember(elements, state.config.contentOrder) {
+        elements.map { element ->
+            state.config.contentOrder.first { it.type.name == element.label }
+        }
+    }
+
     ThirukkuralTheme {
+        when {
+            openBgColorChooser -> {
+                ColorChooserDialog(
+                    "Background Color",
+                    state.config.bgColor,
+                    onColorSelected = { vm.updateBgColor(it) },
+                    onDismissRequest = {
+                        vm.toggleBgColorChooser(false)
+                    })
+            }
+            openTextColorChooser -> {
+                ColorChooserDialog(
+                    "Text Color",
+                    state.config.textColor,
+                    onColorSelected = { vm.updateTextColor(it) },
+                    onDismissRequest = {
+                        vm.toggleTextColorChooser(false)
+                    })
+            }
+        }
         Scaffold(
             topBar = {
                 TopAppBar(navigationIcon = {
@@ -180,19 +308,37 @@ fun WidgetConfiguration(
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 item {
-                    WidgetPreview(state)
+                    WidgetPreview(state, currentOrder)
                 }
-
                 item {
-                    ColorSettings("Background Color", state.config.bgColor) {
-                        vm.updateBgColor(it)
-                    }
+                    ListItem(
+                        trailingContent = {
+                            IconButton(
+                                onClick = { vm.toggleBgColorChooser(true) },
+                            ) {
+                                Icon(
+                                    Icons.Sharp.Star,
+                                    contentDescription = "Pick color"
+                                )
+                            }
+                        },
+                        headlineContent = { Text("Background Color") },
+                    )
                 }
-
                 item {
-                    ColorSettings("Text Color", state.config.textColor) {
-                        vm.updateTextColor(it)
-                    }
+                    ListItem(
+                        trailingContent = {
+                            IconButton(
+                                onClick = { vm.toggleTextColorChooser(true) },
+                            ) {
+                                Icon(
+                                    Icons.Sharp.Star,
+                                    contentDescription = "Pick color"
+                                )
+                            }
+                        },
+                        headlineContent = { Text("Text Color") },
+                    )
                 }
 
                 item {
@@ -202,17 +348,37 @@ fun WidgetConfiguration(
                     )
                 }
 
-                items(elements, key = { it.id }) { item ->
-                    ReorderableItem(reorderableState, key = item.id) { isDragging ->
-                        val elevation by animateDpAsState(if (isDragging) 8.dp else 0.dp)
-                        val sectionConfig = state.config.contentOrder.first { it.type.name == item.id }
+                items(elements, key = { it.label }) { item ->
+                    val currentIndex = elements.indexOf(item)
+                    ReorderableItem(reorderableState, key = item.label) { isDragging ->
+                        val elevation by animateDpAsState(if (isDragging) 8.dp else 0.dp, label = "elevation")
+                        val sectionConfig =
+                            state.config.contentOrder.first { it.type.name == item.label }
+
+                        val cardShape = when (currentIndex) {
+                            0 -> RoundedCornerShape(
+                                topStart = 20.dp,
+                                topEnd = 20.dp,
+                                bottomStart = 4.dp,
+                                bottomEnd = 4.dp,
+                            )
+                            elements.size - 1 -> RoundedCornerShape(
+                                topStart = 4.dp,
+                                topEnd = 4.dp,
+                                bottomStart = 20.dp,
+                                bottomEnd = 20.dp,
+                            )
+                            else -> RoundedCornerShape(4.dp)
+                        }
 
                         Surface(
+                            shape = cardShape,
+                            tonalElevation = 2.dp,
                             shadowElevation = elevation,
-                            shape = MaterialTheme.shapes.medium,
-                            tonalElevation = if (isDragging) 4.dp else 0.dp
+         //                   border = if (isDragging) BorderStroke(2.dp, MaterialTheme.colorScheme.primary) else null
                         ) {
-                            Row(verticalAlignment = Alignment.CenterVertically) {
+                            Row(verticalAlignment = Alignment.CenterVertically,
+                                modifier = Modifier.padding(4.dp)) {
                                 Box(modifier = Modifier.weight(1f)) {
                                     ElementSettingsCard(
                                         item.label,
@@ -254,7 +420,7 @@ fun WidgetConfiguration(
                                         onDragStopped = {
                                             haptic.performHapticFeedback(HapticFeedbackType.GestureEnd)
                                             val newOrder = elements.map { element ->
-                                                state.config.contentOrder.first { it.type.name == element.id }
+                                                state.config.contentOrder.first { it.type.name == element.label }
                                             }
                                             vm.updateContentOrder(newOrder)
                                         }
@@ -277,7 +443,7 @@ fun WidgetConfiguration(
 
 
 @Composable
-fun WidgetPreview(state: SettingsUiState) {
+fun WidgetPreview(state: SettingsUiState, order: List<SectionConfig> = state.config.contentOrder) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -291,7 +457,7 @@ fun WidgetPreview(state: SettingsUiState) {
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            state.config.contentOrder.filter { it.show }.forEach { section ->
+            order.filter { it.show }.forEach { section ->
                 val text = when (section.type) {
                     ContentType.Paal -> "அறத்துப்பால்"
                     ContentType.Iyal -> "பாயிரவியல்"
@@ -330,64 +496,6 @@ fun PreviewText(text: String, color: String, size: Int, align: WidgetTextAlign, 
     )
 }
 
-@Composable
-fun ColorSettings(
-    label: String,
-    initialColor: String,
-    onColorSelected: (String) -> Unit
-) {
-    Column {
-        Text(label, style = MaterialTheme.typography.labelLarge)
-
-        val controller = rememberColorPickerController()
-        var hexCode by remember { mutableStateOf("") }
-        var textColor by remember { mutableStateOf(Color.Transparent) }
-
-        LaunchedEffect(initialColor) {
-            controller.selectByColor(Color(initialColor.toColorInt()), false)
-        }
-
-        HsvColorPicker(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(250.dp)
-                .padding(10.dp),
-            controller = controller,
-            onColorChanged = { colorEnvelope: ColorEnvelope ->
-                hexCode = colorEnvelope.hexCode
-                textColor = colorEnvelope.color
-                if (colorEnvelope.fromUser) {
-                    onColorSelected("#${colorEnvelope.hexCode}")
-                }
-            }
-        )
-        AlphaSlider(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(10.dp)
-                .height(35.dp),
-            controller = controller,
-        )
-        BrightnessSlider(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(10.dp)
-                .height(35.dp),
-            controller = controller,
-        )
-        AlphaTile(
-            modifier = Modifier
-                .size(40.dp)
-                .clip(RoundedCornerShape(6.dp)),
-            controller = controller,
-        )
-        Text(
-            "#$hexCode",
-            color = textColor,
-        )
-    }
-}
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ElementSettingsCard(
@@ -419,6 +527,7 @@ fun ElementSettingsCard(
 
             if (sectionConfig.show) {
 
+                Spacer(modifier = Modifier.height(8.dp))
                 // Bold row
                 Row(
                     modifier = Modifier

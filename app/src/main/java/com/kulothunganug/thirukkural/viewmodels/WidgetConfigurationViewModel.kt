@@ -1,6 +1,8 @@
 package com.kulothunganug.thirukkural.viewmodels
 
 import android.content.Context
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.glance.GlanceId
 import androidx.glance.appwidget.GlanceAppWidgetManager
 import androidx.glance.appwidget.state.getAppWidgetState
@@ -30,6 +32,13 @@ class WidgetConfigurationViewModel(
     private val _uiState = MutableStateFlow(SettingsUiState())
     val uiState: StateFlow<SettingsUiState> = _uiState.asStateFlow()
 
+    private val _openBgColorChooser = MutableStateFlow(false)
+    val openBgColorChooser: StateFlow<Boolean> = _openBgColorChooser.asStateFlow()
+
+
+    private val _openTextColorChooser = MutableStateFlow(false)
+    val openTextColorChooser: StateFlow<Boolean> = _openTextColorChooser.asStateFlow()
+
     private var glanceId: GlanceId? = null
 
     init {
@@ -44,6 +53,15 @@ class WidgetConfigurationViewModel(
                 _uiState.value = SettingsUiState(config = config)
             }
         }
+    }
+
+    fun toggleBgColorChooser(isOpen: Boolean){
+        _openBgColorChooser.value = isOpen
+    }
+
+
+    fun toggleTextColorChooser(isOpen: Boolean){
+        _openTextColorChooser.value = isOpen
     }
 
     fun updateBgColor(color: String) {
