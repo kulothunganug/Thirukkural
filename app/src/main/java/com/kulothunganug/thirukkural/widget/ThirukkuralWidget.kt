@@ -104,12 +104,11 @@ class ThirukkuralWidget : GlanceAppWidget() {
     private fun GlanceContent(context: Context) {
         GlanceTheme {
             val prefs = currentState<Preferences>()
-            val kuralId = prefs[ThirukkuralWidgetKeys.KURAL_ID] ?: 0
+            val kuralId = prefs[ThirukkuralWidgetKeys.KURAL_ID] ?: 1
             val json = prefs[CONFIG]
             val config = json?.let {
                 Json.decodeFromString<WidgetConfig>(it)
             } ?: WidgetConfig()
-
 
             val kural by produceState<ThirukkuralModel?>(initialValue = null, kuralId) {
                 value = if (kuralId != 0) {
@@ -119,9 +118,15 @@ class ThirukkuralWidget : GlanceAppWidget() {
                 }
             }
 
+
+            if (kural == null) {
+                Text("No kural")
+                return@GlanceTheme
+            }
+
             WidgetContent(
                 kuralId,
-                kural,
+                kural!!,
                 config,
             )
         }
@@ -131,16 +136,12 @@ class ThirukkuralWidget : GlanceAppWidget() {
     @Composable
     private fun WidgetContent(
         id: Int,
-        kural: ThirukkuralModel?,
+        kural: ThirukkuralModel,
         config: WidgetConfig,
     ) {
         val backgroundColor = Color(config.bgColor.toColorInt())
         val contentColor = Color(config.textColor.toColorInt())
 
-        if (kural == null) {
-            Text("No kural")
-            return
-        }
 
         Box(
             modifier = GlanceModifier.fillMaxSize().background(backgroundColor).padding(12.dp)
