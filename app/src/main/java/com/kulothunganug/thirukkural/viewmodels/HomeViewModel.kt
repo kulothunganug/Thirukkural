@@ -7,12 +7,13 @@ import com.kulothunganug.thirukkural.repository.ThirukkuralRepository
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.stateIn
 
 data class HomeUiState(
-    val adhigaramId: Int = 1,
     val kurals: List<ThirukkuralModel> = emptyList(),
     val isLoading: Boolean = false
 )
@@ -21,24 +22,20 @@ class HomeViewModel(
     private val repository: ThirukkuralRepository
 ) : ViewModel() {
 
-    private val _adhigaramId = MutableStateFlow(1)
-
     @OptIn(ExperimentalCoroutinesApi::class)
-    val uiState = _adhigaramId
-        .flatMapLatest { id ->
-            repository.getByAdhigaramId(id).map { kurals ->
-                HomeUiState(adhigaramId = id, kurals = kurals, isLoading = false)
-            }
+    val uiState = repository.getAll()
+        .map { kurals ->
+            HomeUiState(kurals = kurals, isLoading = false)
+        }
+        .onStart {
+            emit(HomeUiState(isLoading = true))
+        }
+        .catch {
+            emit(HomeUiState(isLoading = false))
         }
         .stateIn(
             viewModelScope,
             SharingStarted.WhileSubscribed(5_000),
             HomeUiState(isLoading = true)
         )
-
-    fun updateAdhigaram(id: Int) {
-        if (id in 1..133) {
-            _adhigaramId.value = id
-        }
-    }
 }

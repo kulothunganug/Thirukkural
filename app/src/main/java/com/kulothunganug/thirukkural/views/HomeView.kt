@@ -41,12 +41,6 @@ import kotlin.collections.isNotEmpty
 @Composable
 fun HomeView(vm: HomeViewModel, navController: NavController) {
     val uiState by vm.uiState.collectAsState()
-    var query by remember { mutableStateOf("") }
-    val MIN_ADHIGARAM = 1
-    val MAX_ADHIGARAM = 133
-
-    val canGoPrev = uiState.adhigaramId > MIN_ADHIGARAM
-    val canGoNext = uiState.adhigaramId < MAX_ADHIGARAM
 
     Scaffold(
         topBar = {
@@ -69,54 +63,13 @@ fun HomeView(vm: HomeViewModel, navController: NavController) {
                 .padding(innerPadding)
                 .padding(8.dp)
         ) {
-            OutlinedTextField(
-                value = query,
-                leadingIcon = {
-                    Icon(
-                        imageVector = Icons.Filled.Search,
-                        contentDescription = "search"
-                    )
-                },
-                onValueChange = { query = it },
-                placeholder = { Text("Search") },
-                modifier = Modifier.fillMaxWidth(),
-                singleLine = true,
-                shape = RoundedCornerShape(28.dp),
-            )
             Spacer(Modifier.height(8.dp))
             Row(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier.fillMaxWidth()
             ) {
-                IconButton(
-                    enabled = canGoPrev,
-                    onClick = {
-                        vm.updateAdhigaram(uiState.adhigaramId - 1)
-                    }
-                ) {
-                    Icon(
-                        Icons.AutoMirrored.Filled.KeyboardArrowLeft,
-                        contentDescription = "previous"
-                    )
-                }
-                if (uiState.kurals.isNotEmpty()) {
-                    Text(
-                        "${uiState.adhigaramId} - ${uiState.kurals[0].adhigaram}",
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 18.sp
-                    )
-                }
-                IconButton(
-                    enabled = canGoNext,
-                    onClick = {
-                        vm.updateAdhigaram(uiState.adhigaramId + 1)
-                    }
-                ) {
-                    Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, contentDescription = "next")
-                }
             }
-            Spacer(Modifier.height(8.dp))
             LazyColumn(
                 verticalArrangement = Arrangement.spacedBy(8.dp),
             ) {
