@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.text.TextAutoSize
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -66,8 +67,10 @@ fun KuralDetailView(
                     fontSize = 20.sp,
                     fontWeight = FontWeight.Bold,
                     lineHeight = 28.sp,
+                    maxLines = 2,
+                    autoSize = TextAutoSize.StepBased(12.sp, 20.sp, 2.sp)
                 )
-                
+
                 Spacer(modifier = Modifier.height(16.dp))
                 HorizontalDivider()
                 Spacer(modifier = Modifier.height(16.dp))
@@ -75,22 +78,29 @@ fun KuralDetailView(
                 DetailItem(label = "பால் (Section)", value = k.paal)
                 DetailItem(label = "இயல் (Chapter Group)", value = k.iyal)
                 DetailItem(label = "அதிகாரம் (Chapter)", value = k.adhigaram)
-                
+
                 Spacer(modifier = Modifier.height(16.dp))
                 HorizontalDivider()
                 Spacer(modifier = Modifier.height(16.dp))
 
-                DetailItem(label = "Transliteration", value = k.transliteration.replace("<br />", "\n"))
+                DetailItem(
+                    label = "Transliteration",
+                    value = k.transliteration.replace("<br />", "\n")
+                )
                 DetailItem(label = "விளக்கம் (Meaning)", value = k.vilakam)
                 DetailItem(label = "Couplet", value = k.couplet)
-                
+
                 Spacer(modifier = Modifier.height(16.dp))
                 HorizontalDivider()
                 Spacer(modifier = Modifier.height(16.dp))
 
-                Text("Explanations", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                Text(
+                    "Explanations",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold
+                )
                 Spacer(modifier = Modifier.height(8.dp))
-                
+
                 DetailItem(label = "M. Varadharajanar", value = k.mVaradharajanar)
                 DetailItem(label = "Solomon Pappaiya", value = k.solomonPappaiya)
                 DetailItem(label = "Kalaingar Urai", value = k.kalaingarUrai)
