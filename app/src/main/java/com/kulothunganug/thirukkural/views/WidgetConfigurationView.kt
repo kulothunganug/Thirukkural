@@ -3,10 +3,7 @@ package com.kulothunganug.thirukkural.views
 import android.app.Activity
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -17,28 +14,26 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.outlined.Colorize
 import androidx.compose.material.icons.rounded.DragHandle
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.Checkbox
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItem
-import androidx.compose.material3.LocalMinimumInteractiveComponentSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
@@ -46,9 +41,9 @@ import androidx.compose.material3.Slider
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -59,7 +54,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.font.FontWeight
@@ -74,9 +68,9 @@ import com.github.skydoves.colorpicker.compose.BrightnessSlider
 import com.github.skydoves.colorpicker.compose.ColorEnvelope
 import com.github.skydoves.colorpicker.compose.HsvColorPicker
 import com.github.skydoves.colorpicker.compose.rememberColorPickerController
-import com.kulothunganug.thirukkural.shared_ui.CircularCheckbox
 import com.kulothunganug.thirukkural.shared_ui.endItemShape
 import com.kulothunganug.thirukkural.shared_ui.leadingItemShape
+import com.kulothunganug.thirukkural.shared_ui.listItemColors
 import com.kulothunganug.thirukkural.shared_ui.middleItemShape
 import com.kulothunganug.thirukkural.ui.theme.ThirukkuralTheme
 import com.kulothunganug.thirukkural.viewmodels.SettingsUiState
@@ -191,40 +185,22 @@ fun WidgetConfigurationView(
     val openBgColorChooser by vm.openBgColorChooser.collectAsState()
     val openTextColorChooser by vm.openTextColorChooser.collectAsState()
     val haptic = LocalHapticFeedback.current
+    var editingSection by remember { mutableStateOf<SectionConfig?>(null) }
 
-    // Local state for reordering to provide immediate feedback.
-    // We only re-initialize when the set of sections changes, not when their properties (like size) change.
-    val sectionTypes = remember(state.config.contentOrder) {
-        state.config.contentOrder.map { it.type }
-    }
-    var elements by remember(sectionTypes) {
-        mutableStateOf(
-            sectionTypes.map { type ->
-                ElementSettingItem(
-                    idx = type.ordinal,
-                    label = type.name
-                )
-            }
-        )
+    var reorderableSections by remember(state.config.contentOrder) {
+        mutableStateOf(state.config.contentOrder)
     }
 
     val lazyListState = rememberLazyListState()
     val reorderableState = rememberReorderableLazyListState(lazyListState) { from, to ->
-        val fromIndex = elements.indexOfFirst { it.label == from.key }
-        val toIndex = elements.indexOfFirst { it.label == to.key }
+        val fromIndex = reorderableSections.indexOfFirst { it.type.name == from.key }
+        val toIndex = reorderableSections.indexOfFirst { it.type.name == to.key }
 
         if (fromIndex != -1 && toIndex != -1) {
-            elements = elements.toMutableList().apply {
+            reorderableSections = reorderableSections.toMutableList().apply {
                 add(toIndex, removeAt(fromIndex))
             }
             haptic.performHapticFeedback(HapticFeedbackType.SegmentFrequentTick)
-        }
-    }
-
-    // Derived order for real-time preview update during drag
-    val currentOrder = remember(elements, state.config.contentOrder) {
-        elements.map { element ->
-            state.config.contentOrder.first { it.type.name == element.label }
         }
     }
 
@@ -247,6 +223,16 @@ fun WidgetConfigurationView(
                     onDismissRequest = {
                         vm.toggleTextColorChooser(false)
                     })
+            }
+            editingSection != null -> {
+                val currentSection = reorderableSections.find { it.type == editingSection!!.type } ?: editingSection!!
+                ElementSettingsDialog(
+                    sectionConfig = currentSection,
+                    onDismissRequest = { editingSection = null },
+                    onSizeChange = { vm.updateSectionSettings(currentSection.type, size = it) },
+                    onAlignChange = { vm.updateSectionSettings(currentSection.type, align = it) },
+                    onBoldChange = { vm.updateSectionSettings(currentSection.type, bold = it) }
+                )
             }
         }
         Scaffold(
@@ -279,62 +265,90 @@ fun WidgetConfigurationView(
                     .padding(padding)
                     .fillMaxSize(),
                 contentPadding = PaddingValues(16.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 item {
-                    WidgetPreview(state, currentOrder)
+                    WidgetPreview(state, reorderableSections)
+                    Spacer(modifier = Modifier.height(24.dp))
                 }
-                item {
-                    ListItem(
-                        trailingContent = {
-                            IconButton(
-                                onClick = { vm.toggleBgColorChooser(true) },
-                                modifier = Modifier.background(Color(state.config.bgColor.toColorInt()), CircleShape)
-                            ) {
-                                Icon(
-                                    Icons.Outlined.Colorize,
-                                    contentDescription = "Pick color"
-                                )
-                            }
-                        },
-                        headlineContent = { Text("Background Color") },
-                    )
-                }
-                item {
-                    ListItem(
-                        trailingContent = {
-                            IconButton(
-                                onClick = { vm.toggleTextColorChooser(true) },
-                                modifier = Modifier.background(Color(state.config.textColor.toColorInt()), CircleShape)
 
-                            ) {
-                                Icon(
-                                    Icons.Outlined.Colorize,
-                                    contentDescription = "Pick color"
-                                )
-                            }
-                        },
-                        headlineContent = { Text("Text Color") },
+                item {
+                    Text(
+                        "Colors",
+                        style = MaterialTheme.typography.titleMedium,
+                        modifier = Modifier.padding(bottom = 8.dp)
                     )
+                }
+
+                item {
+                    Surface(
+                        shape = leadingItemShape(),
+                        tonalElevation = 2.dp
+                    ) {
+                        ListItem(
+                            colors = listItemColors(),
+                            trailingContent = {
+                                IconButton(
+                                    onClick = { vm.toggleBgColorChooser(true) },
+                                    modifier = Modifier.background(
+                                        Color(state.config.bgColor.toColorInt()),
+                                        CircleShape
+                                    )
+                                ) {
+                                    Icon(
+                                        Icons.Outlined.Colorize,
+                                        contentDescription = "Pick color"
+                                    )
+                                }
+                            },
+                            headlineContent = { Text("Background Color") },
+                        )
+                    }
+                    Spacer(modifier = Modifier.height(2.dp))
+
+                }
+                item {
+                    Surface(
+                        shape = endItemShape(),
+                        tonalElevation = 2.dp
+                    ) {
+                        ListItem(
+                            colors = listItemColors(),
+                            trailingContent = {
+                                IconButton(
+                                    onClick = { vm.toggleTextColorChooser(true) },
+                                    modifier = Modifier.background(
+                                        Color(state.config.textColor.toColorInt()),
+                                        CircleShape
+                                    )
+
+                                ) {
+                                    Icon(
+                                        Icons.Outlined.Colorize,
+                                        contentDescription = "Pick color"
+                                    )
+                                }
+                            },
+                            headlineContent = { Text("Text Color") },
+                        )
+                    }
+                    Spacer(modifier = Modifier.height(24.dp))
                 }
 
                 item {
                     Text(
                         "Element Styling & Order",
-                        style = MaterialTheme.typography.titleMedium
+                        style = MaterialTheme.typography.titleMedium,
+                        modifier = Modifier.padding(bottom = 8.dp)
                     )
                 }
 
-                items(elements, key = { it.label }) { item ->
-                    val currentIndex = elements.indexOf(item)
-                    ReorderableItem(reorderableState, key = item.label) { isDragging ->
+                itemsIndexed(reorderableSections, key = { _, it -> it.type.name }) { index, sectionConfig ->
+                    ReorderableItem(reorderableState, key = sectionConfig.type.name) { isDragging ->
                         val elevation by animateDpAsState(if (isDragging) 8.dp else 0.dp, label = "elevation")
-                        val sectionConfig =
-                            state.config.contentOrder.first { it.type.name == item.label }
 
-                        val cardShape = when (currentIndex) {
+                        val cardShape = when (index) {
                             0 -> leadingItemShape()
-                            elements.size - 1 -> endItemShape()
+                            reorderableSections.size - 1 -> endItemShape()
                             else -> middleItemShape()
                         }
 
@@ -342,66 +356,57 @@ fun WidgetConfigurationView(
                             shape = cardShape,
                             tonalElevation = 2.dp,
                             shadowElevation = elevation,
-                            //                   border = if (isDragging) BorderStroke(2.dp, MaterialTheme.colorScheme.primary) else null
                         ) {
-                            Row(verticalAlignment = Alignment.CenterVertically,
-                                modifier = Modifier.padding(4.dp)) {
-                                Box(modifier = Modifier.weight(1f)) {
-                                    ElementSettingsCard(
-                                        item.label,
-                                        sectionConfig,
-                                        onShowChange = {
-                                            vm.updateSectionSettings(
-                                                sectionConfig.type,
-                                                show = it
-                                            )
-                                        },
-                                        onSizeChange = {
-                                            vm.updateSectionSettings(
-                                                sectionConfig.type,
-                                                size = it
-                                            )
-                                        },
-                                        onAlignChange = {
-                                            vm.updateSectionSettings(
-                                                sectionConfig.type,
-                                                align = it
-                                            )
-                                        },
-                                        onBoldChange = {
-                                            vm.updateSectionSettings(
-                                                sectionConfig.type,
-                                                bold = it
-                                            )
-                                        }
-                                    )
-                                }
-
-                                IconButton(
-                                    modifier = Modifier.draggableHandle(
-                                        onDragStarted = {
-                                            haptic.performHapticFeedback(
-                                                HapticFeedbackType.GestureThresholdActivate
-                                            )
-                                        },
-                                        onDragStopped = {
-                                            haptic.performHapticFeedback(HapticFeedbackType.GestureEnd)
-                                            val newOrder = elements.map { element ->
-                                                state.config.contentOrder.first { it.type.name == element.label }
+                            ListItem(
+                                colors = listItemColors(),
+                                leadingContent = {
+                                    IconButton(
+                                        modifier = Modifier.draggableHandle(
+                                            onDragStarted = {
+                                                haptic.performHapticFeedback(
+                                                    HapticFeedbackType.GestureThresholdActivate
+                                                )
+                                            },
+                                            onDragStopped = {
+                                                haptic.performHapticFeedback(HapticFeedbackType.GestureEnd)
+                                                vm.updateContentOrder(reorderableSections)
                                             }
-                                            vm.updateContentOrder(newOrder)
-                                        }
-                                    ),
-                                    onClick = {}
-                                ) {
-                                    Icon(
-                                        Icons.Rounded.DragHandle,
-                                        contentDescription = "Reorder"
+                                        ),
+                                        onClick = {}
+                                    ) {
+                                        Icon(
+                                            Icons.Rounded.DragHandle,
+                                            contentDescription = "Reorder"
+                                        )
+                                    }
+                                },
+                                headlineContent = {
+                                    Text(
+                                        sectionConfig.type.name,
                                     )
+                                },
+                                trailingContent = {
+                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                        IconButton(
+                                            onClick = { editingSection = sectionConfig },
+                                            enabled = sectionConfig.show
+                                        ) {
+                                            Icon(Icons.Default.Edit, contentDescription = "Edit settings")
+                                        }
+                                        Switch(
+                                            checked = sectionConfig.show,
+                                            onCheckedChange = {
+                                                vm.updateSectionSettings(sectionConfig.type, show = it)
+                                            }
+                                        )
+                                    }
                                 }
-                            }
+                            )
                         }
+
                     }
+                    Spacer(modifier = Modifier.height(2.dp))
+
                 }
             }
         }
@@ -467,47 +472,34 @@ fun PreviewText(text: String, color: String, size: Int, align: WidgetTextAlign, 
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ElementSettingsCard(
-    label: String,
+fun ElementSettingsDialog(
     sectionConfig: SectionConfig,
-    onShowChange: (Boolean) -> Unit,
+    onDismissRequest: () -> Unit,
     onSizeChange: (Int) -> Unit,
     onAlignChange: (WidgetTextAlign) -> Unit,
     onBoldChange: (Boolean) -> Unit
 ) {
-    CompositionLocalProvider(LocalMinimumInteractiveComponentSize provides 0.dp) {
-        Column(modifier = Modifier.padding(12.dp)) {
-
-            // Header
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically
+    Dialog(onDismissRequest = onDismissRequest) {
+        Card(
+            shape = RoundedCornerShape(24.dp),
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Column(
+                modifier = Modifier.padding(24.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                CircularCheckbox(
-                    checked = sectionConfig.show,
-                    onCheckedChange = onShowChange,
-                )
-                Spacer(modifier = Modifier.width(8.dp))
                 Text(
-                    text = label,
-                    style = MaterialTheme.typography.titleSmall
+                    text = "${sectionConfig.type.name} Settings",
+                    style = MaterialTheme.typography.headlineSmall,
                 )
-            }
 
-            if (sectionConfig.show) {
-
-                Spacer(modifier = Modifier.height(8.dp))
                 // Bold row
                 Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 4.dp),
+                    modifier = Modifier.fillMaxWidth(),
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
-                    Text(
-                        "Bold", style = MaterialTheme.typography.bodySmall
-                    )
+                    Text("Bold Text", style = MaterialTheme.typography.bodyLarge)
                     Switch(
                         checked = sectionConfig.bold,
                         onCheckedChange = onBoldChange,
@@ -515,17 +507,19 @@ fun ElementSettingsCard(
                 }
 
                 // Size row
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 4.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(
-                        "Size: ${sectionConfig.size}",
-                        modifier = Modifier.width(70.dp),
-                        style = MaterialTheme.typography.bodySmall
-                    )
+                Column(modifier = Modifier.fillMaxWidth()) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text("Text Size", style = MaterialTheme.typography.bodyLarge)
+                        Text(
+                            "${sectionConfig.size}sp",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                    }
                     Slider(
                         value = sectionConfig.size.toFloat(),
                         onValueChange = { onSizeChange(it.toInt()) },
@@ -534,34 +528,26 @@ fun ElementSettingsCard(
                 }
 
                 // Align row
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 4.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    Text(
-                        "Align", style = MaterialTheme.typography.bodySmall
-                    )
-
+                Column(modifier = Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Text("Alignment", style = MaterialTheme.typography.bodyLarge)
                     Row(
-                        horizontalArrangement = Arrangement.spacedBy(4.dp)
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         WidgetTextAlign.entries.forEach {
                             FilterChip(
                                 selected = sectionConfig.align == it,
                                 onClick = { onAlignChange(it) },
-                                label = {
-                                    Text(
-                                        it.name.uppercase(),
-                                        fontSize = 10.sp
-                                    )
-                                }
+                                label = { Text(it.name) }
                             )
                         }
                     }
+                }
+
+                TextButton(
+                    onClick = onDismissRequest,
+                    modifier = Modifier.align(Alignment.End)
+                ) {
+                    Text("Close")
                 }
             }
         }
