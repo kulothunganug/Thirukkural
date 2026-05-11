@@ -12,7 +12,6 @@ import androidx.compose.ui.unit.sp
 import androidx.core.graphics.toColorInt
 import androidx.core.net.toUri
 import androidx.datastore.preferences.core.Preferences
-import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.glance.ColorFilter
@@ -32,6 +31,7 @@ import androidx.glance.appwidget.cornerRadius
 import androidx.glance.appwidget.provideContent
 import androidx.glance.appwidget.state.updateAppWidgetState
 import androidx.glance.background
+import androidx.glance.color.ColorProvider
 import androidx.glance.currentState
 import androidx.glance.layout.Alignment
 import androidx.glance.layout.Box
@@ -52,7 +52,6 @@ import com.kulothunganug.thirukkural.models.ThirukkuralModel
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import kotlin.random.Random
-import androidx.glance.color.ColorProvider
 
 @Serializable
 enum class ContentType { Paal, Iyal, Adhigaram, Kural, Transliteration }
@@ -62,13 +61,16 @@ enum class WidgetTextAlign { Start, Center, End }
 
 @Serializable
 data class WidgetConfig(
-    val bgColor: String = "#FFFFFF",
-    val textColor: String = "#000000",
+    val bgColor: String = "#000000",
     val contentOrder: List<SectionConfig> = listOf(
         SectionConfig(type = ContentType.Paal, show = false),
         SectionConfig(type = ContentType.Iyal, show = false),
-        SectionConfig(type = ContentType.Adhigaram, show = true, size = 15, bold = true),
-        SectionConfig(type = ContentType.Kural, show = true, size = 14),
+        SectionConfig(type = ContentType.Adhigaram, bold = true),
+        SectionConfig(
+            type = ContentType.Kural,
+            size = 14,
+            align = WidgetTextAlign.Start
+        ),
         SectionConfig(type = ContentType.Transliteration, show = false)
     )
 )
@@ -76,10 +78,11 @@ data class WidgetConfig(
 @Serializable
 data class SectionConfig(
     val type: ContentType,
-    val show: Boolean = false,
+    val show: Boolean = true,
     val size: Int = 12,
     val align: WidgetTextAlign = WidgetTextAlign.Center,
-    val bold: Boolean = false
+    val bold: Boolean = false,
+    val textColor: String = "#ffffff"
 )
 
 val CONFIG = stringPreferencesKey("widget_config")
@@ -88,12 +91,21 @@ object ThirukkuralWidgetKeys {
     val KURAL_ID = intPreferencesKey("kural_id")
 }
 
-
 class ThirukkuralWidget : GlanceAppWidget() {
     override val stateDefinition: GlanceStateDefinition<*> = PreferencesGlanceStateDefinition
 
     override suspend fun providePreview(context: Context, widgetCategory: Int) {
-        provideContent { GlanceContent(context) }
+        provideContent {
+            WidgetContent(
+                0,
+                paal = "",
+                iyal = "",
+                adhigaram = "Hello",
+                kural = "ahahahahah ahaha ahahah ahha<br />ahaha ahh aha",
+                transliteration = "",
+                config = WidgetConfig()
+            )
+        }
     }
 
     override suspend fun provideGlance(context: Context, id: GlanceId) {
@@ -118,37 +130,39 @@ class ThirukkuralWidget : GlanceAppWidget() {
                 }
             }
 
-
-            if (kural == null) {
-                Text("No kural")
-                return@GlanceTheme
-            }
-
-            WidgetContent(
-                kuralId,
-                kural!!,
-                config,
-            )
+            kural?.let {
+                WidgetContent(
+                    kuralId,
+                    paal = it.paal,
+                    iyal = it.iyal,
+                    adhigaram = it.adhigaram,
+                    kural = it.kural,
+                    transliteration = it.transliteration,
+                    config = config,
+                )
+            } ?: Text("No kural")
         }
     }
 
 
     @Composable
     private fun WidgetContent(
-        id: Int,
-        kural: ThirukkuralModel,
+        kuralId: Int,
+        paal: String,
+        iyal: String,
+        adhigaram: String,
+        kural: String,
+        transliteration: String,
         config: WidgetConfig,
     ) {
         val backgroundColor = Color(config.bgColor.toColorInt())
-        val contentColor = Color(config.textColor.toColorInt())
-
 
         Box(
             modifier = GlanceModifier.fillMaxSize().background(backgroundColor).padding(12.dp)
                 .clickable(
                     actionRunCallback<OpenKuralAction>(
                         parameters = actionParametersOf(
-                            OpenKuralAction.kuralIdKey to id
+                            OpenKuralAction.kuralIdKey to kuralId
                         )
                     )
                 ),
@@ -159,8 +173,8 @@ class ThirukkuralWidget : GlanceAppWidget() {
                 contentDescription = "Refresh",
                 colorFilter = ColorFilter.tint(
                     ColorProvider(
-                        day = contentColor,
-                        night = contentColor
+                        day = Color(0, 0, 0),
+                        night = Color(1, 0, 0)
                     )
                 ),
                 modifier = GlanceModifier.cornerRadius(12.dp).padding(6.dp)
@@ -174,14 +188,15 @@ class ThirukkuralWidget : GlanceAppWidget() {
             ) {
                 config.contentOrder.filter { it.show }.forEach { section ->
                     val text = when (section.type) {
-                        ContentType.Paal -> kural.paal
-                        ContentType.Iyal -> kural.iyal
-                        ContentType.Adhigaram -> kural.adhigaram
-                        ContentType.Kural -> kural.kural.replace("<br />", "\n")
-                        ContentType.Transliteration -> kural.transliteration
+                        ContentType.Paal -> paal
+                        ContentType.Iyal -> iyal
+                        ContentType.Adhigaram -> adhigaram
+                        ContentType.Kural -> kural.replace("<br />", "\n")
+                        ContentType.Transliteration -> transliteration
                     }
                     if (text.isNotEmpty()) {
-                        RenderText(text, contentColor, section)
+                        val textColor = Color(section.textColor.toColorInt())
+                        RenderText(text, textColor, section)
                     }
                 }
             }
@@ -221,7 +236,6 @@ class OpenKuralAction : ActionCallback {
         val kuralIdKey = ActionParameters.Key<Int>("id")
 
     }
-
 
     override suspend fun onAction(
         context: Context,
