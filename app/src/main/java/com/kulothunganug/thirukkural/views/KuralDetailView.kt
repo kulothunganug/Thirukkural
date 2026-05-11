@@ -68,7 +68,7 @@ fun KuralDetailView(
                     fontWeight = FontWeight.Bold,
                     lineHeight = 28.sp,
                     maxLines = 2,
-                    autoSize = TextAutoSize.StepBased(12.sp, 20.sp, 2.sp)
+                    autoSize = TextAutoSize.StepBased(14.sp, 20.sp, 1.sp)
                 )
 
                 Spacer(modifier = Modifier.height(16.dp))
@@ -121,7 +121,7 @@ fun DetailItem(label: String, value: String) {
             color = MaterialTheme.colorScheme.secondary
         )
         Text(
-            text = value.replace("<br />", "\n"),
+            text = value,
             style = MaterialTheme.typography.bodyLarge,
             modifier = Modifier.padding(top = 4.dp)
         )
