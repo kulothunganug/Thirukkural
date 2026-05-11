@@ -35,10 +35,6 @@ class WidgetConfigurationViewModel(
     private val _openBgColorChooser = MutableStateFlow(false)
     val openBgColorChooser: StateFlow<Boolean> = _openBgColorChooser.asStateFlow()
 
-
-    private val _openTextColorChooser = MutableStateFlow(false)
-    val openTextColorChooser: StateFlow<Boolean> = _openTextColorChooser.asStateFlow()
-
     private var glanceId: GlanceId? = null
 
     init {
@@ -59,17 +55,8 @@ class WidgetConfigurationViewModel(
         _openBgColorChooser.value = isOpen
     }
 
-
-    fun toggleTextColorChooser(isOpen: Boolean){
-        _openTextColorChooser.value = isOpen
-    }
-
     fun updateBgColor(color: String) {
         _uiState.update { it.copy(config = it.config.copy(bgColor = color)) }
-    }
-
-    fun updateTextColor(color: String) {
-        _uiState.update { it.copy(config = it.config.copy(textColor = color)) }
     }
 
     fun updateContentOrder(order: List<SectionConfig>) {
@@ -81,7 +68,8 @@ class WidgetConfigurationViewModel(
         show: Boolean? = null,
         size: Int? = null,
         align: WidgetTextAlign? = null,
-        bold: Boolean? = null
+        bold: Boolean? = null,
+        textColor: String? = null
     ) {
         _uiState.update { current ->
             val updatedOrder = current.config.contentOrder.map { section ->
@@ -90,7 +78,8 @@ class WidgetConfigurationViewModel(
                         show = show ?: section.show,
                         size = size ?: section.size,
                         align = align ?: section.align,
-                        bold = bold ?: section.bold
+                        bold = bold ?: section.bold,
+                        textColor = textColor ?: section.textColor
                     )
                 } else {
                     section

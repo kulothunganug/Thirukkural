@@ -1,8 +1,8 @@
 package com.kulothunganug.thirukkural.views
 
 import android.app.Activity
+import android.widget.Toast
 import androidx.compose.animation.core.animateDpAsState
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -11,14 +11,17 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.input.InputTransformation
+import androidx.compose.foundation.text.input.TextFieldLineLimits
+import androidx.compose.foundation.text.input.maxLength
+import androidx.compose.foundation.text.input.rememberTextFieldState
+import androidx.compose.foundation.text.input.then
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Check
@@ -29,7 +32,6 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -42,6 +44,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.TextField
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -55,6 +58,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -68,6 +72,7 @@ import com.github.skydoves.colorpicker.compose.BrightnessSlider
 import com.github.skydoves.colorpicker.compose.ColorEnvelope
 import com.github.skydoves.colorpicker.compose.HsvColorPicker
 import com.github.skydoves.colorpicker.compose.rememberColorPickerController
+import com.kulothunganug.thirukkural.shared_ui.detachedItemShape
 import com.kulothunganug.thirukkural.shared_ui.endItemShape
 import com.kulothunganug.thirukkural.shared_ui.leadingItemShape
 import com.kulothunganug.thirukkural.shared_ui.listItemColors
@@ -83,6 +88,7 @@ import org.koin.core.parameter.parametersOf
 import sh.calvin.reorderable.ReorderableItem
 import sh.calvin.reorderable.rememberReorderableLazyListState
 
+
 @Composable
 fun ColorChooserDialog(
     label: String,
@@ -92,11 +98,27 @@ fun ColorChooserDialog(
 ) {
 
     val controller = rememberColorPickerController()
-    var hexCode by remember { mutableStateOf("") }
-    var textColor by remember { mutableStateOf(Color.Transparent) }
+
+    var isError by remember { mutableStateOf(false) }
+    val inputState = rememberTextFieldState(initialColor)
+    val ctx = LocalContext.current;
 
     LaunchedEffect(initialColor) {
         controller.selectByColor(Color(initialColor.toColorInt()), false)
+    }
+
+
+    LaunchedEffect(inputState.text) {
+        if (inputState.text.length != 8) {
+            isError = true; return@LaunchedEffect
+        }
+        try {
+            val color = Color("#${inputState.text}".toColorInt())
+            isError = false
+            controller.selectByColor(color, false)
+        } catch (_: IllegalArgumentException) {
+            isError = true
+        }
     }
 
     Dialog(onDismissRequest = { onDismissRequest() }) {
@@ -124,8 +146,7 @@ fun ColorChooserDialog(
                         .padding(10.dp),
                     controller = controller,
                     onColorChanged = { colorEnvelope: ColorEnvelope ->
-                        hexCode = colorEnvelope.hexCode
-                        textColor = colorEnvelope.color
+                        inputState.edit { replace(0, length, colorEnvelope.hexCode) }
                     }
                 )
                 AlphaSlider(
@@ -141,18 +162,37 @@ fun ColorChooserDialog(
                     controller = controller,
                 )
 
-                Row(horizontalArrangement = Arrangement.spacedBy(4.dp), verticalAlignment = Alignment.CenterVertically) {
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(4.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
                     AlphaTile(
                         modifier = Modifier
                             .size(40.dp)
                             .clip(RoundedCornerShape(6.dp)),
                         controller = controller,
                     )
-                    Text(
-                        "#$hexCode",
-                        color = textColor,
+                    TextField(
+                        inputState,
+                        isError = isError,
+                        leadingIcon = { Text("#") },
+                        lineLimits = TextFieldLineLimits.SingleLine,
+                        inputTransformation = InputTransformation.maxLength(8).then(
+                            InputTransformation {
+                                val filtered = asCharSequence()
+                                    .filter {
+                                        it.isDigit() ||
+                                                it.lowercaseChar() in 'a'..'f'
+                                    }
 
+                                val filteredText = filtered.toString()
+
+                                if (filteredText != asCharSequence().toString()) {
+                                    replace(0, length, filteredText)
+                                }
+                            }
                         )
+                    )
                 }
 
                 Row(
@@ -160,7 +200,19 @@ fun ColorChooserDialog(
                     modifier = Modifier.align(Alignment.End)
                 ) {
                     OutlinedButton(onClick = { onDismissRequest() }) { Text("Cancel") }
-                    Button(onClick = { onColorSelected("#${hexCode}"); onDismissRequest() }) {
+                    Button(onClick = {
+                        if (isError) {
+                            Toast.makeText(
+                                ctx,
+                                "The entered hex code is not valid!",
+                                Toast.LENGTH_SHORT
+                            ).show();
+                            return@Button;
+                        }
+
+                        onColorSelected("#${inputState.text}");
+                        onDismissRequest()
+                    }) {
                         Text(
                             "Ok"
                         )
@@ -183,7 +235,6 @@ fun WidgetConfigurationView(
     val state by vm.uiState.collectAsState()
 
     val openBgColorChooser by vm.openBgColorChooser.collectAsState()
-    val openTextColorChooser by vm.openTextColorChooser.collectAsState()
     val haptic = LocalHapticFeedback.current
     var editingSection by remember { mutableStateOf<SectionConfig?>(null) }
 
@@ -215,47 +266,47 @@ fun WidgetConfigurationView(
                         vm.toggleBgColorChooser(false)
                     })
             }
-            openTextColorChooser -> {
-                ColorChooserDialog(
-                    "Text Color",
-                    state.config.textColor,
-                    onColorSelected = { vm.updateTextColor(it) },
-                    onDismissRequest = {
-                        vm.toggleTextColorChooser(false)
-                    })
-            }
+
             editingSection != null -> {
-                val currentSection = reorderableSections.find { it.type == editingSection!!.type } ?: editingSection!!
+                val currentSection = reorderableSections.find { it.type == editingSection!!.type }
+                    ?: editingSection!!
                 ElementSettingsDialog(
                     sectionConfig = currentSection,
                     onDismissRequest = { editingSection = null },
                     onSizeChange = { vm.updateSectionSettings(currentSection.type, size = it) },
                     onAlignChange = { vm.updateSectionSettings(currentSection.type, align = it) },
-                    onBoldChange = { vm.updateSectionSettings(currentSection.type, bold = it) }
+                    onBoldChange = { vm.updateSectionSettings(currentSection.type, bold = it) },
+                    onColorChange = {
+                        vm.updateSectionSettings(currentSection.type, textColor = it)
+                    }
                 )
             }
         }
         Scaffold(
             topBar = {
-                TopAppBar(navigationIcon = {
-                    IconButton(onClick = {
-                        onDone(Activity.RESULT_CANCELED)
-                    }) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Go back"
-                        )
-                    }
-                }, title = { Text("Widget Customization") })
-            },
-            floatingActionButton = {
-                ExtendedFloatingActionButton(
-                    onClick = {
-                        vm.saveSettings()
-                        onDone(Activity.RESULT_OK)
+                TopAppBar(
+                    navigationIcon = {
+                        IconButton(onClick = {
+                            onDone(Activity.RESULT_CANCELED)
+                        }) {
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                                contentDescription = "Go back"
+                            )
+                        }
                     },
-                    icon = { Icon(Icons.Default.Check, contentDescription = null) },
-                    text = { Text("Save Changes") }
+                    title = { Text("Widget Customization") },
+                    actions = {
+                        IconButton(onClick = {
+                            vm.saveSettings()
+                            onDone(Activity.RESULT_OK)
+                        }) {
+                            Icon(
+                                imageVector = Icons.Default.Check,
+                                contentDescription = "Save changes"
+                            )
+                        }
+                    }
                 )
             }
         ) { padding ->
@@ -281,7 +332,7 @@ fun WidgetConfigurationView(
 
                 item {
                     Surface(
-                        shape = leadingItemShape(),
+                        shape = detachedItemShape(),
                         tonalElevation = 2.dp
                     ) {
                         ListItem(
@@ -289,49 +340,17 @@ fun WidgetConfigurationView(
                             trailingContent = {
                                 IconButton(
                                     onClick = { vm.toggleBgColorChooser(true) },
-                                    modifier = Modifier.background(
-                                        Color(state.config.bgColor.toColorInt()),
-                                        CircleShape
-                                    )
                                 ) {
                                     Icon(
                                         Icons.Outlined.Colorize,
-                                        contentDescription = "Pick color"
+                                        contentDescription = "Pick color",
                                     )
                                 }
                             },
                             headlineContent = { Text("Background Color") },
                         )
                     }
-                    Spacer(modifier = Modifier.height(2.dp))
-
-                }
-                item {
-                    Surface(
-                        shape = endItemShape(),
-                        tonalElevation = 2.dp
-                    ) {
-                        ListItem(
-                            colors = listItemColors(),
-                            trailingContent = {
-                                IconButton(
-                                    onClick = { vm.toggleTextColorChooser(true) },
-                                    modifier = Modifier.background(
-                                        Color(state.config.textColor.toColorInt()),
-                                        CircleShape
-                                    )
-
-                                ) {
-                                    Icon(
-                                        Icons.Outlined.Colorize,
-                                        contentDescription = "Pick color"
-                                    )
-                                }
-                            },
-                            headlineContent = { Text("Text Color") },
-                        )
-                    }
-                    Spacer(modifier = Modifier.height(24.dp))
+                    Spacer(modifier = Modifier.height(12.dp))
                 }
 
                 item {
@@ -342,9 +361,14 @@ fun WidgetConfigurationView(
                     )
                 }
 
-                itemsIndexed(reorderableSections, key = { _, it -> it.type.name }) { index, sectionConfig ->
+                itemsIndexed(
+                    reorderableSections,
+                    key = { _, it -> it.type.name }) { index, sectionConfig ->
                     ReorderableItem(reorderableState, key = sectionConfig.type.name) { isDragging ->
-                        val elevation by animateDpAsState(if (isDragging) 8.dp else 0.dp, label = "elevation")
+                        val elevation by animateDpAsState(
+                            if (isDragging) 8.dp else 0.dp,
+                            label = "elevation"
+                        )
 
                         val cardShape = when (index) {
                             0 -> leadingItemShape()
@@ -391,12 +415,18 @@ fun WidgetConfigurationView(
                                             onClick = { editingSection = sectionConfig },
                                             enabled = sectionConfig.show
                                         ) {
-                                            Icon(Icons.Default.Edit, contentDescription = "Edit settings")
+                                            Icon(
+                                                Icons.Default.Edit,
+                                                contentDescription = "Edit settings"
+                                            )
                                         }
                                         Switch(
                                             checked = sectionConfig.show,
                                             onCheckedChange = {
-                                                vm.updateSectionSettings(sectionConfig.type, show = it)
+                                                vm.updateSectionSettings(
+                                                    sectionConfig.type,
+                                                    show = it
+                                                )
                                             }
                                         )
                                     }
@@ -419,7 +449,7 @@ fun WidgetPreview(state: SettingsUiState, order: List<SectionConfig> = state.con
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .heightIn(min = 150.dp),
+            .height(180.dp),
         colors = CardDefaults.cardColors(containerColor = Color(state.config.bgColor.toColorInt()))
     ) {
         Column(
@@ -439,7 +469,7 @@ fun WidgetPreview(state: SettingsUiState, order: List<SectionConfig> = state.con
                 }
                 PreviewText(
                     text,
-                    state.config.textColor,
+                    section.textColor,
                     section.size,
                     section.align,
                     section.bold
@@ -469,7 +499,6 @@ fun PreviewText(text: String, color: String, size: Int, align: WidgetTextAlign, 
 }
 
 
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ElementSettingsDialog(
@@ -477,8 +506,20 @@ fun ElementSettingsDialog(
     onDismissRequest: () -> Unit,
     onSizeChange: (Int) -> Unit,
     onAlignChange: (WidgetTextAlign) -> Unit,
-    onBoldChange: (Boolean) -> Unit
+    onBoldChange: (Boolean) -> Unit,
+    onColorChange: (String) -> Unit
 ) {
+    var showColorPicker by remember { mutableStateOf(false) }
+
+    if (showColorPicker) {
+        ColorChooserDialog(
+            label = "${sectionConfig.type.name} Color",
+            initialColor = sectionConfig.textColor,
+            onColorSelected = { onColorChange(it) },
+            onDismissRequest = { showColorPicker = false }
+        )
+    }
+
     Dialog(onDismissRequest = onDismissRequest) {
         Card(
             shape = RoundedCornerShape(24.dp),
@@ -493,13 +534,32 @@ fun ElementSettingsDialog(
                     style = MaterialTheme.typography.headlineSmall,
                 )
 
+                // Color Row
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Text("Custom Color")
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        IconButton(
+                            onClick = { showColorPicker = true },
+                        ) {
+                            Icon(
+                                Icons.Outlined.Colorize, contentDescription = "Pick color",
+
+                                )
+                        }
+                    }
+                }
+
                 // Bold row
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
-                    Text("Bold Text", style = MaterialTheme.typography.bodyLarge)
+                    Text("Bold Text")
                     Switch(
                         checked = sectionConfig.bold,
                         onCheckedChange = onBoldChange,
@@ -513,7 +573,7 @@ fun ElementSettingsDialog(
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Text("Text Size", style = MaterialTheme.typography.bodyLarge)
+                        Text("Text Size")
                         Text(
                             "${sectionConfig.size}sp",
                             style = MaterialTheme.typography.bodyMedium,
@@ -528,8 +588,11 @@ fun ElementSettingsDialog(
                 }
 
                 // Align row
-                Column(modifier = Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Text("Alignment", style = MaterialTheme.typography.bodyLarge)
+                Column(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Text("Alignment")
                     Row(
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
