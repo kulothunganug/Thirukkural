@@ -79,10 +79,10 @@ import com.kulothunganug.thirukkural.shared_ui.leadingItemShape
 import com.kulothunganug.thirukkural.shared_ui.listItemColors
 import com.kulothunganug.thirukkural.shared_ui.middleItemShape
 import com.kulothunganug.thirukkural.ui.theme.ThirukkuralTheme
-import com.kulothunganug.thirukkural.viewmodels.SettingsUiState
 import com.kulothunganug.thirukkural.viewmodels.WidgetCustomizationViewModel
 import com.kulothunganug.thirukkural.widget.ContentType
 import com.kulothunganug.thirukkural.widget.SectionConfig
+import com.kulothunganug.thirukkural.widget.WidgetConfig
 import com.kulothunganug.thirukkural.widget.WidgetTextAlign
 import org.koin.androidx.compose.koinViewModel
 import org.koin.core.parameter.parametersOf
@@ -240,8 +240,8 @@ fun WidgetCustomizationView(
     val haptic = LocalHapticFeedback.current
     var editingSection by remember { mutableStateOf<SectionConfig?>(null) }
 
-    var reorderableSections by remember(state.config.contentOrder) {
-        mutableStateOf(state.config.contentOrder)
+    var reorderableSections by remember(state.contentOrder) {
+        mutableStateOf(state.contentOrder)
     }
 
     val lazyListState = rememberLazyListState()
@@ -262,7 +262,7 @@ fun WidgetCustomizationView(
             openBgColorChooser -> {
                 ColorChooserDialog(
                     "Background Color",
-                    state.config.bgColor,
+                    state.bgColor,
                     onColorSelected = { vm.updateBgColor(it) },
                     onDismissRequest = {
                         vm.toggleBgColorChooser(false)
@@ -272,7 +272,7 @@ fun WidgetCustomizationView(
             openRefreshColorChooser -> {
                 ColorChooserDialog(
                     "Refresh Button Color",
-                    state.config.refreshButtonColor,
+                    state.refreshButtonColor,
                     onColorSelected = { vm.updateRefreshButtonColor(it) },
                     onDismissRequest = {
                         vm.toggleRefreshColorChooser(false)
@@ -330,7 +330,7 @@ fun WidgetCustomizationView(
                 contentPadding = PaddingValues(16.dp),
             ) {
                 item {
-                    WidgetPreview(state, reorderableSections)
+                    WidgetPreview(state)
                     Spacer(modifier = Modifier.height(24.dp))
                 }
 
@@ -477,18 +477,18 @@ fun WidgetCustomizationView(
 
 
 @Composable
-fun WidgetPreview(state: SettingsUiState, order: List<SectionConfig> = state.config.contentOrder) {
+fun WidgetPreview(state: WidgetConfig) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
             .height(180.dp),
-        colors = CardDefaults.cardColors(containerColor = Color(state.config.bgColor.toColorInt()))
+        colors = CardDefaults.cardColors(containerColor = Color(state.bgColor.toColorInt()))
     ) {
         Box(modifier = Modifier.fillMaxSize()) {
             Icon(
                 imageVector = Icons.Default.Refresh,
                 contentDescription = null,
-                tint = Color(state.config.refreshButtonColor.toColorInt()),
+                tint = Color(state.refreshButtonColor.toColorInt()),
                 modifier = Modifier
                     .align(Alignment.BottomEnd)
                     .padding(12.dp)
@@ -501,7 +501,7 @@ fun WidgetPreview(state: SettingsUiState, order: List<SectionConfig> = state.con
                 verticalArrangement = Arrangement.Center,
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                order.filter { it.show }.forEach { section ->
+                state.contentOrder.filter { it.show }.forEach { section ->
                     val text = when (section.type) {
                         ContentType.Paal -> "அறத்துப்பால்"
                         ContentType.Iyal -> "பாயிரவியல்"

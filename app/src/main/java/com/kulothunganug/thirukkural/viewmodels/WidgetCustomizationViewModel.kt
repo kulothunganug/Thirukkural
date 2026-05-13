@@ -17,17 +17,13 @@ import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import kotlinx.serialization.json.Json
 
-data class SettingsUiState(
-    val config: WidgetConfig = WidgetConfig()
-)
-
 class WidgetCustomizationViewModel(
     private val context: Context,
     private val appWidgetId: Int
 ) : ViewModel() {
 
-    private val _uiState = MutableStateFlow(SettingsUiState())
-    val uiState: StateFlow<SettingsUiState> = _uiState.asStateFlow()
+    private val _uiState = MutableStateFlow(WidgetConfig())
+    val uiState: StateFlow<WidgetConfig> = _uiState.asStateFlow()
 
     private val _openBgColorChooser = MutableStateFlow(false)
     val openBgColorChooser: StateFlow<Boolean> = _openBgColorChooser.asStateFlow()
@@ -46,7 +42,7 @@ class WidgetCustomizationViewModel(
                 val config = json?.let {
                     Json.decodeFromString<WidgetConfig>(it)
                 } ?: WidgetConfig()
-                _uiState.value = SettingsUiState(config = config)
+                _uiState.value = config
             }
         }
     }
@@ -60,15 +56,15 @@ class WidgetCustomizationViewModel(
     }
 
     fun updateBgColor(color: String) {
-        _uiState.update { it.copy(config = it.config.copy(bgColor = color)) }
+        _uiState.update { it.copy(bgColor = color) }
     }
 
     fun updateRefreshButtonColor(color: String) {
-        _uiState.update { it.copy(config = it.config.copy(refreshButtonColor = color)) }
+        _uiState.update { it.copy(refreshButtonColor = color) }
     }
 
     fun updateContentOrder(order: List<SectionConfig>) {
-        _uiState.update { it.copy(config = it.config.copy(contentOrder = order)) }
+        _uiState.update { it.copy(contentOrder = order) }
     }
 
     fun updateSectionSettings(
@@ -80,7 +76,7 @@ class WidgetCustomizationViewModel(
         textColor: String? = null
     ) {
         _uiState.update { current ->
-            val updatedOrder = current.config.contentOrder.map { section ->
+            val updatedOrder = current.contentOrder.map { section ->
                 if (section.type == type) {
                     section.copy(
                         show = show ?: section.show,
@@ -93,7 +89,7 @@ class WidgetCustomizationViewModel(
                     section
                 }
             }
-            current.copy(config = current.config.copy(contentOrder = updatedOrder))
+            current.copy(contentOrder = updatedOrder)
         }
     }
 
@@ -102,7 +98,7 @@ class WidgetCustomizationViewModel(
         glanceId?.let { id ->
             updateAppWidgetState(context, PreferencesGlanceStateDefinition, id) { prefs ->
                 prefs.toMutablePreferences().apply {
-                    val config = uiState.value.config
+                    val config = uiState.value
                     this[com.kulothunganug.thirukkural.widget.CONFIG] = Json.encodeToString(config)
                 }
             }
