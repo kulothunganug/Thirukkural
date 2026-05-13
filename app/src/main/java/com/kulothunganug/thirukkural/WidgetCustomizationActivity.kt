@@ -7,10 +7,10 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.material3.ExperimentalMaterial3Api
-import com.kulothunganug.thirukkural.views.WidgetConfigurationView
+import com.kulothunganug.thirukkural.views.WidgetCustomizationView
 
 
-class WidgetConfigurationActivity : ComponentActivity() {
+class WidgetCustomizationActivity : ComponentActivity() {
     @OptIn(ExperimentalMaterial3Api::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -22,7 +22,7 @@ class WidgetConfigurationActivity : ComponentActivity() {
         ) ?: AppWidgetManager.INVALID_APPWIDGET_ID
 
         setContent {
-            WidgetConfigurationView(
+            WidgetCustomizationView(
                 appWidgetId,
                 onDone = { code ->
                     val resultValue = Intent().putExtra(

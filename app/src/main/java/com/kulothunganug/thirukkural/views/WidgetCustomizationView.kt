@@ -36,7 +36,6 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
-import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
@@ -75,14 +74,13 @@ import com.github.skydoves.colorpicker.compose.BrightnessSlider
 import com.github.skydoves.colorpicker.compose.ColorEnvelope
 import com.github.skydoves.colorpicker.compose.HsvColorPicker
 import com.github.skydoves.colorpicker.compose.rememberColorPickerController
-import com.kulothunganug.thirukkural.shared_ui.detachedItemShape
 import com.kulothunganug.thirukkural.shared_ui.endItemShape
 import com.kulothunganug.thirukkural.shared_ui.leadingItemShape
 import com.kulothunganug.thirukkural.shared_ui.listItemColors
 import com.kulothunganug.thirukkural.shared_ui.middleItemShape
 import com.kulothunganug.thirukkural.ui.theme.ThirukkuralTheme
 import com.kulothunganug.thirukkural.viewmodels.SettingsUiState
-import com.kulothunganug.thirukkural.viewmodels.WidgetConfigurationViewModel
+import com.kulothunganug.thirukkural.viewmodels.WidgetCustomizationViewModel
 import com.kulothunganug.thirukkural.widget.ContentType
 import com.kulothunganug.thirukkural.widget.SectionConfig
 import com.kulothunganug.thirukkural.widget.WidgetTextAlign
@@ -229,11 +227,11 @@ fun ColorChooserDialog(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun WidgetConfigurationView(
+fun WidgetCustomizationView(
     appWidgetId: Int,
     onDone: (Int) -> Unit,
 ) {
-    val vm: WidgetConfigurationViewModel = koinViewModel(parameters = { parametersOf(appWidgetId) })
+    val vm: WidgetCustomizationViewModel = koinViewModel(parameters = { parametersOf(appWidgetId) })
 
     val state by vm.uiState.collectAsState()
 

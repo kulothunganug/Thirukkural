@@ -3,7 +3,7 @@
     android:resizeMode="horizontal|vertical"
     android:updatePeriodMillis="0"
     android:widgetCategory="home_screen"
-    android:configure="com.kulothunganug.thirukkural.WidgetConfigurationActivity"
+    android:configure="com.kulothunganug.thirukkural.WidgetCustomizationActivity"
     android:widgetFeatures="reconfigurable"
     android:targetCellWidth="4"
     android:targetCellHeight="2"

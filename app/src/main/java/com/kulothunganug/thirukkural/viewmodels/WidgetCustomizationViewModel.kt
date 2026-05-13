@@ -1,8 +1,6 @@
 package com.kulothunganug.thirukkural.viewmodels
 
 import android.content.Context
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.glance.GlanceId
 import androidx.glance.appwidget.GlanceAppWidgetManager
 import androidx.glance.appwidget.state.getAppWidgetState
@@ -13,7 +11,6 @@ import androidx.lifecycle.viewModelScope
 import com.kulothunganug.thirukkural.widget.ContentType
 import com.kulothunganug.thirukkural.widget.SectionConfig
 import com.kulothunganug.thirukkural.widget.ThirukkuralWidget
-import com.kulothunganug.thirukkural.widget.ThirukkuralWidgetKeys
 import com.kulothunganug.thirukkural.widget.WidgetConfig
 import com.kulothunganug.thirukkural.widget.WidgetTextAlign
 import kotlinx.coroutines.flow.*
@@ -24,7 +21,7 @@ data class SettingsUiState(
     val config: WidgetConfig = WidgetConfig()
 )
 
-class WidgetConfigurationViewModel(
+class WidgetCustomizationViewModel(
     private val context: Context,
     private val appWidgetId: Int
 ) : ViewModel() {
