@@ -90,7 +90,7 @@ fun KuralDetailView(
                     .verticalScroll(rememberScrollState())
             ) {
                 Text(
-                    text = k.kural.replace("<br />", "\n"),
+                    text = k.kuralTa.replace("<br />", "\n"),
                     fontSize = 20.sp,
                     fontWeight = FontWeight.Bold,
                     lineHeight = 28.sp,
@@ -107,24 +107,24 @@ fun KuralDetailView(
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     InfoCard(label = "குறள் எண்", value = k.id.toString(), modifier = Modifier.weight(1f))
-                    InfoCard(label = "பால் (Section)", value = k.paal, modifier = Modifier.weight(1f))
+                    InfoCard(label = "பால்", value = k.palTa, modifier = Modifier.weight(1f))
                 }
                 Spacer(modifier = Modifier.height(8.dp))
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    InfoCard(label = "இயல் (Chapter Group)", value = k.iyal, modifier = Modifier.weight(1f))
-                    InfoCard(label = "அதிகாரம் (Chapter)", value = k.adhigaram, modifier = Modifier.weight(1f))
+                    InfoCard(label = "இயல்", value = k.iyalTa, modifier = Modifier.weight(1f))
+                    InfoCard(label = "அதிகாரம்", value = k.adikaramTa, modifier = Modifier.weight(1f))
                 }
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                DetailItem(label = "விளக்கம் (Meaning)", value = k.vilakam)
+                DetailItem(label = "விளக்கம்", value = k.explanationTa)
                 Spacer(modifier = Modifier.height(8.dp))
                 DetailItem(
                     label = "Transliteration",
-                    value = k.transliteration.replace("<br />", "\n")
+                    value = k.kuralTl.replace("<br />", "\n")
                 )
                 Spacer(modifier = Modifier.height(8.dp))
                 DetailItem(label = "Couplet", value = k.couplet)
@@ -132,15 +132,17 @@ fun KuralDetailView(
                 Spacer(modifier = Modifier.height(16.dp))
 
                 Text(
-                    "Explanations",
+                    "உரையாசிரியர்கள்",
                     style = MaterialTheme.typography.titleMedium,
                 )
                 Spacer(modifier = Modifier.height(8.dp))
 
-                CollapsibleExplanation(label = "M. Varadharajanar", value = k.mVaradharajanar)
-                CollapsibleExplanation(label = "Solomon Pappaiya", value = k.solomonPappaiya)
-                CollapsibleExplanation(label = "Kalaingar Urai", value = k.kalaingarUrai)
-                CollapsibleExplanation(label = "Parimezhalagar Urai", value = k.parimezhalagarUrai)
+                CollapsibleExplanation(label = "மு.வரதராசனார் உரை", value = k.commentaryMuVaratharasanar)
+                CollapsibleExplanation(label = "பரிமேலழகர் உரை", value = k.commentaryParimelazhagar)
+                CollapsibleExplanation(label = "சாலமன் பாப்பையா உரை", value = k.commentarySalamanPappaiya)
+                CollapsibleExplanation(label = "மணக்குடவர் உரை", value = k.commentaryManakudavar)
+                CollapsibleExplanation(label = "திருக்குறளார் வீ. முனிசாமி உரை", value = k.commentaryMunusami)
+                CollapsibleExplanation(label = "கலைஞர் மு.கருணாநிதி உரை", value = k.commentaryKarunanidhi)
             }
         }
     }

@@ -20,7 +20,7 @@ import kotlinx.coroutines.flow.stateIn
 
 @Database(
     entities = [ThirukkuralModel::class],
-    version = 1,
+    version = 2,
     exportSchema = false
 )
 abstract class ThirukkuralDatabase : RoomDatabase() {
@@ -34,10 +34,10 @@ abstract class ThirukkuralDatabase : RoomDatabase() {
         fun get(context: Context): ThirukkuralDatabase =
             INSTANCE ?: synchronized(this) {
                 INSTANCE ?: Room.databaseBuilder(
-                    context.applicationContext,
-                    ThirukkuralDatabase::class.java,
-                    "thirukkural.db"
-                )
+                                context.applicationContext,
+                                ThirukkuralDatabase::class.java,
+                                "thirukkural.db"
+                            ).fallbackToDestructiveMigration(false)
                     .createFromAsset("thirukkural.db")
                     .build()
                     .also { INSTANCE = it }

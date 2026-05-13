@@ -34,7 +34,6 @@ class WidgetConfigurationViewModel(
 
     private val _openBgColorChooser = MutableStateFlow(false)
     val openBgColorChooser: StateFlow<Boolean> = _openBgColorChooser.asStateFlow()
-
     private var glanceId: GlanceId? = null
 
     init {

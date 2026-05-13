@@ -116,7 +116,7 @@ class ThirukkuralWidget : GlanceAppWidget() {
     private fun GlanceContent(context: Context) {
         GlanceTheme {
             val prefs = currentState<Preferences>()
-            val kuralId = prefs[ThirukkuralWidgetKeys.KURAL_ID] ?: 1
+            val kuralId = prefs[ThirukkuralWidgetKeys.KURAL_ID] ?: Random.nextInt(1, 1331)
             val json = prefs[CONFIG]
             val config = json?.let {
                 Json.decodeFromString<WidgetConfig>(it)
@@ -133,11 +133,11 @@ class ThirukkuralWidget : GlanceAppWidget() {
             kural?.let {
                 WidgetContent(
                     kuralId,
-                    paal = it.paal,
-                    iyal = it.iyal,
-                    adhigaram = it.adhigaram,
-                    kural = it.kural,
-                    transliteration = it.transliteration,
+                    paal = it.palTa,
+                    iyal = it.iyalTa,
+                    adhigaram = it.adikaramTa,
+                    kural = it.kuralTa,
+                    transliteration = it.kuralTl,
                     config = config,
                 )
             } ?: Text("No kural")

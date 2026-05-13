@@ -71,7 +71,7 @@ fun HomeView(vm: HomeViewModel, navController: NavController) {
                         }
                     ) {
                         Text(
-                            kural.kural.replace("<br />", "\n"),
+                            kural.kuralTa.replace("<br />", "\n"),
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .padding(12.dp),

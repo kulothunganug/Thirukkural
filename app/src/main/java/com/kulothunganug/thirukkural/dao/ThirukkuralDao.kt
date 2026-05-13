@@ -8,15 +8,12 @@ import kotlinx.coroutines.flow.Flow
 @Dao
 interface ThirukkuralDao {
 
-    @Query("SELECT * FROM records")
+    @Query("SELECT * FROM thirukkural")
     fun getAll(): Flow<List<ThirukkuralModel>>
 
-    @Query("SELECT * FROM records WHERE Paal = :paal")
-    fun getByPaal(paal: String): Flow<List<ThirukkuralModel>>
+    @Query("SELECT * FROM thirukkural WHERE pal_ta = :pal")
+    fun getByPal(pal: String): Flow<List<ThirukkuralModel>>
 
-    @Query("SELECT * FROM records WHERE Adhigaram_ID = :id")
-    fun getByAdhigaramId(id: Int): Flow<List<ThirukkuralModel>>
-
-    @Query("SELECT * FROM records WHERE ID = :number")
-    suspend fun getById(number: Int): ThirukkuralModel
+    @Query("SELECT * FROM thirukkural WHERE id = :id")
+    suspend fun getById(id: Int): ThirukkuralModel
 }
