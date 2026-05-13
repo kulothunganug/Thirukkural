@@ -34,6 +34,10 @@ class WidgetConfigurationViewModel(
 
     private val _openBgColorChooser = MutableStateFlow(false)
     val openBgColorChooser: StateFlow<Boolean> = _openBgColorChooser.asStateFlow()
+
+    private val _openRefreshColorChooser = MutableStateFlow(false)
+    val openRefreshColorChooser: StateFlow<Boolean> = _openRefreshColorChooser.asStateFlow()
+
     private var glanceId: GlanceId? = null
 
     init {
@@ -54,8 +58,16 @@ class WidgetConfigurationViewModel(
         _openBgColorChooser.value = isOpen
     }
 
+    fun toggleRefreshColorChooser(isOpen: Boolean){
+        _openRefreshColorChooser.value = isOpen
+    }
+
     fun updateBgColor(color: String) {
         _uiState.update { it.copy(config = it.config.copy(bgColor = color)) }
+    }
+
+    fun updateRefreshButtonColor(color: String) {
+        _uiState.update { it.copy(config = it.config.copy(refreshButtonColor = color)) }
     }
 
     fun updateContentOrder(order: List<SectionConfig>) {

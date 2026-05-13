@@ -62,6 +62,7 @@ enum class WidgetTextAlign { Start, Center, End }
 @Serializable
 data class WidgetConfig(
     val bgColor: String = "#000000",
+    val refreshButtonColor: String = "#ffffff",
     val contentOrder: List<SectionConfig> = listOf(
         SectionConfig(type = ContentType.Paal, show = false),
         SectionConfig(type = ContentType.Iyal, show = false),
@@ -173,8 +174,8 @@ class ThirukkuralWidget : GlanceAppWidget() {
                 contentDescription = "Refresh",
                 colorFilter = ColorFilter.tint(
                     ColorProvider(
-                        day = Color(0, 0, 0),
-                        night = Color(1, 0, 0)
+                        day = Color(config.refreshButtonColor.toColorInt()),
+                        night = Color(config.refreshButtonColor.toColorInt())
                     )
                 ),
                 modifier = GlanceModifier.cornerRadius(12.dp).padding(6.dp)

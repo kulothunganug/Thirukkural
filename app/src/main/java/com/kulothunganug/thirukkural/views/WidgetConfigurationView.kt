@@ -25,6 +25,9 @@ import androidx.compose.foundation.text.input.then
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.foundation.layout.Box
+import androidx.compose.material3.Icon
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.outlined.Colorize
 import androidx.compose.material.icons.rounded.DragHandle
@@ -235,6 +238,7 @@ fun WidgetConfigurationView(
     val state by vm.uiState.collectAsState()
 
     val openBgColorChooser by vm.openBgColorChooser.collectAsState()
+    val openRefreshColorChooser by vm.openRefreshColorChooser.collectAsState()
     val haptic = LocalHapticFeedback.current
     var editingSection by remember { mutableStateOf<SectionConfig?>(null) }
 
@@ -264,6 +268,16 @@ fun WidgetConfigurationView(
                     onColorSelected = { vm.updateBgColor(it) },
                     onDismissRequest = {
                         vm.toggleBgColorChooser(false)
+                    })
+            }
+
+            openRefreshColorChooser -> {
+                ColorChooserDialog(
+                    "Refresh Button Color",
+                    state.config.refreshButtonColor,
+                    onColorSelected = { vm.updateRefreshButtonColor(it) },
+                    onDismissRequest = {
+                        vm.toggleRefreshColorChooser(false)
                     })
             }
 
@@ -332,7 +346,7 @@ fun WidgetConfigurationView(
 
                 item {
                     Surface(
-                        shape = detachedItemShape(),
+                        shape = leadingItemShape(),
                         tonalElevation = 2.dp
                     ) {
                         ListItem(
@@ -348,6 +362,26 @@ fun WidgetConfigurationView(
                                 }
                             },
                             headlineContent = { Text("Background Color") },
+                        )
+                    }
+                    Spacer(modifier = Modifier.height(2.dp))
+                    Surface(
+                        shape = endItemShape(),
+                        tonalElevation = 2.dp
+                    ) {
+                        ListItem(
+                            colors = listItemColors(),
+                            trailingContent = {
+                                IconButton(
+                                    onClick = { vm.toggleRefreshColorChooser(true) },
+                                ) {
+                                    Icon(
+                                        Icons.Outlined.Colorize,
+                                        contentDescription = "Pick color",
+                                    )
+                                }
+                            },
+                            headlineContent = { Text("Refresh Button Color") },
                         )
                     }
                     Spacer(modifier = Modifier.height(12.dp))
@@ -452,28 +486,39 @@ fun WidgetPreview(state: SettingsUiState, order: List<SectionConfig> = state.con
             .height(180.dp),
         colors = CardDefaults.cardColors(containerColor = Color(state.config.bgColor.toColorInt()))
     ) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(12.dp),
-            verticalArrangement = Arrangement.Center,
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            order.filter { it.show }.forEach { section ->
-                val text = when (section.type) {
-                    ContentType.Paal -> "அறத்துப்பால்"
-                    ContentType.Iyal -> "பாயிரவியல்"
-                    ContentType.Adhigaram -> "கடவுள் வாழ்த்து"
-                    ContentType.Kural -> "அகர முதல எழுத்தெல்லாம் ஆதி\nபகவன் முதற்றே உலகு."
-                    ContentType.Transliteration -> "Akara Mudhala Ezhuththellam Aadhi..."
+        Box(modifier = Modifier.fillMaxSize()) {
+            Icon(
+                imageVector = Icons.Default.Refresh,
+                contentDescription = null,
+                tint = Color(state.config.refreshButtonColor.toColorInt()),
+                modifier = Modifier
+                    .align(Alignment.BottomEnd)
+                    .padding(12.dp)
+            )
+
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(12.dp),
+                verticalArrangement = Arrangement.Center,
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                order.filter { it.show }.forEach { section ->
+                    val text = when (section.type) {
+                        ContentType.Paal -> "அறத்துப்பால்"
+                        ContentType.Iyal -> "பாயிரவியல்"
+                        ContentType.Adhigaram -> "கடவுள் வாழ்த்து"
+                        ContentType.Kural -> "அகர முதல எழுத்தெல்லாம் ஆதி\nபகவன் முதற்றே உலகு."
+                        ContentType.Transliteration -> "Akara Mudhala Ezhuththellam Aadhi..."
+                    }
+                    PreviewText(
+                        text,
+                        section.textColor,
+                        section.size,
+                        section.align,
+                        section.bold
+                    )
                 }
-                PreviewText(
-                    text,
-                    section.textColor,
-                    section.size,
-                    section.align,
-                    section.bold
-                )
             }
         }
     }
@@ -540,7 +585,7 @@ fun ElementSettingsDialog(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
-                    Text("Custom Color")
+                    Text("Color")
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         IconButton(
                             onClick = { showColorPicker = true },
