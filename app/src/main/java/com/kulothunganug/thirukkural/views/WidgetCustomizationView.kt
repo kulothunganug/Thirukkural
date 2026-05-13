@@ -74,6 +74,7 @@ import com.github.skydoves.colorpicker.compose.BrightnessSlider
 import com.github.skydoves.colorpicker.compose.ColorEnvelope
 import com.github.skydoves.colorpicker.compose.HsvColorPicker
 import com.github.skydoves.colorpicker.compose.rememberColorPickerController
+import com.kulothunganug.thirukkural.shared_ui.ColorChooserDialog
 import com.kulothunganug.thirukkural.shared_ui.endItemShape
 import com.kulothunganug.thirukkural.shared_ui.leadingItemShape
 import com.kulothunganug.thirukkural.shared_ui.listItemColors
@@ -90,139 +91,6 @@ import sh.calvin.reorderable.ReorderableItem
 import sh.calvin.reorderable.rememberReorderableLazyListState
 
 
-@Composable
-fun ColorChooserDialog(
-    label: String,
-    initialColor: String,
-    onColorSelected: (String) -> Unit,
-    onDismissRequest: () -> Unit
-) {
-
-    val controller = rememberColorPickerController()
-
-    var isError by remember { mutableStateOf(false) }
-    val inputState = rememberTextFieldState(initialColor)
-    val ctx = LocalContext.current;
-
-    LaunchedEffect(initialColor) {
-        controller.selectByColor(Color(initialColor.toColorInt()), false)
-    }
-
-
-    LaunchedEffect(inputState.text) {
-        if (inputState.text.length != 8) {
-            isError = true; return@LaunchedEffect
-        }
-        try {
-            val color = Color("#${inputState.text}".toColorInt())
-            isError = false
-            controller.selectByColor(color, false)
-        } catch (_: IllegalArgumentException) {
-            isError = true
-        }
-    }
-
-    Dialog(onDismissRequest = { onDismissRequest() }) {
-        Card(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(500.dp),
-            shape = RoundedCornerShape(16.dp),
-        ) {
-            Column(
-                verticalArrangement = Arrangement.spacedBy(4.dp),
-                modifier = Modifier.padding(start = 12.dp, end = 12.dp, top = 16.dp, bottom = 12.dp)
-            ) {
-                Text(
-                    label,
-                    modifier = Modifier.fillMaxWidth(),
-                    textAlign = TextAlign.Center,
-                    style = MaterialTheme.typography.titleMedium
-                )
-
-                HsvColorPicker(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(250.dp)
-                        .padding(10.dp),
-                    controller = controller,
-                    onColorChanged = { colorEnvelope: ColorEnvelope ->
-                        inputState.edit { replace(0, length, colorEnvelope.hexCode) }
-                    }
-                )
-                AlphaSlider(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(35.dp),
-                    controller = controller,
-                )
-                BrightnessSlider(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(35.dp),
-                    controller = controller,
-                )
-
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(4.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    AlphaTile(
-                        modifier = Modifier
-                            .size(40.dp)
-                            .clip(RoundedCornerShape(6.dp)),
-                        controller = controller,
-                    )
-                    TextField(
-                        inputState,
-                        isError = isError,
-                        leadingIcon = { Text("#") },
-                        lineLimits = TextFieldLineLimits.SingleLine,
-                        inputTransformation = InputTransformation.maxLength(8).then(
-                            InputTransformation {
-                                val filtered = asCharSequence()
-                                    .filter {
-                                        it.isDigit() ||
-                                                it.lowercaseChar() in 'a'..'f'
-                                    }
-
-                                val filteredText = filtered.toString()
-
-                                if (filteredText != asCharSequence().toString()) {
-                                    replace(0, length, filteredText)
-                                }
-                            }
-                        )
-                    )
-                }
-
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(4.dp),
-                    modifier = Modifier.align(Alignment.End)
-                ) {
-                    OutlinedButton(onClick = { onDismissRequest() }) { Text("Cancel") }
-                    Button(onClick = {
-                        if (isError) {
-                            Toast.makeText(
-                                ctx,
-                                "The entered hex code is not valid!",
-                                Toast.LENGTH_SHORT
-                            ).show();
-                            return@Button;
-                        }
-
-                        onColorSelected("#${inputState.text}");
-                        onDismissRequest()
-                    }) {
-                        Text(
-                            "Ok"
-                        )
-                    }
-                }
-            }
-        }
-    }
-}
 
 
 @OptIn(ExperimentalMaterial3Api::class)
