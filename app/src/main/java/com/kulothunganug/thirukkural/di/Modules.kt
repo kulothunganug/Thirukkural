@@ -2,6 +2,7 @@ package com.kulothunganug.thirukkural.di
 
 import com.kulothunganug.thirukkural.ThirukkuralDatabase
 import com.kulothunganug.thirukkural.repository.ThirukkuralRepository
+import com.kulothunganug.thirukkural.viewmodels.BrowseViewModel
 import com.kulothunganug.thirukkural.viewmodels.HomeViewModel
 import com.kulothunganug.thirukkural.viewmodels.KuralDetailViewModel
 import com.kulothunganug.thirukkural.viewmodels.WidgetCustomizationViewModel
@@ -14,6 +15,7 @@ val appModule = module {
     single { get<ThirukkuralDatabase>().dao() }
     single { ThirukkuralRepository(get()) }
     viewModel { HomeViewModel(get()) }
+    viewModel { BrowseViewModel(get()) }
     viewModel { KuralDetailViewModel(get()) }
     viewModel { (appWidgetId: Int) -> WidgetCustomizationViewModel(androidContext(), appWidgetId) }
 }

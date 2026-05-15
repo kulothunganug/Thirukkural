@@ -14,6 +14,7 @@ import androidx.navigation.navArgument
 import androidx.navigation.navDeepLink
 import com.kulothunganug.thirukkural.di.appModule
 import com.kulothunganug.thirukkural.ui.theme.ThirukkuralTheme
+import com.kulothunganug.thirukkural.views.BrowseView
 import com.kulothunganug.thirukkural.views.HomeView
 import com.kulothunganug.thirukkural.views.KuralDetailView
 import com.kulothunganug.thirukkural.views.SettingsView
@@ -29,6 +30,7 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+
 
         setContent {
             val navController = rememberNavController()
@@ -72,6 +74,12 @@ class MainActivity : ComponentActivity() {
                             navController = navController
                         )
                     }
+                    composable("browse") {
+                        BrowseView(
+                            vm = koinViewModel(),
+                            navController = navController
+                        )
+                    }
                     composable(
                         "kural_detail/{kuralId}",
                         arguments = listOf(navArgument("kuralId") { type = NavType.StringType }),
@@ -90,7 +98,6 @@ class MainActivity : ComponentActivity() {
                     composable("settings") {
                         SettingsView(
                             navController = navController,
-                            koinInject()
                         )
                     }
 
