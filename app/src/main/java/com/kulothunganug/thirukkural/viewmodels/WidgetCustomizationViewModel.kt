@@ -38,7 +38,7 @@ class WidgetCustomizationViewModel(
             glanceId = GlanceAppWidgetManager(context).getGlanceIdBy(appWidgetId)
             glanceId?.let { id ->
                 val prefs = getAppWidgetState(context, PreferencesGlanceStateDefinition, id)
-                val json = prefs[com.kulothunganug.thirukkural.widget.CONFIG]
+                val json = prefs[com.kulothunganug.thirukkural.widget.WIDGET_CONFIG]
                 val config = json?.let {
                     Json.decodeFromString<WidgetConfig>(it)
                 } ?: WidgetConfig()
@@ -99,7 +99,7 @@ class WidgetCustomizationViewModel(
             updateAppWidgetState(context, PreferencesGlanceStateDefinition, id) { prefs ->
                 prefs.toMutablePreferences().apply {
                     val config = uiState.value
-                    this[com.kulothunganug.thirukkural.widget.CONFIG] = Json.encodeToString(config)
+                    this[com.kulothunganug.thirukkural.widget.WIDGET_CONFIG] = Json.encodeToString(config)
                 }
             }
             ThirukkuralWidget().update(context, id)
