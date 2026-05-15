@@ -86,7 +86,7 @@ data class SectionConfig(
     val textColor: String = "#ffffff"
 )
 
-val CONFIG = stringPreferencesKey("widget_config")
+val WIDGET_CONFIG = stringPreferencesKey("widget_config")
 
 object ThirukkuralWidgetKeys {
     val KURAL_ID = intPreferencesKey("kural_id")
@@ -101,8 +101,8 @@ class ThirukkuralWidget : GlanceAppWidget() {
                 0,
                 paal = "",
                 iyal = "",
-                adhigaram = "Hello",
-                kural = "ahahahahah ahaha ahahah ahha<br />ahaha ahh aha",
+                adhigaram = "கடவுள் வாழ்த்து",
+                kural = "அகர முதல எழுத்தெல்லாம் ஆதி\nபகவன் முதற்றே உலகு.",
                 transliteration = "",
                 config = WidgetConfig()
             )
@@ -118,7 +118,7 @@ class ThirukkuralWidget : GlanceAppWidget() {
         GlanceTheme {
             val prefs = currentState<Preferences>()
             val kuralId = prefs[ThirukkuralWidgetKeys.KURAL_ID] ?: Random.nextInt(1, 1331)
-            val json = prefs[CONFIG]
+            val json = prefs[WIDGET_CONFIG]
             val config = json?.let {
                 Json.decodeFromString<WidgetConfig>(it)
             } ?: WidgetConfig()
