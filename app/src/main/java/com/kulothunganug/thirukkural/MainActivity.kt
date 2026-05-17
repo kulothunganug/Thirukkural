@@ -12,30 +12,33 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import androidx.navigation.navDeepLink
-import com.kulothunganug.thirukkural.di.appModule
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import com.kulothunganug.thirukkural.datastore.AppTheme
+import com.kulothunganug.thirukkural.datastore.ThemeSettings
 import com.kulothunganug.thirukkural.ui.theme.ThirukkuralTheme
 import com.kulothunganug.thirukkural.views.BrowseView
 import com.kulothunganug.thirukkural.views.HomeView
 import com.kulothunganug.thirukkural.views.KuralDetailView
 import com.kulothunganug.thirukkural.views.SettingsView
-import org.koin.android.ext.koin.androidContext
-import org.koin.android.ext.koin.androidLogger
+import org.koin.android.ext.android.inject
 import org.koin.androidx.compose.koinViewModel
-import org.koin.compose.koinInject
-import org.koin.core.context.GlobalContext.startKoin
 
 const val SCREEN_TRANSITION_MILLIS = 500
 
 class MainActivity : ComponentActivity() {
+    private val themeSettings: ThemeSettings by inject()
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
 
 
         setContent {
+            val theme by themeSettings.themeStream.collectAsState(initial = AppTheme.SYSTEM)
             val navController = rememberNavController()
 
-            ThirukkuralTheme {
+            ThirukkuralTheme(appTheme = theme) {
                 NavHost(
                     navController = navController,
                     startDestination = "home",

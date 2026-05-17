@@ -1,10 +1,12 @@
 package com.kulothunganug.thirukkural.di
 
 import com.kulothunganug.thirukkural.ThirukkuralDatabase
+import com.kulothunganug.thirukkural.datastore.ThemeSettings
 import com.kulothunganug.thirukkural.repository.ThirukkuralRepository
 import com.kulothunganug.thirukkural.viewmodels.BrowseViewModel
 import com.kulothunganug.thirukkural.viewmodels.HomeViewModel
 import com.kulothunganug.thirukkural.viewmodels.KuralDetailViewModel
+import com.kulothunganug.thirukkural.viewmodels.SettingsViewModel
 import com.kulothunganug.thirukkural.viewmodels.WidgetCustomizationViewModel
 import org.koin.android.ext.koin.androidContext
 import org.koin.core.module.dsl.viewModel
@@ -14,8 +16,10 @@ val appModule = module {
     single { ThirukkuralDatabase.get(get()) }
     single { get<ThirukkuralDatabase>().dao() }
     single { ThirukkuralRepository(get()) }
+    single { ThemeSettings(androidContext()) }
     viewModel { HomeViewModel(get()) }
     viewModel { BrowseViewModel(get()) }
     viewModel { KuralDetailViewModel(get()) }
+    viewModel { SettingsViewModel(get()) }
     viewModel { (appWidgetId: Int) -> WidgetCustomizationViewModel(androidContext(), appWidgetId) }
 }
