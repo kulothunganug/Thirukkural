@@ -26,6 +26,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -72,7 +73,7 @@ fun KuralDetailView(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("குறள் எண் ${kural?.id ?: ""}") },
+                title = { Text("") },
                 navigationIcon = {
                     IconButton(onClick = { navController.popBackStack() }) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
@@ -106,7 +107,11 @@ fun KuralDetailView(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    InfoCard(label = "குறள் எண்", value = k.id.toString(), modifier = Modifier.weight(1f))
+                    InfoCard(
+                        label = "குறள் எண்",
+                        value = k.id.toString(),
+                        modifier = Modifier.weight(1f)
+                    )
                     InfoCard(label = "பால்", value = k.palTa, modifier = Modifier.weight(1f))
                 }
                 Spacer(modifier = Modifier.height(8.dp))
@@ -115,7 +120,11 @@ fun KuralDetailView(
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     InfoCard(label = "இயல்", value = k.iyalTa, modifier = Modifier.weight(1f))
-                    InfoCard(label = "அதிகாரம்", value = k.adikaramTa, modifier = Modifier.weight(1f))
+                    InfoCard(
+                        label = "அதிகாரம்",
+                        value = k.adikaramTa,
+                        modifier = Modifier.weight(1f)
+                    )
                 }
 
                 Spacer(modifier = Modifier.height(16.dp))
@@ -137,12 +146,24 @@ fun KuralDetailView(
                 )
                 Spacer(modifier = Modifier.height(8.dp))
 
-                CollapsibleExplanation(label = "மு.வரதராசனார் உரை", value = k.commentaryMuVaratharasanar)
+                CollapsibleExplanation(
+                    label = "மு.வரதராசனார் உரை",
+                    value = k.commentaryMuVaratharasanar
+                )
                 CollapsibleExplanation(label = "பரிமேலழகர் உரை", value = k.commentaryParimelazhagar)
-                CollapsibleExplanation(label = "சாலமன் பாப்பையா உரை", value = k.commentarySalamanPappaiya)
+                CollapsibleExplanation(
+                    label = "சாலமன் பாப்பையா உரை",
+                    value = k.commentarySalamanPappaiya
+                )
                 CollapsibleExplanation(label = "மணக்குடவர் உரை", value = k.commentaryManakudavar)
-                CollapsibleExplanation(label = "திருக்குறளார் வீ. முனிசாமி உரை", value = k.commentaryMunusami)
-                CollapsibleExplanation(label = "கலைஞர் மு.கருணாநிதி உரை", value = k.commentaryKarunanidhi)
+                CollapsibleExplanation(
+                    label = "திருக்குறளார் வீ. முனிசாமி உரை",
+                    value = k.commentaryMunusami
+                )
+                CollapsibleExplanation(
+                    label = "கலைஞர் மு.கருணாநிதி உரை",
+                    value = k.commentaryKarunanidhi
+                )
             }
         }
     }
@@ -152,7 +173,10 @@ fun KuralDetailView(
 
 @Composable
 fun DetailItem(label: String, value: String, modifier: Modifier = Modifier) {
-    Card(modifier = modifier.fillMaxWidth()) {
+    Card(modifier = modifier.fillMaxWidth(), colors = CardDefaults.cardColors().copy(
+        containerColor =
+            MaterialTheme.colorScheme.surfaceContainer
+    )) {
         Column(modifier = Modifier.padding(16.dp)) {
             Text(
                 text = label,
@@ -170,7 +194,11 @@ fun DetailItem(label: String, value: String, modifier: Modifier = Modifier) {
 @Composable
 fun InfoCard(label: String, value: String, modifier: Modifier = Modifier) {
     Card(
-        modifier = modifier
+        modifier = modifier,
+        colors = CardDefaults.cardColors().copy(
+            containerColor =
+                MaterialTheme.colorScheme.surfaceContainer
+        )
     ) {
         Column(
             modifier = Modifier
@@ -180,7 +208,7 @@ fun InfoCard(label: String, value: String, modifier: Modifier = Modifier) {
         ) {
             Text(
                 text = label,
-                style = MaterialTheme.typography.labelSmall,
+                style = MaterialTheme.typography.labelMedium,
                 textAlign = TextAlign.Center
             )
             Spacer(modifier = Modifier.height(4.dp))
@@ -206,7 +234,7 @@ fun CollapsibleExplanation(label: String, value: String, modifier: Modifier = Mo
         color = MaterialTheme.colorScheme.surfaceContainer,
         modifier = modifier
             .fillMaxWidth()
-            .padding(vertical = 4.dp)
+            .padding(4.dp)
             // clip the ripple effect
             .clip(RoundedCornerShape(12.dp))
             .clickable { expanded = !expanded }
@@ -222,8 +250,7 @@ fun CollapsibleExplanation(label: String, value: String, modifier: Modifier = Mo
             ) {
                 Text(
                     text = label,
-                    style = MaterialTheme.typography.labelLarge,
-                    fontWeight = FontWeight.Bold,
+                    style = MaterialTheme.typography.labelMedium,
                     modifier = Modifier.weight(1f)
                 )
                 Icon(

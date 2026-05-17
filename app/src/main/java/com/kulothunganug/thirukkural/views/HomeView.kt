@@ -13,6 +13,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.rounded.Search
 import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
@@ -49,7 +50,7 @@ fun HomeView(vm: HomeViewModel, navController: NavController) {
                     }
                 },
                 title = {
-                    Text("Thirukkural")
+                    Text("")
                 }
             )
         },
@@ -62,6 +63,13 @@ fun HomeView(vm: HomeViewModel, navController: NavController) {
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
+            Text(
+                text = "திருக்குறள்",
+                style = MaterialTheme.typography.headlineLarge,
+                fontWeight = FontWeight.Bold,
+                fontSize = 48.sp,
+            )
+            Spacer(modifier = Modifier.height(90.dp))
             uiState.randomKural?.let { kural ->
                 Card(
                     onClick = {
@@ -69,7 +77,11 @@ fun HomeView(vm: HomeViewModel, navController: NavController) {
                     },
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(bottom = 32.dp)
+                        .padding(bottom = 32.dp),
+                    colors = CardDefaults.cardColors().copy(
+                        containerColor =
+                            MaterialTheme.colorScheme.surfaceContainer
+                    )
                 ) {
                     Column(
                         modifier = Modifier.padding(16.dp),
