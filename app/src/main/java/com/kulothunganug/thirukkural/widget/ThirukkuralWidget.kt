@@ -109,39 +109,73 @@ class ThirukkuralWidget : GlanceAppWidget() {
         }
     }
 
-    override suspend fun provideGlance(context: Context, id: GlanceId) {
-        provideContent { GlanceContent(context) }
+    override suspend fun provideGlance(
+        context: Context,
+        id: GlanceId
+    ) {
+        updateAppWidgetState(
+            context,
+            PreferencesGlanceStateDefinition,
+            id
+        ) { prefs ->
+
+            if (prefs[ThirukkuralWidgetKeys.KURAL_ID] == null) {
+
+                prefs.toMutablePreferences().apply {
+                    this[ThirukkuralWidgetKeys.KURAL_ID] =
+                        Random.nextInt(1, 1331)
+                }
+            } else {
+                prefs
+            }
+        }
+
+        provideContent {
+            GlanceContent(context)
+        }
     }
 
     @Composable
-    private fun GlanceContent(context: Context) {
+    private fun GlanceContent(
+        context: Context
+    ) {
+
         GlanceTheme {
             val prefs = currentState<Preferences>()
-            val kuralId = prefs[ThirukkuralWidgetKeys.KURAL_ID] ?: Random.nextInt(1, 1331)
+            val kuralId =
+                prefs[ThirukkuralWidgetKeys.KURAL_ID]!!
+
             val json = prefs[WIDGET_CONFIG]
+
             val config = json?.let {
                 Json.decodeFromString<WidgetConfig>(it)
             } ?: WidgetConfig()
 
-            val kural by produceState<ThirukkuralModel?>(initialValue = null, kuralId) {
-                value = if (kuralId != 0) {
-                    ThirukkuralDatabase.get(context).dao().getById(kuralId)
-                } else {
-                    null
-                }
+            val kural by produceState<ThirukkuralModel?>(
+                initialValue = null,
+                key1 = kuralId
+            ) {
+
+                value = ThirukkuralDatabase
+                    .get(context)
+                    .dao()
+                    .getById(kuralId)
             }
 
-            kural?.let {
-                WidgetContent(
-                    kuralId,
-                    paal = it.palTa,
-                    iyal = it.iyalTa,
-                    adhigaram = it.adikaramTa,
-                    kural = it.kuralTa,
-                    transliteration = it.kuralTl,
-                    config = config,
-                )
-            } ?: Text("No kural")
+            if (kural == null) {
+                Text("Loading...")
+                return@GlanceTheme
+            }
+
+            WidgetContent(
+                kuralId = kuralId,
+                paal = kural!!.palTa,
+                iyal = kural!!.iyalTa,
+                adhigaram = kural!!.adikaramTa,
+                kural = kural!!.kuralTa,
+                transliteration = kural!!.kuralTl,
+                config = config
+            )
         }
     }
 
