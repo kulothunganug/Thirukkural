@@ -7,10 +7,19 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import com.kulothunganug.thirukkural.datastore.AppTheme
+import com.kulothunganug.thirukkural.datastore.ThemeSettings
+import com.kulothunganug.thirukkural.ui.theme.ThirukkuralTheme
 import com.kulothunganug.thirukkural.views.WidgetCustomizationView
+import org.koin.android.ext.android.inject
+import kotlin.getValue
 
 
 class WidgetCustomizationActivity : ComponentActivity() {
+
+    private val themeSettings: ThemeSettings by inject()
     @OptIn(ExperimentalMaterial3Api::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -22,7 +31,10 @@ class WidgetCustomizationActivity : ComponentActivity() {
         ) ?: AppWidgetManager.INVALID_APPWIDGET_ID
 
         setContent {
-            WidgetCustomizationView(
+
+            val theme by themeSettings.themeStream.collectAsState(initial = AppTheme.SYSTEM)
+
+            ThirukkuralTheme(theme) {WidgetCustomizationView(
                 appWidgetId,
                 onDone = { code ->
                     val resultValue = Intent().putExtra(
@@ -32,7 +44,8 @@ class WidgetCustomizationActivity : ComponentActivity() {
                     setResult(code, resultValue)
                     finish()
                 }
-            )
+            ) }
+
         }
     }
 }

@@ -1,9 +1,9 @@
 package com.kulothunganug.thirukkural.views
 
 import android.app.Activity
-import android.widget.Toast
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -12,44 +12,33 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.input.InputTransformation
-import androidx.compose.foundation.text.input.TextFieldLineLimits
-import androidx.compose.foundation.text.input.maxLength
-import androidx.compose.foundation.text.input.rememberTextFieldState
-import androidx.compose.foundation.text.input.then
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Check
-import androidx.compose.material.icons.filled.Refresh
-import androidx.compose.foundation.layout.Box
-import androidx.compose.material3.Icon
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.outlined.Colorize
 import androidx.compose.material.icons.rounded.DragHandle
-import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
+import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Slider
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.TextField
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -57,10 +46,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -68,18 +55,11 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.core.graphics.toColorInt
-import com.github.skydoves.colorpicker.compose.AlphaSlider
-import com.github.skydoves.colorpicker.compose.AlphaTile
-import com.github.skydoves.colorpicker.compose.BrightnessSlider
-import com.github.skydoves.colorpicker.compose.ColorEnvelope
-import com.github.skydoves.colorpicker.compose.HsvColorPicker
-import com.github.skydoves.colorpicker.compose.rememberColorPickerController
 import com.kulothunganug.thirukkural.shared_ui.ColorChooserDialog
 import com.kulothunganug.thirukkural.shared_ui.endItemShape
 import com.kulothunganug.thirukkural.shared_ui.leadingItemShape
 import com.kulothunganug.thirukkural.shared_ui.listItemColors
 import com.kulothunganug.thirukkural.shared_ui.middleItemShape
-import com.kulothunganug.thirukkural.ui.theme.ThirukkuralTheme
 import com.kulothunganug.thirukkural.viewmodels.WidgetCustomizationViewModel
 import com.kulothunganug.thirukkural.widget.ContentType
 import com.kulothunganug.thirukkural.widget.SectionConfig
@@ -89,8 +69,6 @@ import org.koin.androidx.compose.koinViewModel
 import org.koin.core.parameter.parametersOf
 import sh.calvin.reorderable.ReorderableItem
 import sh.calvin.reorderable.rememberReorderableLazyListState
-
-
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -125,222 +103,221 @@ fun WidgetCustomizationView(
         }
     }
 
-    ThirukkuralTheme {
-        when {
-            openBgColorChooser -> {
-                ColorChooserDialog(
-                    "Background Color",
-                    state.bgColor,
-                    onColorSelected = { vm.updateBgColor(it) },
-                    onDismissRequest = {
-                        vm.toggleBgColorChooser(false)
-                    })
-            }
-
-            openRefreshColorChooser -> {
-                ColorChooserDialog(
-                    "Refresh Button Color",
-                    state.refreshButtonColor,
-                    onColorSelected = { vm.updateRefreshButtonColor(it) },
-                    onDismissRequest = {
-                        vm.toggleRefreshColorChooser(false)
-                    })
-            }
-
-            editingSection != null -> {
-                val currentSection = reorderableSections.find { it.type == editingSection!!.type }
-                    ?: editingSection!!
-                ElementSettingsDialog(
-                    sectionConfig = currentSection,
-                    onDismissRequest = { editingSection = null },
-                    onSizeChange = { vm.updateSectionSettings(currentSection.type, size = it) },
-                    onAlignChange = { vm.updateSectionSettings(currentSection.type, align = it) },
-                    onBoldChange = { vm.updateSectionSettings(currentSection.type, bold = it) },
-                    onColorChange = {
-                        vm.updateSectionSettings(currentSection.type, textColor = it)
-                    }
-                )
-            }
+    when {
+        openBgColorChooser -> {
+            ColorChooserDialog(
+                "Background Color",
+                state.bgColor,
+                onColorSelected = { vm.updateBgColor(it) },
+                onDismissRequest = {
+                    vm.toggleBgColorChooser(false)
+                })
         }
-        Scaffold(
-            topBar = {
-                TopAppBar(
-                    navigationIcon = {
-                        IconButton(onClick = {
-                            onDone(Activity.RESULT_CANCELED)
-                        }) {
-                            Icon(
-                                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                                contentDescription = "Go back"
-                            )
-                        }
-                    },
-                    title = { Text("Widget Customization") },
-                    actions = {
-                        IconButton(onClick = {
-                            vm.saveSettings()
-                            onDone(Activity.RESULT_OK)
-                        }) {
-                            Icon(
-                                imageVector = Icons.Default.Check,
-                                contentDescription = "Save changes"
-                            )
-                        }
+
+        openRefreshColorChooser -> {
+            ColorChooserDialog(
+                "Refresh Button Color",
+                state.refreshButtonColor,
+                onColorSelected = { vm.updateRefreshButtonColor(it) },
+                onDismissRequest = {
+                    vm.toggleRefreshColorChooser(false)
+                })
+        }
+
+        editingSection != null -> {
+            val currentSection = reorderableSections.find { it.type == editingSection!!.type }
+                ?: editingSection!!
+            ElementSettingsDialog(
+                sectionConfig = currentSection,
+                onDismissRequest = { editingSection = null },
+                onSizeChange = { vm.updateSectionSettings(currentSection.type, size = it) },
+                onAlignChange = { vm.updateSectionSettings(currentSection.type, align = it) },
+                onBoldChange = { vm.updateSectionSettings(currentSection.type, bold = it) },
+                onColorChange = {
+                    vm.updateSectionSettings(currentSection.type, textColor = it)
+                }
+            )
+        }
+    }
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                navigationIcon = {
+                    IconButton(onClick = {
+                        onDone(Activity.RESULT_CANCELED)
+                    }) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = "Go back"
+                        )
                     }
+                },
+                title = { Text("Widget Customization") },
+                actions = {
+                    IconButton(onClick = {
+                        vm.saveSettings()
+                        onDone(Activity.RESULT_OK)
+                    }) {
+                        Icon(
+                            imageVector = Icons.Default.Check,
+                            contentDescription = "Save changes"
+                        )
+                    }
+                }
+            )
+        }
+    ) { padding ->
+        LazyColumn(
+            state = lazyListState,
+            modifier = Modifier
+                .padding(padding)
+                .fillMaxSize(),
+            contentPadding = PaddingValues(16.dp),
+        ) {
+            item {
+                WidgetPreview(state)
+                Spacer(modifier = Modifier.height(24.dp))
+            }
+
+            item {
+                Text(
+                    "Colors",
+                    style = MaterialTheme.typography.titleMedium,
+                    modifier = Modifier.padding(bottom = 8.dp)
                 )
             }
-        ) { padding ->
-            LazyColumn(
-                state = lazyListState,
-                modifier = Modifier
-                    .padding(padding)
-                    .fillMaxSize(),
-                contentPadding = PaddingValues(16.dp),
-            ) {
-                item {
-                    WidgetPreview(state)
-                    Spacer(modifier = Modifier.height(24.dp))
-                }
 
-                item {
-                    Text(
-                        "Colors",
-                        style = MaterialTheme.typography.titleMedium,
-                        modifier = Modifier.padding(bottom = 8.dp)
+            item {
+                Surface(
+                    shape = leadingItemShape(),
+                    tonalElevation = 2.dp
+                ) {
+                    ListItem(
+                        colors = listItemColors(),
+                        trailingContent = {
+                            IconButton(
+                                onClick = { vm.toggleBgColorChooser(true) },
+                            ) {
+                                Icon(
+                                    Icons.Outlined.Colorize,
+                                    contentDescription = "Pick color",
+                                )
+                            }
+                        },
+                        headlineContent = { Text("Background Color") },
                     )
                 }
+                Spacer(modifier = Modifier.height(2.dp))
+                Surface(
+                    shape = endItemShape(),
+                    tonalElevation = 2.dp
+                ) {
+                    ListItem(
+                        colors = listItemColors(),
+                        trailingContent = {
+                            IconButton(
+                                onClick = { vm.toggleRefreshColorChooser(true) },
+                            ) {
+                                Icon(
+                                    Icons.Outlined.Colorize,
+                                    contentDescription = "Pick color",
+                                )
+                            }
+                        },
+                        headlineContent = { Text("Refresh Button Color") },
+                    )
+                }
+                Spacer(modifier = Modifier.height(12.dp))
+            }
 
-                item {
+            item {
+                Text(
+                    "Element Styling & Order",
+                    style = MaterialTheme.typography.titleMedium,
+                    modifier = Modifier.padding(bottom = 8.dp)
+                )
+            }
+
+            itemsIndexed(
+                reorderableSections,
+                key = { _, it -> it.type.name }) { index, sectionConfig ->
+                ReorderableItem(reorderableState, key = sectionConfig.type.name) { isDragging ->
+                    val elevation by animateDpAsState(
+                        if (isDragging) 8.dp else 0.dp,
+                        label = "elevation"
+                    )
+
+                    val cardShape = when (index) {
+                        0 -> leadingItemShape()
+                        reorderableSections.size - 1 -> endItemShape()
+                        else -> middleItemShape()
+                    }
+
                     Surface(
-                        shape = leadingItemShape(),
-                        tonalElevation = 2.dp
+                        shape = cardShape,
+                        tonalElevation = 2.dp,
+                        shadowElevation = elevation,
                     ) {
                         ListItem(
                             colors = listItemColors(),
-                            trailingContent = {
+                            leadingContent = {
                                 IconButton(
-                                    onClick = { vm.toggleBgColorChooser(true) },
+                                    modifier = Modifier.draggableHandle(
+                                        onDragStarted = {
+                                            haptic.performHapticFeedback(
+                                                HapticFeedbackType.GestureThresholdActivate
+                                            )
+                                        },
+                                        onDragStopped = {
+                                            haptic.performHapticFeedback(HapticFeedbackType.GestureEnd)
+                                            vm.updateContentOrder(reorderableSections)
+                                        }
+                                    ),
+                                    onClick = {}
                                 ) {
                                     Icon(
-                                        Icons.Outlined.Colorize,
-                                        contentDescription = "Pick color",
+                                        Icons.Rounded.DragHandle,
+                                        contentDescription = "Reorder"
                                     )
                                 }
                             },
-                            headlineContent = { Text("Background Color") },
-                        )
-                    }
-                    Spacer(modifier = Modifier.height(2.dp))
-                    Surface(
-                        shape = endItemShape(),
-                        tonalElevation = 2.dp
-                    ) {
-                        ListItem(
-                            colors = listItemColors(),
-                            trailingContent = {
-                                IconButton(
-                                    onClick = { vm.toggleRefreshColorChooser(true) },
-                                ) {
-                                    Icon(
-                                        Icons.Outlined.Colorize,
-                                        contentDescription = "Pick color",
-                                    )
-                                }
+                            headlineContent = {
+                                Text(
+                                    sectionConfig.type.name,
+                                )
                             },
-                            headlineContent = { Text("Refresh Button Color") },
-                        )
-                    }
-                    Spacer(modifier = Modifier.height(12.dp))
-                }
-
-                item {
-                    Text(
-                        "Element Styling & Order",
-                        style = MaterialTheme.typography.titleMedium,
-                        modifier = Modifier.padding(bottom = 8.dp)
-                    )
-                }
-
-                itemsIndexed(
-                    reorderableSections,
-                    key = { _, it -> it.type.name }) { index, sectionConfig ->
-                    ReorderableItem(reorderableState, key = sectionConfig.type.name) { isDragging ->
-                        val elevation by animateDpAsState(
-                            if (isDragging) 8.dp else 0.dp,
-                            label = "elevation"
-                        )
-
-                        val cardShape = when (index) {
-                            0 -> leadingItemShape()
-                            reorderableSections.size - 1 -> endItemShape()
-                            else -> middleItemShape()
-                        }
-
-                        Surface(
-                            shape = cardShape,
-                            tonalElevation = 2.dp,
-                            shadowElevation = elevation,
-                        ) {
-                            ListItem(
-                                colors = listItemColors(),
-                                leadingContent = {
+                            trailingContent = {
+                                Row(verticalAlignment = Alignment.CenterVertically) {
                                     IconButton(
-                                        modifier = Modifier.draggableHandle(
-                                            onDragStarted = {
-                                                haptic.performHapticFeedback(
-                                                    HapticFeedbackType.GestureThresholdActivate
-                                                )
-                                            },
-                                            onDragStopped = {
-                                                haptic.performHapticFeedback(HapticFeedbackType.GestureEnd)
-                                                vm.updateContentOrder(reorderableSections)
-                                            }
-                                        ),
-                                        onClick = {}
+                                        onClick = { editingSection = sectionConfig },
+                                        enabled = sectionConfig.show
                                     ) {
                                         Icon(
-                                            Icons.Rounded.DragHandle,
-                                            contentDescription = "Reorder"
+                                            Icons.Default.Edit,
+                                            contentDescription = "Edit settings"
                                         )
                                     }
-                                },
-                                headlineContent = {
-                                    Text(
-                                        sectionConfig.type.name,
-                                    )
-                                },
-                                trailingContent = {
-                                    Row(verticalAlignment = Alignment.CenterVertically) {
-                                        IconButton(
-                                            onClick = { editingSection = sectionConfig },
-                                            enabled = sectionConfig.show
-                                        ) {
-                                            Icon(
-                                                Icons.Default.Edit,
-                                                contentDescription = "Edit settings"
+                                    Switch(
+                                        checked = sectionConfig.show,
+                                        onCheckedChange = {
+                                            vm.updateSectionSettings(
+                                                sectionConfig.type,
+                                                show = it
                                             )
                                         }
-                                        Switch(
-                                            checked = sectionConfig.show,
-                                            onCheckedChange = {
-                                                vm.updateSectionSettings(
-                                                    sectionConfig.type,
-                                                    show = it
-                                                )
-                                            }
-                                        )
-                                    }
+                                    )
                                 }
-                            )
-                        }
-
+                            }
+                        )
                     }
-                    Spacer(modifier = Modifier.height(2.dp))
 
                 }
+                Spacer(modifier = Modifier.height(2.dp))
+
             }
         }
     }
+
 }
 
 
