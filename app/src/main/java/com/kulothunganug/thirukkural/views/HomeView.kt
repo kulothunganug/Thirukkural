@@ -32,6 +32,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import androidx.compose.ui.res.stringResource
+import com.kulothunganug.thirukkural.R
 import com.kulothunganug.thirukkural.viewmodels.HomeViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -46,7 +48,10 @@ fun HomeView(vm: HomeViewModel, navController: NavController) {
                     IconButton(
                         onClick = { navController.navigate("settings") }
                     ) {
-                        Icon(Icons.Default.Settings, contentDescription = "Settings")
+                        Icon(
+                            Icons.Default.Settings,
+                            contentDescription = stringResource(R.string.settings)
+                        )
                     }
                 },
                 title = {
@@ -64,7 +69,7 @@ fun HomeView(vm: HomeViewModel, navController: NavController) {
             verticalArrangement = Arrangement.Center
         ) {
             Text(
-                text = "திருக்குறள்",
+                text = stringResource(R.string.app_name),
                 style = MaterialTheme.typography.headlineLarge,
                 fontWeight = FontWeight.Bold,
                 fontSize = 48.sp,
@@ -80,7 +85,7 @@ fun HomeView(vm: HomeViewModel, navController: NavController) {
                         .padding(bottom = 32.dp),
                     colors = CardDefaults.cardColors().copy(
                         containerColor =
-                            MaterialTheme.colorScheme.surfaceContainer
+                        MaterialTheme.colorScheme.surfaceContainer
                     )
                 ) {
                     Column(
@@ -88,7 +93,7 @@ fun HomeView(vm: HomeViewModel, navController: NavController) {
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
                         Text(
-                            text = "Kural of the Moment",
+                            text = stringResource(R.string.kural_of_the_moment),
                             style = MaterialTheme.typography.labelLarge,
                             fontWeight = FontWeight.Bold
                         )
@@ -120,10 +125,13 @@ fun HomeView(vm: HomeViewModel, navController: NavController) {
                     .fillMaxWidth()
                     .height(80.dp),
             ) {
-                Icon(Icons.Rounded.Search, contentDescription = "Browse")
+                Icon(
+                    Icons.Rounded.Search,
+                    contentDescription = stringResource(R.string.browse_kurals)
+                )
                 Spacer(modifier = Modifier.width(8.dp))
                 Text(
-                    "Browse Kurals",
+                    stringResource(R.string.browse_kurals),
                     fontSize = 20.sp,
                     fontWeight = FontWeight.Bold
                 )

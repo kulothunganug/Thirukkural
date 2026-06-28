@@ -23,7 +23,10 @@ data class BrowseUiState(
     val kurals: List<ThirukkuralModel> = emptyList()
 )
 
-class BrowseViewModel(private val repository: ThirukkuralRepository) : ViewModel() {
+class BrowseViewModel(
+    private val repository: ThirukkuralRepository,
+) : ViewModel() {
+
 
     private val _selectedPals = MutableStateFlow<List<String>>(emptyList())
     private val _selectedIyals = MutableStateFlow<List<String>>(emptyList())
@@ -66,7 +69,13 @@ class BrowseViewModel(private val repository: ThirukkuralRepository) : ViewModel
         pals,
         iyals,
         adikarams,
-        combine(_selectedPals, _selectedIyals, _selectedAdikarams) { sp, si, sa -> Triple(sp, si, sa) },
+        combine(_selectedPals, _selectedIyals, _selectedAdikarams) { sp, si, sa ->
+            Triple(
+                sp,
+                si,
+                sa
+            )
+        },
         kurals
     ) { p, i, a, s, k ->
         BrowseUiState(

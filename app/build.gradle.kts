@@ -46,6 +46,17 @@ android {
     buildFeatures {
         compose = true
     }
+
+        androidResources {
+            generateLocaleConfig = true
+        }
+
+
+    bundle {
+        language {
+            enableSplit = false
+        }
+    }
 }
 
 dependencies {

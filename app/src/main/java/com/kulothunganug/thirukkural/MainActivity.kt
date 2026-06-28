@@ -6,14 +6,14 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.animation.AnimatedContentTransitionScope
 import androidx.compose.animation.core.tween
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import androidx.navigation.navDeepLink
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
 import com.kulothunganug.thirukkural.datastore.AppTheme
 import com.kulothunganug.thirukkural.datastore.ThemeSettings
 import com.kulothunganug.thirukkural.ui.theme.ThirukkuralTheme
@@ -32,7 +32,6 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
-
 
         setContent {
             val theme by themeSettings.themeStream.collectAsState(initial = AppTheme.SYSTEM)

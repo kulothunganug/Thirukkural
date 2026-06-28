@@ -55,6 +55,8 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import androidx.compose.ui.res.stringResource
+import com.kulothunganug.thirukkural.R
 import com.kulothunganug.thirukkural.viewmodels.KuralDetailViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -76,7 +78,10 @@ fun KuralDetailView(
                 title = { Text("") },
                 navigationIcon = {
                     IconButton(onClick = { navController.popBackStack() }) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                        Icon(
+                            Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = stringResource(R.string.go_back)
+                        )
                     }
                 }
             )
@@ -108,20 +113,28 @@ fun KuralDetailView(
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     InfoCard(
-                        label = "குறள் எண்",
+                        label = stringResource(R.string.kural_no),
                         value = k.id.toString(),
                         modifier = Modifier.weight(1f)
                     )
-                    InfoCard(label = "பால்", value = k.palTa, modifier = Modifier.weight(1f))
+                    InfoCard(
+                        label = stringResource(R.string.pal),
+                        value = k.palTa,
+                        modifier = Modifier.weight(1f)
+                    )
                 }
                 Spacer(modifier = Modifier.height(8.dp))
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    InfoCard(label = "இயல்", value = k.iyalTa, modifier = Modifier.weight(1f))
                     InfoCard(
-                        label = "அதிகாரம்",
+                        label = stringResource(R.string.iyal),
+                        value = k.iyalTa,
+                        modifier = Modifier.weight(1f)
+                    )
+                    InfoCard(
+                        label = stringResource(R.string.adikaram),
                         value = k.adikaramTa,
                         modifier = Modifier.weight(1f)
                     )
@@ -129,39 +142,45 @@ fun KuralDetailView(
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                DetailItem(label = "விளக்கம்", value = k.explanationTa)
+                DetailItem(label = stringResource(R.string.explanation), value = k.explanationTa)
                 Spacer(modifier = Modifier.height(8.dp))
                 DetailItem(
-                    label = "Transliteration",
+                    label = stringResource(R.string.transliteration),
                     value = k.kuralTl.replace("<br />", "\n")
                 )
                 Spacer(modifier = Modifier.height(8.dp))
-                DetailItem(label = "Couplet", value = k.couplet)
+                DetailItem(label = stringResource(R.string.couplet), value = k.couplet)
 
                 Spacer(modifier = Modifier.height(16.dp))
 
                 Text(
-                    "உரையாசிரியர்கள்",
+                    stringResource(R.string.commentators),
                     style = MaterialTheme.typography.titleMedium,
                 )
                 Spacer(modifier = Modifier.height(8.dp))
 
                 CollapsibleExplanation(
-                    label = "மு.வரதராசனார் உரை",
+                    label = stringResource(R.string.mu_varadarasanar),
                     value = k.commentaryMuVaratharasanar
                 )
-                CollapsibleExplanation(label = "பரிமேலழகர் உரை", value = k.commentaryParimelazhagar)
                 CollapsibleExplanation(
-                    label = "சாலமன் பாப்பையா உரை",
+                    label = stringResource(R.string.parimelazhagar),
+                    value = k.commentaryParimelazhagar
+                )
+                CollapsibleExplanation(
+                    label = stringResource(R.string.solomon_pappaiah),
                     value = k.commentarySalamanPappaiya
                 )
-                CollapsibleExplanation(label = "மணக்குடவர் உரை", value = k.commentaryManakudavar)
                 CollapsibleExplanation(
-                    label = "திருக்குறளார் வீ. முனிசாமி உரை",
+                    label = stringResource(R.string.manakkudavar),
+                    value = k.commentaryManakudavar
+                )
+                CollapsibleExplanation(
+                    label = stringResource(R.string.munusami),
                     value = k.commentaryMunusami
                 )
                 CollapsibleExplanation(
-                    label = "கலைஞர் மு.கருணாநிதி உரை",
+                    label = stringResource(R.string.karunanidhi),
                     value = k.commentaryKarunanidhi
                 )
             }

@@ -1,0 +1,34 @@
+<resources>
+    <string name="app_name">திருக்குறள்</string>
+    <string name="settings">அமைப்புகள்</string>
+    <string name="go_back">பின்செல்ல</string>
+    <string name="theme">தீம்</string>
+    <string name="system_default">இயல்புநிலை</string>
+    <string name="light">பகல்</string>
+    <string name="dark">இரவு</string>
+    <string name="language">மொழி</string>
+    <string name="english">ஆங்கிலம்</string>
+    <string name="tamil">தமிழ்</string>
+    <string name="kural_of_the_moment">இப்போதைய குறள்</string>
+    <string name="browse_kurals">குறள்களைத் தேடுக</string>
+    <string name="filters">வடிகட்டிகள்</string>
+    <string name="done">முடிந்தது</string>
+    <string name="pal">பால்</string>
+    <string name="iyal">இயல்</string>
+    <string name="adikaram">அதிகாரம்</string>
+    <string name="select_filters_to_browse">குறள்களைப் பார்க்க வடிகட்டிகளைத் தேர்ந்தெடுக்கவும்</string>
+    <string name="select_label">%1$s-ஐத் தேர்ந்தெடு</string>
+    <string name="label_selected">%1$d %2$s தேர்ந்தெடுக்கப்பட்டது</string>
+    <string name="kural_no">குறள் எண்</string>
+    <string name="explanation">விளக்கம்</string>
+    <string name="transliteration">Transliteration</string>
+    <string name="couplet">Couplet</string>
+    <string name="commentators">உரையாசிரியர்கள்</string>
+    <string name="mu_varadarasanar">மு. வரதராசனார்</string>
+    <string name="parimelazhagar">பரிமேலழகர்</string>
+    <string name="solomon_pappaiah">சாலமன் பாப்பையா</string>
+    <string name="manakkudavar">மணக்குடவர்</string>
+    <string name="munusami">திருக்குறளார் வீ. முனிசாமி</string>
+    <string name="karunanidhi">கலைஞர் மு. கருணாநிதி</string>
+    <string name="tamil_kural">தமிழ் குறள்</string>
+</resources>

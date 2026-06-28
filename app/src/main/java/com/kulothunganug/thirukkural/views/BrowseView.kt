@@ -42,6 +42,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import androidx.compose.ui.res.stringResource
+import com.kulothunganug.thirukkural.R
 import com.kulothunganug.thirukkural.viewmodels.BrowseViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -53,15 +55,21 @@ fun BrowseView(vm: BrowseViewModel, navController: NavController) {
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Browse Kurals") },
+                title = { Text(stringResource(R.string.browse_kurals)) },
                 navigationIcon = {
                     IconButton(onClick = { navController.popBackStack() }) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                        Icon(
+                            Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = stringResource(R.string.go_back)
+                        )
                     }
                 },
                 actions = {
                     IconButton(onClick = { showFilterDialog = true }) {
-                        Icon(Icons.Default.FilterList, contentDescription = "Filter")
+                        Icon(
+                            Icons.Default.FilterList,
+                            contentDescription = stringResource(R.string.filters)
+                        )
                     }
                 }
             )
@@ -72,21 +80,21 @@ fun BrowseView(vm: BrowseViewModel, navController: NavController) {
                 onDismissRequest = { showFilterDialog = false },
                 confirmButton = {
                     TextButton(onClick = { showFilterDialog = false }) {
-                        Text("Done")
+                        Text(stringResource(R.string.done))
                     }
                 },
-                title = { Text("Filters") },
+                title = { Text(stringResource(R.string.filters)) },
                 text = {
                     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                         MultiFilterDropdown(
-                            label = "Pal",
+                            label = stringResource(R.string.pal),
                             options = uiState.pals,
                             selectedOptions = uiState.selectedPals,
                             onOptionToggled = { vm.togglePal(it) }
                         )
 
                         MultiFilterDropdown(
-                            label = "Iyal",
+                            label = stringResource(R.string.iyal),
                             options = uiState.iyals,
                             selectedOptions = uiState.selectedIyals,
                             enabled = uiState.selectedPals.isNotEmpty(),
@@ -94,7 +102,7 @@ fun BrowseView(vm: BrowseViewModel, navController: NavController) {
                         )
 
                         MultiFilterDropdown(
-                            label = "Adikaram",
+                            label = stringResource(R.string.adikaram),
                             options = uiState.adikarams,
                             selectedOptions = uiState.selectedAdikarams,
                             enabled = uiState.selectedIyals.isNotEmpty(),
@@ -116,14 +124,17 @@ fun BrowseView(vm: BrowseViewModel, navController: NavController) {
         ) {
             if (uiState.kurals.isEmpty()) {
                 Text(
-                    text = "Select filters to browse Kurals",
+                    text = stringResource(R.string.select_filters_to_browse),
                     style = MaterialTheme.typography.bodyLarge,
                     color = MaterialTheme.colorScheme.secondary
                 )
                 FilledTonalButton(onClick = { showFilterDialog = true }) {
-                    Icon(Icons.Default.FilterList, contentDescription = "Filter")
+                    Icon(
+                        Icons.Default.FilterList,
+                        contentDescription = stringResource(R.string.filters)
+                    )
                     Spacer(modifier = Modifier.width(4.dp))
-                    Text("Filters")
+                    Text(stringResource(R.string.filters))
                 }
             } else {
                 LazyColumn(
@@ -168,9 +179,9 @@ fun MultiFilterDropdown(
 ) {
     var expanded by remember { mutableStateOf(false) }
     val displayText = when {
-        selectedOptions.isEmpty() -> "Select $label"
+        selectedOptions.isEmpty() -> stringResource(R.string.select_label, label)
         selectedOptions.size == 1 -> selectedOptions.first()
-        else -> "${selectedOptions.size} $label selected"
+        else -> stringResource(R.string.label_selected, selectedOptions.size, label)
     }
 
     ExposedDropdownMenuBox(

@@ -1,9 +1,16 @@
 package com.kulothunganug.thirukkural.views
 
+import android.app.LocaleManager
+import android.content.Context
+import android.os.Build
+import android.os.LocaleList
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -22,8 +29,12 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalLocale
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import com.kulothunganug.thirukkural.R
 import com.kulothunganug.thirukkural.datastore.AppTheme
 import com.kulothunganug.thirukkural.shared_ui.endItemShape
 import com.kulothunganug.thirukkural.shared_ui.leadingItemShape
@@ -31,6 +42,7 @@ import com.kulothunganug.thirukkural.shared_ui.listItemColors
 import com.kulothunganug.thirukkural.shared_ui.middleItemShape
 import com.kulothunganug.thirukkural.viewmodels.SettingsViewModel
 import org.koin.androidx.compose.koinViewModel
+import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -39,6 +51,18 @@ fun SettingsView(
     vm: SettingsViewModel = koinViewModel()
 ) {
     val currentTheme by vm.theme.collectAsState()
+    val currentLanguage = LocalLocale.current.platformLocale.language
+    val context = LocalContext.current
+
+    fun setAppLanguage(languageTag: String) {
+        if (Build.VERSION.SDK_INT >= 33) {
+            val localeManager =
+                context.getSystemService(LocaleManager::class.java)
+
+            localeManager.applicationLocales =
+                LocaleList(Locale.forLanguageTag(languageTag))
+        }
+    }
 
     Scaffold(
         topBar = {
@@ -47,11 +71,11 @@ fun SettingsView(
                     IconButton(onClick = { navController.popBackStack() }) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Go back"
+                            contentDescription = stringResource(R.string.go_back)
                         )
                     }
                 },
-                title = { Text("Settings") }
+                title = { Text(stringResource(R.string.settings)) }
             )
         }
     ) { padding ->
@@ -63,28 +87,53 @@ fun SettingsView(
             verticalArrangement = Arrangement.spacedBy(2.dp)
         ) {
             Text(
-                text = "Theme",
+                text = stringResource(R.string.theme),
                 style = MaterialTheme.typography.titleMedium,
                 modifier = Modifier.padding(16.dp)
             )
 
             ThemeOption(
-                label = "System Default",
+                label = stringResource(R.string.system_default),
                 selected = currentTheme == AppTheme.SYSTEM,
                 shape = leadingItemShape(),
                 onClick = { vm.setTheme(AppTheme.SYSTEM) }
             )
             ThemeOption(
-                label = "Light",
+                label = stringResource(R.string.light),
                 selected = currentTheme == AppTheme.LIGHT,
                 shape = middleItemShape(),
                 onClick = { vm.setTheme(AppTheme.LIGHT) }
             )
             ThemeOption(
-                label = "Dark",
+                label = stringResource(R.string.dark),
                 selected = currentTheme == AppTheme.DARK,
                 shape = endItemShape(),
                 onClick = { vm.setTheme(AppTheme.DARK) }
+            )
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            Text(
+                text = stringResource(R.string.language),
+                style = MaterialTheme.typography.titleMedium,
+                modifier = Modifier.padding(16.dp)
+            )
+
+            ThemeOption(
+                label = stringResource(R.string.english),
+                selected = currentLanguage == "en",
+                shape = leadingItemShape(),
+                onClick = {
+                    setAppLanguage("en")
+                }
+            )
+            ThemeOption(
+                label = stringResource(R.string.tamil),
+                selected = currentLanguage == "ta",
+                shape = endItemShape(),
+                onClick = {
+                    setAppLanguage("ta")
+                }
             )
         }
     }
