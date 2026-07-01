@@ -1,5 +1,10 @@
 package com.kulothunganug.thirukkural.views
 
+import android.content.ClipData
+import android.content.ClipboardManager
+import android.content.Context
+import android.os.Build
+import android.widget.Toast
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
@@ -21,10 +26,12 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.TextAutoSize
+import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
+import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -49,13 +56,14 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
-import androidx.compose.ui.res.stringResource
 import com.kulothunganug.thirukkural.R
 import com.kulothunganug.thirukkural.viewmodels.KuralDetailViewModel
 
@@ -67,6 +75,7 @@ fun KuralDetailView(
     navController: NavController
 ) {
     val kural by vm.kural.collectAsState()
+    val context = LocalContext.current;
 
     LaunchedEffect(kuralId) {
         vm.loadKural(kuralId)
@@ -81,6 +90,22 @@ fun KuralDetailView(
                         Icon(
                             Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = stringResource(R.string.go_back)
+                        )
+                    }
+                },
+                actions = {
+                    IconButton(onClick = {
+                        val clipboard =
+                            context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+                        val clip = ClipData.newPlainText("Copied kural", kural?.kuralTa?.replace("<br />", "\n"))
+                        clipboard.setPrimaryClip(clip)
+                        if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.S_V2)
+                            Toast.makeText(context, "Copied", Toast.LENGTH_SHORT).show()
+
+                    }) {
+                        Icon(
+                            Icons.Filled.ContentCopy,
+                            contentDescription = stringResource(R.string.copy)
                         )
                     }
                 }
@@ -101,7 +126,7 @@ fun KuralDetailView(
                     fontWeight = FontWeight.Bold,
                     lineHeight = 28.sp,
                     maxLines = 2,
-                    autoSize = TextAutoSize.StepBased(14.sp, 20.sp, 1.sp)
+                    autoSize = TextAutoSize.StepBased(10.sp, 20.sp, 1.sp),
                 )
 
                 Spacer(modifier = Modifier.height(16.dp))
@@ -186,26 +211,28 @@ fun KuralDetailView(
             }
         }
     }
-
-
 }
 
 @Composable
 fun DetailItem(label: String, value: String, modifier: Modifier = Modifier) {
-    Card(modifier = modifier.fillMaxWidth(), colors = CardDefaults.cardColors().copy(
-        containerColor =
-            MaterialTheme.colorScheme.surfaceContainer
-    )) {
+    Card(
+        modifier = modifier.fillMaxWidth(), colors = CardDefaults.cardColors().copy(
+            containerColor =
+                MaterialTheme.colorScheme.surfaceContainer
+        )
+    ) {
         Column(modifier = Modifier.padding(16.dp)) {
             Text(
                 text = label,
                 style = MaterialTheme.typography.labelMedium,
             )
-            Text(
-                text = value,
-                style = MaterialTheme.typography.bodyLarge,
-                modifier = Modifier.padding(top = 4.dp)
-            )
+            SelectionContainer {
+                Text(
+                    text = value,
+                    style = MaterialTheme.typography.bodyMedium,
+                    modifier = Modifier.padding(top = 4.dp)
+                )
+            }
         }
     }
 }
@@ -231,12 +258,15 @@ fun InfoCard(label: String, value: String, modifier: Modifier = Modifier) {
                 textAlign = TextAlign.Center
             )
             Spacer(modifier = Modifier.height(4.dp))
-            Text(
-                text = value,
-                style = MaterialTheme.typography.bodyLarge,
-                fontWeight = FontWeight.Bold,
-                textAlign = TextAlign.Center
-            )
+            SelectionContainer {
+
+                Text(
+                    text = value,
+                    style = MaterialTheme.typography.bodyLarge,
+                    fontWeight = FontWeight.Bold,
+                    textAlign = TextAlign.Center,
+                )
+            }
         }
     }
 }
@@ -251,6 +281,7 @@ fun CollapsibleExplanation(label: String, value: String, modifier: Modifier = Mo
 
     Surface(
         color = MaterialTheme.colorScheme.surfaceContainer,
+        contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
         modifier = modifier
             .fillMaxWidth()
             .padding(4.dp)
@@ -259,7 +290,7 @@ fun CollapsibleExplanation(label: String, value: String, modifier: Modifier = Mo
             .clickable { expanded = !expanded }
     ) {
         Column(
-            verticalArrangement = Arrangement.spacedBy(4.dp),
+            verticalArrangement = Arrangement.spacedBy(2.dp),
             modifier = Modifier.padding(12.dp)
         ) {
             // accordion header
@@ -328,10 +359,12 @@ fun CollapsibleExplanation(label: String, value: String, modifier: Modifier = Mo
                         animationSpec = tween()
                     ) + fadeOut()
                 ) {
-                    Text(
-                        text = value,
-                        style = MaterialTheme.typography.bodyMedium
-                    )
+                    SelectionContainer {
+                        Text(
+                            text = value,
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+                    }
                 }
             }
         }
