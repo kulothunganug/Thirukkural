@@ -224,7 +224,7 @@ fun DetailItem(label: String, value: String, modifier: Modifier = Modifier) {
         Column(modifier = Modifier.padding(16.dp)) {
             Text(
                 text = label,
-                style = MaterialTheme.typography.labelMedium,
+                style = MaterialTheme.typography.labelLarge,
             )
             SelectionContainer {
                 Text(
@@ -254,7 +254,7 @@ fun InfoCard(label: String, value: String, modifier: Modifier = Modifier) {
         ) {
             Text(
                 text = label,
-                style = MaterialTheme.typography.labelMedium,
+                style = MaterialTheme.typography.labelLarge,
                 textAlign = TextAlign.Center
             )
             Spacer(modifier = Modifier.height(4.dp))
@@ -300,7 +300,7 @@ fun CollapsibleExplanation(label: String, value: String, modifier: Modifier = Mo
             ) {
                 Text(
                     text = label,
-                    style = MaterialTheme.typography.labelMedium,
+                    style = MaterialTheme.typography.labelLarge,
                     modifier = Modifier.weight(1f)
                 )
                 Icon(
