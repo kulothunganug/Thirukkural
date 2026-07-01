@@ -59,6 +59,11 @@ enum class ContentType { Paal, Iyal, Adhigaram, Kural, Transliteration }
 @Serializable
 enum class WidgetTextAlign { Start, Center, End }
 
+const val MIN_KURAL_ID = 1
+const val MAX_KURAL_ID = 1330
+
+fun randomKuralId() = Random.nextInt(MIN_KURAL_ID, MAX_KURAL_ID + 1)
+
 @Serializable
 data class WidgetConfig(
     val bgColor: String = "#000000",
@@ -120,10 +125,9 @@ class ThirukkuralWidget : GlanceAppWidget() {
         ) { prefs ->
 
             if (prefs[ThirukkuralWidgetKeys.KURAL_ID] == null) {
-
                 prefs.toMutablePreferences().apply {
                     this[ThirukkuralWidgetKeys.KURAL_ID] =
-                        Random.nextInt(1, 1331)
+                        randomKuralId()
                 }
             } else {
                 prefs
@@ -294,11 +298,10 @@ class RefreshKuralAction : ActionCallback {
         glanceId: GlanceId,
         parameters: ActionParameters
     ) {
-        val randomId = Random.nextInt(1, 1331)
 
         updateAppWidgetState(context, PreferencesGlanceStateDefinition, glanceId) { prefs ->
             prefs.toMutablePreferences().apply {
-                this[ThirukkuralWidgetKeys.KURAL_ID] = randomId
+                this[ThirukkuralWidgetKeys.KURAL_ID] = randomKuralId()
             }
         }
         ThirukkuralWidget().update(context, glanceId)
