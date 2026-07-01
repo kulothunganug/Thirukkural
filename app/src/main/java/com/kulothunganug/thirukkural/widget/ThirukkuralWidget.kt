@@ -203,19 +203,6 @@ class ThirukkuralWidget : GlanceAppWidget() {
                 ),
             contentAlignment = Alignment.BottomEnd
         ) {
-            Image(
-                provider = ImageProvider(R.drawable.refresh_24px),
-                contentDescription = "Refresh",
-                colorFilter = ColorFilter.tint(
-                    ColorProvider(
-                        day = Color(config.refreshButtonColor.toColorInt()),
-                        night = Color(config.refreshButtonColor.toColorInt())
-                    )
-                ),
-                modifier = GlanceModifier.cornerRadius(12.dp).padding(6.dp)
-                    .clickable(actionRunCallback<RefreshKuralAction>())
-
-            )
             Column(
                 modifier = GlanceModifier.fillMaxSize(),
                 horizontalAlignment = Alignment.CenterHorizontally,
@@ -235,6 +222,19 @@ class ThirukkuralWidget : GlanceAppWidget() {
                     }
                 }
             }
+            Image(
+                provider = ImageProvider(R.drawable.refresh_24px),
+                contentDescription = "Refresh",
+                colorFilter = ColorFilter.tint(
+                    ColorProvider(
+                        day = Color(config.refreshButtonColor.toColorInt()),
+                        night = Color(config.refreshButtonColor.toColorInt())
+                    )
+                ),
+                modifier = GlanceModifier.cornerRadius(12.dp).padding(6.dp)
+                    .clickable(actionRunCallback<RefreshKuralAction>())
+
+            )
         }
     }
 
