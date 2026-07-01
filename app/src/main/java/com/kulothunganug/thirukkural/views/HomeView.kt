@@ -102,11 +102,7 @@ fun HomeView(vm: HomeViewModel, navController: NavController) {
                             text = kural.kuralTa.replace("<br />", "\n"),
                             fontWeight = FontWeight.Bold,
                             textAlign = TextAlign.Left,
-                            fontSize = 20.sp,
                             lineHeight = 28.sp,
-                            maxLines = 2,
-                            autoSize = TextAutoSize.StepBased(14.sp, 20.sp, 1.sp)
-
                         )
                         Spacer(modifier = Modifier.height(8.dp))
                         Text(
