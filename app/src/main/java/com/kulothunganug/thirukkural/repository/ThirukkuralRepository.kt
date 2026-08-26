@@ -4,6 +4,7 @@ import com.kulothunganug.thirukkural.dao.ThirukkuralDao
 
 class ThirukkuralRepository(private val dao: ThirukkuralDao) {
     suspend fun getById(number: Int) = dao.getById(number)
+    suspend fun getByIds(numbers: List<Int>) = dao.getByIds(numbers)
 
     fun getPals() = dao.getPals()
     fun getIyals(pals: List<String>) = dao.getIyals(pals)

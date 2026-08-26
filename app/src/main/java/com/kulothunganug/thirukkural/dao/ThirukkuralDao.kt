@@ -10,6 +10,9 @@ interface ThirukkuralDao {
     @Query("SELECT * FROM thirukkural WHERE id = :id")
     suspend fun getById(id: Int): ThirukkuralModel?
 
+    @Query("SELECT * FROM thirukkural WHERE id IN (:ids) ORDER BY id ASC")
+    suspend fun getByIds(ids: List<Int>): List<ThirukkuralModel>
+
     @Query("SELECT DISTINCT pal_ta FROM thirukkural")
     fun getPals(): Flow<List<String>>
 

@@ -34,6 +34,10 @@
     <string name="copy">Copy</string>
     <string name="copied">Copied</string>
     <string name="kural_not_found">Kural not found</string>
+    <string name="favourites">Favourites</string>
+    <string name="add_to_favourites">Add to favourites</string>
+    <string name="remove_from_favourites">Remove from favourites</string>
+    <string name="no_favourites_yet">No favourites yet. Tap the heart on a Kural to save it here.</string>
     <string name="language_switch_unsupported">Changing the app language requires Android 13 or newer</string>
     <string name="widget_customization_title">Widget Customization</string>
     <string name="save_changes">Save changes</string>

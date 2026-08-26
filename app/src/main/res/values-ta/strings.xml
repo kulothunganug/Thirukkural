@@ -34,6 +34,10 @@
     <string name="copy">நகலெடு</string>
     <string name="copied">நகலெடுக்கப்பட்டது</string>
     <string name="kural_not_found">குறள் கிடைக்கவில்லை</string>
+    <string name="favourites">பிடித்தவை</string>
+    <string name="add_to_favourites">பிடித்தவைகளில் சேர்</string>
+    <string name="remove_from_favourites">பிடித்தவைகளிலிருந்து நீக்கு</string>
+    <string name="no_favourites_yet">இதுவரை பிடித்தவை எதுவும் இல்லை. ஒரு குறளை சேர்க்க அதன் இதயக் குறியீட்டைத் தட்டவும்.</string>
     <string name="language_switch_unsupported">பயன்பாட்டு மொழியை மாற்ற ஆண்ட்ராய்டு 13 அல்லது அதற்கு மேற்பட்டது தேவை</string>
     <string name="widget_customization_title">விட்செட் தனிப்பயனாக்கம்</string>
     <string name="save_changes">மாற்றங்களைச் சேமி</string>

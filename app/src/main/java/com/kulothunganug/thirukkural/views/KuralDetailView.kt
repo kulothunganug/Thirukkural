@@ -32,6 +32,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.ContentCopy
+import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -39,6 +41,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
@@ -83,7 +86,9 @@ fun KuralDetailView(
         vm.loadKural(kuralId)
     }
 
-    val foundKural = (uiState as? KuralDetailUiState.Found)?.kural
+    val foundState = uiState as? KuralDetailUiState.Found
+    val foundKural = foundState?.kural
+    val isFavourite = foundState?.isFavourite ?: false
 
     Scaffold(
         topBar = {
@@ -99,6 +104,17 @@ fun KuralDetailView(
                 },
                 actions = {
                     if (foundKural != null) {
+                        IconButton(onClick = { vm.toggleFavourite() }) {
+                            Icon(
+                                imageVector = if (isFavourite) Icons.Filled.Favorite else Icons.Filled.FavoriteBorder,
+                                contentDescription = stringResource(
+                                    if (isFavourite) R.string.remove_from_favourites
+                                    else R.string.add_to_favourites
+                                ),
+                                tint = if (isFavourite) MaterialTheme.colorScheme.error
+                                else LocalContentColor.current
+                            )
+                        }
                         IconButton(onClick = {
                             val clipboard =
                                 context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager

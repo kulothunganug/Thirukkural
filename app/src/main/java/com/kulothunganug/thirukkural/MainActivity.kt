@@ -20,6 +20,7 @@ import com.kulothunganug.thirukkural.models.MIN_KURAL_ID
 import com.kulothunganug.thirukkural.models.isValidKuralId
 import com.kulothunganug.thirukkural.ui.theme.ThirukkuralTheme
 import com.kulothunganug.thirukkural.views.BrowseView
+import com.kulothunganug.thirukkural.views.FavouritesView
 import com.kulothunganug.thirukkural.views.HomeView
 import com.kulothunganug.thirukkural.views.KuralDetailView
 import com.kulothunganug.thirukkural.views.SettingsView
@@ -107,6 +108,12 @@ class MainActivity : ComponentActivity() {
                     composable("settings") {
                         SettingsView(
                             navController = navController,
+                        )
+                    }
+                    composable("favourites") {
+                        FavouritesView(
+                            vm = koinViewModel(),
+                            navController = navController
                         )
                     }
 

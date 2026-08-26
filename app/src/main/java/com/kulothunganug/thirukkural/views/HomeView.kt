@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.rounded.Search
 import androidx.compose.material3.Card
@@ -44,6 +45,14 @@ fun HomeView(vm: HomeViewModel, navController: NavController) {
         topBar = {
             TopAppBar(
                 actions = {
+                    IconButton(
+                        onClick = { navController.navigate("favourites") }
+                    ) {
+                        Icon(
+                            Icons.Default.Favorite,
+                            contentDescription = stringResource(R.string.favourites)
+                        )
+                    }
                     IconButton(
                         onClick = { navController.navigate("settings") }
                     ) {
