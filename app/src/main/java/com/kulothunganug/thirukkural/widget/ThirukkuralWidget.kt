@@ -49,20 +49,15 @@ import com.kulothunganug.thirukkural.MainActivity
 import com.kulothunganug.thirukkural.R
 import com.kulothunganug.thirukkural.ThirukkuralDatabase
 import com.kulothunganug.thirukkural.models.ThirukkuralModel
+import com.kulothunganug.thirukkural.models.randomKuralId
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
-import kotlin.random.Random
 
 @Serializable
 enum class ContentType { Paal, Iyal, Adhigaram, Kural, Transliteration }
 
 @Serializable
 enum class WidgetTextAlign { Start, Center, End }
-
-const val MIN_KURAL_ID = 1
-const val MAX_KURAL_ID = 1330
-
-fun randomKuralId() = Random.nextInt(MIN_KURAL_ID, MAX_KURAL_ID + 1)
 
 @Serializable
 data class WidgetConfig(
@@ -166,18 +161,19 @@ class ThirukkuralWidget : GlanceAppWidget() {
                     .getById(kuralId)
             }
 
-            if (kural == null) {
+            val currentKural = kural
+            if (currentKural == null) {
                 Text("Loading...")
                 return@GlanceTheme
             }
 
             WidgetContent(
                 kuralId = kuralId,
-                paal = kural!!.palTa,
-                iyal = kural!!.iyalTa,
-                adhigaram = kural!!.adikaramTa,
-                kural = kural!!.kuralTa,
-                transliteration = kural!!.kuralTl,
+                paal = currentKural.palTa,
+                iyal = currentKural.iyalTa,
+                adhigaram = currentKural.adikaramTa,
+                kural = currentKural.kuralTa,
+                transliteration = currentKural.kuralTl,
                 config = config
             )
         }

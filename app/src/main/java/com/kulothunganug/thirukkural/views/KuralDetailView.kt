@@ -34,6 +34,7 @@ import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -65,6 +66,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.kulothunganug.thirukkural.R
+import com.kulothunganug.thirukkural.viewmodels.KuralDetailUiState
 import com.kulothunganug.thirukkural.viewmodels.KuralDetailViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -74,12 +76,14 @@ fun KuralDetailView(
     vm: KuralDetailViewModel,
     navController: NavController
 ) {
-    val kural by vm.kural.collectAsState()
-    val context = LocalContext.current;
+    val uiState by vm.uiState.collectAsState()
+    val context = LocalContext.current
 
     LaunchedEffect(kuralId) {
         vm.loadKural(kuralId)
     }
+
+    val foundKural = (uiState as? KuralDetailUiState.Found)?.kural
 
     Scaffold(
         topBar = {
@@ -94,120 +98,157 @@ fun KuralDetailView(
                     }
                 },
                 actions = {
-                    IconButton(onClick = {
-                        val clipboard =
-                            context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-                        val clip = ClipData.newPlainText("Copied kural", kural?.kuralTa?.replace("<br />", "\n"))
-                        clipboard.setPrimaryClip(clip)
-                        if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.S_V2)
-                            Toast.makeText(context, "Copied", Toast.LENGTH_SHORT).show()
+                    if (foundKural != null) {
+                        IconButton(onClick = {
+                            val clipboard =
+                                context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+                            val clip = ClipData.newPlainText(
+                                context.getString(R.string.copy),
+                                foundKural.kuralTa.replace("<br />", "\n")
+                            )
+                            clipboard.setPrimaryClip(clip)
+                            if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.S_V2)
+                                Toast.makeText(context, context.getString(R.string.copied), Toast.LENGTH_SHORT)
+                                    .show()
 
-                    }) {
-                        Icon(
-                            Icons.Filled.ContentCopy,
-                            contentDescription = stringResource(R.string.copy)
-                        )
+                        }) {
+                            Icon(
+                                Icons.Filled.ContentCopy,
+                                contentDescription = stringResource(R.string.copy)
+                            )
+                        }
                     }
                 }
             )
         }
     ) { innerPadding ->
-        kural?.let { k ->
-            Column(
-                modifier = Modifier
-                    .padding(innerPadding)
-                    .padding(16.dp)
-                    .fillMaxSize()
-                    .verticalScroll(rememberScrollState())
-            ) {
-                Text(
-                    text = k.kuralTa.replace("<br />", "\n"),
-                    fontSize = 20.sp,
-                    fontWeight = FontWeight.Bold,
-                    lineHeight = 28.sp,
-                    maxLines = 2,
-                    autoSize = TextAutoSize.StepBased(10.sp, 20.sp, 1.sp),
-                )
-
-                Spacer(modifier = Modifier.height(16.dp))
-                HorizontalDivider()
-                Spacer(modifier = Modifier.height(16.dp))
-
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+        when (uiState) {
+            is KuralDetailUiState.Loading -> {
+                Box(
+                    modifier = Modifier
+                        .padding(innerPadding)
+                        .fillMaxSize(),
+                    contentAlignment = Alignment.Center
                 ) {
-                    InfoCard(
-                        label = stringResource(R.string.kural_no),
-                        value = k.id.toString(),
-                        modifier = Modifier.weight(1f)
-                    )
-                    InfoCard(
-                        label = stringResource(R.string.pal),
-                        value = k.palTa,
-                        modifier = Modifier.weight(1f)
+                    CircularProgressIndicator()
+                }
+            }
+
+            is KuralDetailUiState.NotFound -> {
+                Box(
+                    modifier = Modifier
+                        .padding(innerPadding)
+                        .fillMaxSize()
+                        .padding(24.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = stringResource(R.string.kural_not_found),
+                        style = MaterialTheme.typography.bodyLarge,
+                        textAlign = TextAlign.Center,
+                        color = MaterialTheme.colorScheme.secondary
                     )
                 }
-                Spacer(modifier = Modifier.height(8.dp))
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+            }
+
+            is KuralDetailUiState.Found -> {
+                val k = (uiState as KuralDetailUiState.Found).kural
+                Column(
+                    modifier = Modifier
+                        .padding(innerPadding)
+                        .padding(16.dp)
+                        .fillMaxSize()
+                        .verticalScroll(rememberScrollState())
                 ) {
-                    InfoCard(
-                        label = stringResource(R.string.iyal),
-                        value = k.iyalTa,
-                        modifier = Modifier.weight(1f)
+                    Text(
+                        text = k.kuralTa.replace("<br />", "\n"),
+                        fontSize = 20.sp,
+                        fontWeight = FontWeight.Bold,
+                        lineHeight = 28.sp,
+                        maxLines = 2,
+                        autoSize = TextAutoSize.StepBased(10.sp, 20.sp, 1.sp),
                     )
-                    InfoCard(
-                        label = stringResource(R.string.adikaram),
-                        value = k.adikaramTa,
-                        modifier = Modifier.weight(1f)
+
+                    Spacer(modifier = Modifier.height(16.dp))
+                    HorizontalDivider()
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        InfoCard(
+                            label = stringResource(R.string.kural_no),
+                            value = k.id.toString(),
+                            modifier = Modifier.weight(1f)
+                        )
+                        InfoCard(
+                            label = stringResource(R.string.pal),
+                            value = k.palTa,
+                            modifier = Modifier.weight(1f)
+                        )
+                    }
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        InfoCard(
+                            label = stringResource(R.string.iyal),
+                            value = k.iyalTa,
+                            modifier = Modifier.weight(1f)
+                        )
+                        InfoCard(
+                            label = stringResource(R.string.adikaram),
+                            value = k.adikaramTa,
+                            modifier = Modifier.weight(1f)
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    DetailItem(label = stringResource(R.string.explanation), value = k.explanationTa)
+                    Spacer(modifier = Modifier.height(8.dp))
+                    DetailItem(
+                        label = stringResource(R.string.transliteration),
+                        value = k.kuralTl.replace("<br />", "\n")
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    DetailItem(label = stringResource(R.string.couplet), value = k.couplet)
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    Text(
+                        stringResource(R.string.commentators),
+                        style = MaterialTheme.typography.titleMedium,
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    CollapsibleExplanation(
+                        label = stringResource(R.string.mu_varadarasanar),
+                        value = k.commentaryMuVaratharasanar
+                    )
+                    CollapsibleExplanation(
+                        label = stringResource(R.string.parimelazhagar),
+                        value = k.commentaryParimelazhagar
+                    )
+                    CollapsibleExplanation(
+                        label = stringResource(R.string.solomon_pappaiah),
+                        value = k.commentarySalamanPappaiya
+                    )
+                    CollapsibleExplanation(
+                        label = stringResource(R.string.manakkudavar),
+                        value = k.commentaryManakudavar
+                    )
+                    CollapsibleExplanation(
+                        label = stringResource(R.string.munusami),
+                        value = k.commentaryMunusami
+                    )
+                    CollapsibleExplanation(
+                        label = stringResource(R.string.karunanidhi),
+                        value = k.commentaryKarunanidhi
                     )
                 }
-
-                Spacer(modifier = Modifier.height(16.dp))
-
-                DetailItem(label = stringResource(R.string.explanation), value = k.explanationTa)
-                Spacer(modifier = Modifier.height(8.dp))
-                DetailItem(
-                    label = stringResource(R.string.transliteration),
-                    value = k.kuralTl.replace("<br />", "\n")
-                )
-                Spacer(modifier = Modifier.height(8.dp))
-                DetailItem(label = stringResource(R.string.couplet), value = k.couplet)
-
-                Spacer(modifier = Modifier.height(16.dp))
-
-                Text(
-                    stringResource(R.string.commentators),
-                    style = MaterialTheme.typography.titleMedium,
-                )
-                Spacer(modifier = Modifier.height(8.dp))
-
-                CollapsibleExplanation(
-                    label = stringResource(R.string.mu_varadarasanar),
-                    value = k.commentaryMuVaratharasanar
-                )
-                CollapsibleExplanation(
-                    label = stringResource(R.string.parimelazhagar),
-                    value = k.commentaryParimelazhagar
-                )
-                CollapsibleExplanation(
-                    label = stringResource(R.string.solomon_pappaiah),
-                    value = k.commentarySalamanPappaiya
-                )
-                CollapsibleExplanation(
-                    label = stringResource(R.string.manakkudavar),
-                    value = k.commentaryManakudavar
-                )
-                CollapsibleExplanation(
-                    label = stringResource(R.string.munusami),
-                    value = k.commentaryMunusami
-                )
-                CollapsibleExplanation(
-                    label = stringResource(R.string.karunanidhi),
-                    value = k.commentaryKarunanidhi
-                )
             }
         }
     }

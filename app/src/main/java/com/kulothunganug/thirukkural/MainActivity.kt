@@ -16,6 +16,8 @@ import androidx.navigation.navArgument
 import androidx.navigation.navDeepLink
 import com.kulothunganug.thirukkural.datastore.AppTheme
 import com.kulothunganug.thirukkural.datastore.ThemeSettings
+import com.kulothunganug.thirukkural.models.MIN_KURAL_ID
+import com.kulothunganug.thirukkural.models.isValidKuralId
 import com.kulothunganug.thirukkural.ui.theme.ThirukkuralTheme
 import com.kulothunganug.thirukkural.views.BrowseView
 import com.kulothunganug.thirukkural.views.HomeView
@@ -89,8 +91,13 @@ class MainActivity : ComponentActivity() {
                             uriPattern = "thirukkural_app://kural/{kuralId}"
                         })
                     ) { backStackEntry ->
-                        val kuralId =
-                            backStackEntry.arguments?.getString("kuralId")?.toIntOrNull() ?: 1
+                        // The id can come from an externally-triggered deep link (BROWSABLE
+                        // intent-filter), so it must never be trusted without a range check —
+                        // an out-of-range id would otherwise crash the database lookup.
+                        val kuralId = backStackEntry.arguments?.getString("kuralId")
+                            ?.toIntOrNull()
+                            ?.takeIf { isValidKuralId(it) }
+                            ?: MIN_KURAL_ID
                         KuralDetailView(
                             kuralId = kuralId,
                             vm = koinViewModel(),

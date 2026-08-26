@@ -8,7 +8,7 @@ import kotlinx.coroutines.flow.Flow
 @Dao
 interface ThirukkuralDao {
     @Query("SELECT * FROM thirukkural WHERE id = :id")
-    suspend fun getById(id: Int): ThirukkuralModel
+    suspend fun getById(id: Int): ThirukkuralModel?
 
     @Query("SELECT DISTINCT pal_ta FROM thirukkural")
     fun getPals(): Flow<List<String>>

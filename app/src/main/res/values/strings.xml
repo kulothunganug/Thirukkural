@@ -32,4 +32,6 @@
     <string name="karunanidhi">Kalaignar M. Karunanidhi</string>
     <string name="tamil_kural">Tamil Kural</string>
     <string name="copy">Copy</string>
+    <string name="copied">Copied</string>
+    <string name="kural_not_found">Kural not found</string>
 </resources>

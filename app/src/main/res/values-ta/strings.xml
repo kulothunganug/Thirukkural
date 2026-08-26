@@ -32,4 +32,6 @@
     <string name="karunanidhi">கலைஞர் மு. கருணாநிதி</string>
     <string name="tamil_kural">தமிழ் குறள்</string>
     <string name="copy">நகலெடு</string>
+    <string name="copied">நகலெடுக்கப்பட்டது</string>
+    <string name="kural_not_found">குறள் கிடைக்கவில்லை</string>
 </resources>
