@@ -1,6 +1,7 @@
 package com.kulothunganug.thirukkural.viewmodels
 
 import android.content.Context
+import android.util.Log
 import androidx.glance.GlanceId
 import androidx.glance.appwidget.GlanceAppWidgetManager
 import androidx.glance.appwidget.state.getAppWidgetState
@@ -11,11 +12,14 @@ import androidx.lifecycle.viewModelScope
 import com.kulothunganug.thirukkural.widget.ContentType
 import com.kulothunganug.thirukkural.widget.SectionConfig
 import com.kulothunganug.thirukkural.widget.ThirukkuralWidget
+import com.kulothunganug.thirukkural.widget.WIDGET_CONFIG
 import com.kulothunganug.thirukkural.widget.WidgetConfig
 import com.kulothunganug.thirukkural.widget.WidgetTextAlign
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import kotlinx.serialization.json.Json
+
+private const val TAG = "WidgetCustomizationVM"
 
 class WidgetCustomizationViewModel(
     private val context: Context,
@@ -24,6 +28,16 @@ class WidgetCustomizationViewModel(
 
     private val _uiState = MutableStateFlow(WidgetConfig())
     val uiState: StateFlow<WidgetConfig> = _uiState.asStateFlow()
+
+    // Loading is true until the existing widget config has been read from disk. The view uses
+    // this to keep editing (and saving) disabled until then, so a fast tap on "save" can never
+    // race the initial load and silently no-op, and the initial load can never silently
+    // overwrite edits the user already made while it was still in flight.
+    private val _isLoading = MutableStateFlow(true)
+    val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
+
+    private val _loadFailed = MutableStateFlow(false)
+    val loadFailed: StateFlow<Boolean> = _loadFailed.asStateFlow()
 
     private val _openBgColorChooser = MutableStateFlow(false)
     val openBgColorChooser: StateFlow<Boolean> = _openBgColorChooser.asStateFlow()
@@ -35,14 +49,20 @@ class WidgetCustomizationViewModel(
 
     init {
         viewModelScope.launch {
-            glanceId = GlanceAppWidgetManager(context).getGlanceIdBy(appWidgetId)
-            glanceId?.let { id ->
+            try {
+                val id = GlanceAppWidgetManager(context).getGlanceIdBy(appWidgetId)
+                glanceId = id
                 val prefs = getAppWidgetState(context, PreferencesGlanceStateDefinition, id)
-                val json = prefs[com.kulothunganug.thirukkural.widget.WIDGET_CONFIG]
+                val json = prefs[WIDGET_CONFIG]
                 val config = json?.let {
                     Json.decodeFromString<WidgetConfig>(it)
                 } ?: WidgetConfig()
                 _uiState.value = config
+            } catch (e: Exception) {
+                Log.w(TAG, "failed to load existing config for widget $appWidgetId", e)
+                _loadFailed.value = true
+            } finally {
+                _isLoading.value = false
             }
         }
     }
@@ -93,16 +113,16 @@ class WidgetCustomizationViewModel(
         }
     }
 
-
-    suspend fun saveSettings() {
-        glanceId?.let { id ->
-            updateAppWidgetState(context, PreferencesGlanceStateDefinition, id) { prefs ->
-                prefs.toMutablePreferences().apply {
-                    val config = uiState.value
-                    this[com.kulothunganug.thirukkural.widget.WIDGET_CONFIG] = Json.encodeToString(config)
-                }
+    /** Returns true if the config was actually persisted, false if there was nothing to save to. */
+    suspend fun saveSettings(): Boolean {
+        val id = glanceId ?: return false
+        updateAppWidgetState(context, PreferencesGlanceStateDefinition, id) { prefs ->
+            prefs.toMutablePreferences().apply {
+                val config = uiState.value
+                this[WIDGET_CONFIG] = Json.encodeToString(config)
             }
-            ThirukkuralWidget().update(context, id)
         }
+        ThirukkuralWidget().update(context, id)
+        return true
     }
 }

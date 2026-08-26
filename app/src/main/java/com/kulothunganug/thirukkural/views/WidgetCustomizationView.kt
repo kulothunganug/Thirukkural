@@ -25,6 +25,7 @@ import androidx.compose.material.icons.outlined.Colorize
 import androidx.compose.material.icons.rounded.DragHandle
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
@@ -39,6 +40,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -82,7 +84,15 @@ fun WidgetCustomizationView(
     val vm: WidgetCustomizationViewModel = koinViewModel(parameters = { parametersOf(appWidgetId) })
 
     val state by vm.uiState.collectAsState()
+    val isLoading by vm.isLoading.collectAsState()
+    val loadFailed by vm.loadFailed.collectAsState()
     val scope = rememberCoroutineScope()
+
+    LaunchedEffect(loadFailed) {
+        // The widget id turned out to be unusable (e.g. removed mid-configuration) — there's
+        // nothing to edit or save, so back out as if the user cancelled.
+        if (loadFailed) onDone(Activity.RESULT_CANCELED)
+    }
 
     val openBgColorChooser by vm.openBgColorChooser.collectAsState()
     val openRefreshColorChooser by vm.openRefreshColorChooser.collectAsState()
@@ -157,12 +167,19 @@ fun WidgetCustomizationView(
                 },
                 title = { Text("Widget Customization") },
                 actions = {
-                    IconButton(onClick = {
-                        scope.launch {
-                            vm.saveSettings()
-                            onDone(Activity.RESULT_OK)
+                    IconButton(
+                        enabled = !isLoading,
+                        onClick = {
+                            scope.launch {
+                                // Only report success to the widget host if the config actually
+                                // made it to disk — saveSettings() can still return false if the
+                                // widget was removed while this screen was open.
+                                if (vm.saveSettings()) {
+                                    onDone(Activity.RESULT_OK)
+                                }
+                            }
                         }
-                    }) {
+                    ) {
                         Icon(
                             imageVector = Icons.Default.Check,
                             contentDescription = "Save changes"
@@ -172,6 +189,18 @@ fun WidgetCustomizationView(
             )
         }
     ) { padding ->
+        if (isLoading) {
+            Box(
+                modifier = Modifier
+                    .padding(padding)
+                    .fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                CircularProgressIndicator()
+            }
+            return@Scaffold
+        }
+
         LazyColumn(
             state = lazyListState,
             modifier = Modifier
