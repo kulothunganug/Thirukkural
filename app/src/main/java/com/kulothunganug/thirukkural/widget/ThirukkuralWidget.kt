@@ -47,11 +47,13 @@ import androidx.glance.text.TextAlign
 import androidx.glance.text.TextStyle
 import com.kulothunganug.thirukkural.MainActivity
 import com.kulothunganug.thirukkural.R
-import com.kulothunganug.thirukkural.ThirukkuralDatabase
 import com.kulothunganug.thirukkural.models.ThirukkuralModel
 import com.kulothunganug.thirukkural.models.randomKuralId
+import com.kulothunganug.thirukkural.repository.ThirukkuralRepository
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
+import org.koin.core.component.KoinComponent
+import org.koin.core.component.inject
 
 @Serializable
 enum class ContentType { Paal, Iyal, Adhigaram, Kural, Transliteration }
@@ -92,8 +94,13 @@ object ThirukkuralWidgetKeys {
     val KURAL_ID = intPreferencesKey("kural_id")
 }
 
-class ThirukkuralWidget : GlanceAppWidget() {
+class ThirukkuralWidget : GlanceAppWidget(), KoinComponent {
     override val stateDefinition: GlanceStateDefinition<*> = PreferencesGlanceStateDefinition
+
+    // GlanceAppWidget instances aren't constructor-injected by Koin (the Glance runtime
+    // constructs them directly), so this is the composition root's entry point into the same
+    // Koin graph the rest of the app uses, instead of reaching for a separate static db handle.
+    private val repository: ThirukkuralRepository by inject()
 
     override suspend fun providePreview(context: Context, widgetCategory: Int) {
         provideContent {
@@ -130,14 +137,12 @@ class ThirukkuralWidget : GlanceAppWidget() {
         }
 
         provideContent {
-            GlanceContent(context)
+            GlanceContent()
         }
     }
 
     @Composable
-    private fun GlanceContent(
-        context: Context
-    ) {
+    private fun GlanceContent() {
 
         GlanceTheme {
             val prefs = currentState<Preferences>()
@@ -154,11 +159,7 @@ class ThirukkuralWidget : GlanceAppWidget() {
                 initialValue = null,
                 key1 = kuralId
             ) {
-
-                value = ThirukkuralDatabase
-                    .get(context)
-                    .dao()
-                    .getById(kuralId)
+                value = repository.getById(kuralId)
             }
 
             val currentKural = kural
