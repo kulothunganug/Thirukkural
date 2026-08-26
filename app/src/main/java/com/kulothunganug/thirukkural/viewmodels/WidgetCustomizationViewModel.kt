@@ -94,7 +94,7 @@ class WidgetCustomizationViewModel(
     }
 
 
-    fun saveSettings() = viewModelScope.launch {
+    suspend fun saveSettings() {
         glanceId?.let { id ->
             updateAppWidgetState(context, PreferencesGlanceStateDefinition, id) { prefs ->
                 prefs.toMutablePreferences().apply {

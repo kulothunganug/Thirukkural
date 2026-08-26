@@ -43,6 +43,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -65,6 +66,7 @@ import com.kulothunganug.thirukkural.widget.ContentType
 import com.kulothunganug.thirukkural.widget.SectionConfig
 import com.kulothunganug.thirukkural.widget.WidgetConfig
 import com.kulothunganug.thirukkural.widget.WidgetTextAlign
+import kotlinx.coroutines.launch
 import org.koin.androidx.compose.koinViewModel
 import org.koin.core.parameter.parametersOf
 import sh.calvin.reorderable.ReorderableItem
@@ -80,6 +82,7 @@ fun WidgetCustomizationView(
     val vm: WidgetCustomizationViewModel = koinViewModel(parameters = { parametersOf(appWidgetId) })
 
     val state by vm.uiState.collectAsState()
+    val scope = rememberCoroutineScope()
 
     val openBgColorChooser by vm.openBgColorChooser.collectAsState()
     val openRefreshColorChooser by vm.openRefreshColorChooser.collectAsState()
@@ -155,8 +158,10 @@ fun WidgetCustomizationView(
                 title = { Text("Widget Customization") },
                 actions = {
                     IconButton(onClick = {
-                        vm.saveSettings()
-                        onDone(Activity.RESULT_OK)
+                        scope.launch {
+                            vm.saveSettings()
+                            onDone(Activity.RESULT_OK)
+                        }
                     }) {
                         Icon(
                             imageVector = Icons.Default.Check,
