@@ -34,4 +34,5 @@
     <string name="copy">நகலெடு</string>
     <string name="copied">நகலெடுக்கப்பட்டது</string>
     <string name="kural_not_found">குறள் கிடைக்கவில்லை</string>
+    <string name="language_switch_unsupported">பயன்பாட்டு மொழியை மாற்ற ஆண்ட்ராய்டு 13 அல்லது அதற்கு மேற்பட்டது தேவை</string>
 </resources>

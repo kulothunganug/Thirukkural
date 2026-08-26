@@ -34,4 +34,5 @@
     <string name="copy">Copy</string>
     <string name="copied">Copied</string>
     <string name="kural_not_found">Kural not found</string>
+    <string name="language_switch_unsupported">Changing the app language requires Android 13 or newer</string>
 </resources>

@@ -119,10 +119,16 @@ fun SettingsView(
                 modifier = Modifier.padding(16.dp)
             )
 
+            // Per-app language switching is only backed by the platform LocaleManager (API 33+).
+            // The app's own minSdk is 31, so on API 31/32 these options must be visibly disabled
+            // instead of silently doing nothing when tapped.
+            val languageSwitchSupported = Build.VERSION.SDK_INT >= 33
+
             ThemeOption(
                 label = stringResource(R.string.english),
                 selected = currentLanguage == "en",
                 shape = leadingItemShape(),
+                enabled = languageSwitchSupported,
                 onClick = {
                     setAppLanguage("en")
                 }
@@ -131,10 +137,20 @@ fun SettingsView(
                 label = stringResource(R.string.tamil),
                 selected = currentLanguage == "ta",
                 shape = endItemShape(),
+                enabled = languageSwitchSupported,
                 onClick = {
                     setAppLanguage("ta")
                 }
             )
+
+            if (!languageSwitchSupported) {
+                Text(
+                    text = stringResource(R.string.language_switch_unsupported),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.secondary,
+                    modifier = Modifier.padding(16.dp)
+                )
+            }
         }
     }
 }
@@ -144,17 +160,19 @@ fun ThemeOption(
     label: String,
     selected: Boolean,
     shape: Shape,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    enabled: Boolean = true
 ) {
     Surface(shape = shape) {
         ListItem(
             colors = listItemColors(),
-            modifier = Modifier.clickable { onClick() },
+            modifier = Modifier.clickable(enabled = enabled) { onClick() },
             headlineContent = { Text(text = label) },
             trailingContent = {
                 RadioButton(
                     selected = selected,
-                    onClick = onClick
+                    onClick = onClick,
+                    enabled = enabled
                 )
             }
         )
