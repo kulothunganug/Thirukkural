@@ -35,4 +35,27 @@
     <string name="copied">நகலெடுக்கப்பட்டது</string>
     <string name="kural_not_found">குறள் கிடைக்கவில்லை</string>
     <string name="language_switch_unsupported">பயன்பாட்டு மொழியை மாற்ற ஆண்ட்ராய்டு 13 அல்லது அதற்கு மேற்பட்டது தேவை</string>
+    <string name="widget_customization_title">விட்செட் தனிப்பயனாக்கம்</string>
+    <string name="save_changes">மாற்றங்களைச் சேமி</string>
+    <string name="colors">நிறங்கள்</string>
+    <string name="background_color">பின்னணி நிறம்</string>
+    <string name="refresh_button_color">புதுப்பிப்பு பொத்தான் நிறம்</string>
+    <string name="pick_color">நிறத்தைத் தேர்ந்தெடு</string>
+    <string name="element_styling_order">உறுப்புகளின் தோற்றமும் வரிசையும்</string>
+    <string name="reorder">வரிசைமாற்று</string>
+    <string name="edit_settings">அமைப்புகளைத் திருத்து</string>
+    <string name="section_settings">%1$s அமைப்புகள்</string>
+    <string name="color">நிறம்</string>
+    <string name="bold_text">தடிமனான எழுத்து</string>
+    <string name="text_size">எழுத்து அளவு</string>
+    <string name="alignment">சீரமைப்பு</string>
+    <string name="close">மூடு</string>
+    <string name="cancel">ரத்துசெய்</string>
+    <string name="ok">சரி</string>
+    <string name="invalid_hex_code">உள்ளிட்ட ஹெக்ஸ் குறியீடு செல்லுபடியாகாது!</string>
+    <string name="align_start">தொடக்கம்</string>
+    <string name="align_center">மையம்</string>
+    <string name="align_end">முடிவு</string>
+    <string name="widget_loading">ஏற்றுகிறது…</string>
+    <string name="refresh">புதுப்பி</string>
 </resources>

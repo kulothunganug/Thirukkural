@@ -35,4 +35,27 @@
     <string name="copied">Copied</string>
     <string name="kural_not_found">Kural not found</string>
     <string name="language_switch_unsupported">Changing the app language requires Android 13 or newer</string>
+    <string name="widget_customization_title">Widget Customization</string>
+    <string name="save_changes">Save changes</string>
+    <string name="colors">Colors</string>
+    <string name="background_color">Background Color</string>
+    <string name="refresh_button_color">Refresh Button Color</string>
+    <string name="pick_color">Pick color</string>
+    <string name="element_styling_order">Element Styling &amp; Order</string>
+    <string name="reorder">Reorder</string>
+    <string name="edit_settings">Edit settings</string>
+    <string name="section_settings">%1$s Settings</string>
+    <string name="color">Color</string>
+    <string name="bold_text">Bold Text</string>
+    <string name="text_size">Text Size</string>
+    <string name="alignment">Alignment</string>
+    <string name="close">Close</string>
+    <string name="cancel">Cancel</string>
+    <string name="ok">Ok</string>
+    <string name="invalid_hex_code">The entered hex code is not valid!</string>
+    <string name="align_start">Start</string>
+    <string name="align_center">Center</string>
+    <string name="align_end">End</string>
+    <string name="widget_loading">Loading…</string>
+    <string name="refresh">Refresh</string>
 </resources>

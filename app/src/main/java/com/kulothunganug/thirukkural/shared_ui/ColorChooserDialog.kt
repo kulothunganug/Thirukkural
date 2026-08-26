@@ -31,6 +31,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
@@ -41,6 +42,7 @@ import com.github.skydoves.colorpicker.compose.BrightnessSlider
 import com.github.skydoves.colorpicker.compose.ColorEnvelope
 import com.github.skydoves.colorpicker.compose.HsvColorPicker
 import com.github.skydoves.colorpicker.compose.rememberColorPickerController
+import com.kulothunganug.thirukkural.R
 
 @Composable
 fun ColorChooserDialog(
@@ -159,23 +161,20 @@ fun ColorChooserDialog(
                     horizontalArrangement = Arrangement.spacedBy(4.dp),
                     modifier = Modifier.align(Alignment.End)
                 ) {
-                    OutlinedButton(onClick = { onDismissRequest() }) { Text("Cancel") }
+                    OutlinedButton(onClick = { onDismissRequest() }) {
+                        Text(stringResource(R.string.cancel))
+                    }
+                    val invalidHexMessage = stringResource(R.string.invalid_hex_code)
                     Button(onClick = {
                         if (isError) {
-                            Toast.makeText(
-                                ctx,
-                                "The entered hex code is not valid!",
-                                Toast.LENGTH_SHORT
-                            ).show();
-                            return@Button;
+                            Toast.makeText(ctx, invalidHexMessage, Toast.LENGTH_SHORT).show()
+                            return@Button
                         }
 
-                        onColorSelected("#${inputState.text}");
+                        onColorSelected("#${inputState.text}")
                         onDismissRequest()
                     }) {
-                        Text(
-                            "Ok"
-                        )
+                        Text(stringResource(R.string.ok))
                     }
                 }
             }

@@ -52,12 +52,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.core.graphics.toColorInt
+import com.kulothunganug.thirukkural.R
 import com.kulothunganug.thirukkural.shared_ui.ColorChooserDialog
 import com.kulothunganug.thirukkural.shared_ui.endItemShape
 import com.kulothunganug.thirukkural.shared_ui.leadingItemShape
@@ -119,7 +121,7 @@ fun WidgetCustomizationView(
     when {
         openBgColorChooser -> {
             ColorChooserDialog(
-                "Background Color",
+                stringResource(R.string.background_color),
                 state.bgColor,
                 onColorSelected = { vm.updateBgColor(it) },
                 onDismissRequest = {
@@ -129,7 +131,7 @@ fun WidgetCustomizationView(
 
         openRefreshColorChooser -> {
             ColorChooserDialog(
-                "Refresh Button Color",
+                stringResource(R.string.refresh_button_color),
                 state.refreshButtonColor,
                 onColorSelected = { vm.updateRefreshButtonColor(it) },
                 onDismissRequest = {
@@ -161,11 +163,11 @@ fun WidgetCustomizationView(
                     }) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Go back"
+                            contentDescription = stringResource(R.string.go_back)
                         )
                     }
                 },
-                title = { Text("Widget Customization") },
+                title = { Text(stringResource(R.string.widget_customization_title)) },
                 actions = {
                     IconButton(
                         enabled = !isLoading,
@@ -182,7 +184,7 @@ fun WidgetCustomizationView(
                     ) {
                         Icon(
                             imageVector = Icons.Default.Check,
-                            contentDescription = "Save changes"
+                            contentDescription = stringResource(R.string.save_changes)
                         )
                     }
                 }
@@ -215,7 +217,7 @@ fun WidgetCustomizationView(
 
             item {
                 Text(
-                    "Colors",
+                    stringResource(R.string.colors),
                     style = MaterialTheme.typography.titleMedium,
                     modifier = Modifier.padding(bottom = 8.dp)
                 )
@@ -234,11 +236,11 @@ fun WidgetCustomizationView(
                             ) {
                                 Icon(
                                     Icons.Outlined.Colorize,
-                                    contentDescription = "Pick color",
+                                    contentDescription = stringResource(R.string.pick_color),
                                 )
                             }
                         },
-                        headlineContent = { Text("Background Color") },
+                        headlineContent = { Text(stringResource(R.string.background_color)) },
                     )
                 }
                 Spacer(modifier = Modifier.height(2.dp))
@@ -254,11 +256,11 @@ fun WidgetCustomizationView(
                             ) {
                                 Icon(
                                     Icons.Outlined.Colorize,
-                                    contentDescription = "Pick color",
+                                    contentDescription = stringResource(R.string.pick_color),
                                 )
                             }
                         },
-                        headlineContent = { Text("Refresh Button Color") },
+                        headlineContent = { Text(stringResource(R.string.refresh_button_color)) },
                     )
                 }
                 Spacer(modifier = Modifier.height(12.dp))
@@ -266,7 +268,7 @@ fun WidgetCustomizationView(
 
             item {
                 Text(
-                    "Element Styling & Order",
+                    stringResource(R.string.element_styling_order),
                     style = MaterialTheme.typography.titleMedium,
                     modifier = Modifier.padding(bottom = 8.dp)
                 )
@@ -311,13 +313,13 @@ fun WidgetCustomizationView(
                                 ) {
                                     Icon(
                                         Icons.Rounded.DragHandle,
-                                        contentDescription = "Reorder"
+                                        contentDescription = stringResource(R.string.reorder)
                                     )
                                 }
                             },
                             headlineContent = {
                                 Text(
-                                    sectionConfig.type.name,
+                                    contentTypeLabel(sectionConfig.type),
                                 )
                             },
                             trailingContent = {
@@ -328,7 +330,7 @@ fun WidgetCustomizationView(
                                     ) {
                                         Icon(
                                             Icons.Default.Edit,
-                                            contentDescription = "Edit settings"
+                                            contentDescription = stringResource(R.string.edit_settings)
                                         )
                                     }
                                     Switch(
@@ -432,10 +434,11 @@ fun ElementSettingsDialog(
     onColorChange: (String) -> Unit
 ) {
     var showColorPicker by remember { mutableStateOf(false) }
+    val sectionLabel = contentTypeLabel(sectionConfig.type)
 
     if (showColorPicker) {
         ColorChooserDialog(
-            label = "${sectionConfig.type.name} Color",
+            label = stringResource(R.string.section_settings, sectionLabel),
             initialColor = sectionConfig.textColor,
             onColorSelected = { onColorChange(it) },
             onDismissRequest = { showColorPicker = false }
@@ -452,7 +455,7 @@ fun ElementSettingsDialog(
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
                 Text(
-                    text = "${sectionConfig.type.name} Settings",
+                    text = stringResource(R.string.section_settings, sectionLabel),
                     style = MaterialTheme.typography.headlineSmall,
                 )
 
@@ -462,15 +465,15 @@ fun ElementSettingsDialog(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
-                    Text("Color")
+                    Text(stringResource(R.string.color))
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         IconButton(
                             onClick = { showColorPicker = true },
                         ) {
                             Icon(
-                                Icons.Outlined.Colorize, contentDescription = "Pick color",
-
-                                )
+                                Icons.Outlined.Colorize,
+                                contentDescription = stringResource(R.string.pick_color),
+                            )
                         }
                     }
                 }
@@ -481,7 +484,7 @@ fun ElementSettingsDialog(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
-                    Text("Bold Text")
+                    Text(stringResource(R.string.bold_text))
                     Switch(
                         checked = sectionConfig.bold,
                         onCheckedChange = onBoldChange,
@@ -495,7 +498,7 @@ fun ElementSettingsDialog(
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Text("Text Size")
+                        Text(stringResource(R.string.text_size))
                         Text(
                             "${sectionConfig.size}sp",
                             style = MaterialTheme.typography.bodyMedium,
@@ -514,7 +517,7 @@ fun ElementSettingsDialog(
                     modifier = Modifier.fillMaxWidth(),
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    Text("Alignment")
+                    Text(stringResource(R.string.alignment))
                     Row(
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
@@ -522,7 +525,7 @@ fun ElementSettingsDialog(
                             FilterChip(
                                 selected = sectionConfig.align == it,
                                 onClick = { onAlignChange(it) },
-                                label = { Text(it.name) }
+                                label = { Text(widgetTextAlignLabel(it)) }
                             )
                         }
                     }
@@ -532,9 +535,25 @@ fun ElementSettingsDialog(
                     onClick = onDismissRequest,
                     modifier = Modifier.align(Alignment.End)
                 ) {
-                    Text("Close")
+                    Text(stringResource(R.string.close))
                 }
             }
         }
     }
+}
+
+@Composable
+private fun contentTypeLabel(type: ContentType): String = when (type) {
+    ContentType.Paal -> stringResource(R.string.pal)
+    ContentType.Iyal -> stringResource(R.string.iyal)
+    ContentType.Adhigaram -> stringResource(R.string.adikaram)
+    ContentType.Kural -> stringResource(R.string.tamil_kural)
+    ContentType.Transliteration -> stringResource(R.string.transliteration)
+}
+
+@Composable
+private fun widgetTextAlignLabel(align: WidgetTextAlign): String = when (align) {
+    WidgetTextAlign.Start -> stringResource(R.string.align_start)
+    WidgetTextAlign.Center -> stringResource(R.string.align_center)
+    WidgetTextAlign.End -> stringResource(R.string.align_end)
 }

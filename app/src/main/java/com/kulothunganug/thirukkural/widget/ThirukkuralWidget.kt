@@ -20,6 +20,7 @@ import androidx.glance.GlanceModifier
 import androidx.glance.GlanceTheme
 import androidx.glance.Image
 import androidx.glance.ImageProvider
+import androidx.glance.LocalContext
 import androidx.glance.action.ActionParameters
 import androidx.glance.action.actionParametersOf
 import androidx.glance.action.clickable
@@ -145,6 +146,7 @@ class ThirukkuralWidget : GlanceAppWidget(), KoinComponent {
     private fun GlanceContent() {
 
         GlanceTheme {
+            val context = LocalContext.current
             val prefs = currentState<Preferences>()
             val kuralId =
                 prefs[ThirukkuralWidgetKeys.KURAL_ID]!!
@@ -164,7 +166,7 @@ class ThirukkuralWidget : GlanceAppWidget(), KoinComponent {
 
             val currentKural = kural
             if (currentKural == null) {
-                Text("Loading...")
+                Text(context.getString(R.string.widget_loading))
                 return@GlanceTheme
             }
 
@@ -192,6 +194,7 @@ class ThirukkuralWidget : GlanceAppWidget(), KoinComponent {
         config: WidgetConfig,
     ) {
         val backgroundColor = Color(config.bgColor.toColorInt())
+        val context = LocalContext.current
 
         Box(
             modifier = GlanceModifier.fillMaxSize().background(backgroundColor).padding(12.dp)
@@ -225,7 +228,7 @@ class ThirukkuralWidget : GlanceAppWidget(), KoinComponent {
             }
             Image(
                 provider = ImageProvider(R.drawable.refresh_24px),
-                contentDescription = "Refresh",
+                contentDescription = context.getString(R.string.refresh),
                 colorFilter = ColorFilter.tint(
                     ColorProvider(
                         day = Color(config.refreshButtonColor.toColorInt()),
