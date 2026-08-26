@@ -53,8 +53,13 @@ fun ColorChooserDialog(
     val controller = rememberColorPickerController()
 
     var isError by remember { mutableStateOf(false) }
-    val inputState = rememberTextFieldState(initialColor)
-    val ctx = LocalContext.current;
+    // The text field only ever holds the hex digits, never the leading '#' — it's shown
+    // separately as a leadingIcon below, and every write-back point ("#${inputState.text}")
+    // assumes the same. initialColor is stored app-wide as "#RRGGBB"/"#AARRGGBB", so strip the
+    // '#' here or the field would start out one character short of valid and show as an error
+    // before the user has touched anything.
+    val inputState = rememberTextFieldState(initialColor.removePrefix("#"))
+    val ctx = LocalContext.current
 
     LaunchedEffect(initialColor) {
         controller.selectByColor(Color(initialColor.toColorInt()), false)
@@ -62,7 +67,9 @@ fun ColorChooserDialog(
 
 
     LaunchedEffect(inputState.text) {
-        if (inputState.text.length != 8) {
+        // Accept both 6-digit RGB (the format every default color in the app is stored in) and
+        // 8-digit ARGB (what the picker itself emits once the user drags a slider).
+        if (inputState.text.length != 6 && inputState.text.length != 8) {
             isError = true; return@LaunchedEffect
         }
         try {
