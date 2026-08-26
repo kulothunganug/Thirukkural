@@ -119,9 +119,6 @@ fun SettingsView(
                 modifier = Modifier.padding(16.dp)
             )
 
-            // Per-app language switching is only backed by the platform LocaleManager (API 33+).
-            // The app's own minSdk is 31, so on API 31/32 these options must be visibly disabled
-            // instead of silently doing nothing when tapped.
             val languageSwitchSupported = Build.VERSION.SDK_INT >= 33
 
             ThemeOption(

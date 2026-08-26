@@ -20,8 +20,6 @@ private const val TAG = "ThirukkuralApplication"
 
 class ThirukkuralApplication : Application() {
 
-    // A real application-scoped coroutine scope instead of an ad-hoc MainScope() per call site,
-    // so any future application-level background work has one consistent, cancellable home.
     private val applicationScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
 
     override fun onCreate() {
