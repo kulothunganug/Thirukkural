@@ -4,6 +4,7 @@ import androidx.room.Room
 import com.kulothunganug.thirukkural.ThirukkuralDatabase
 import com.kulothunganug.thirukkural.datastore.FavouritesSettings
 import com.kulothunganug.thirukkural.datastore.ThemeSettings
+import com.kulothunganug.thirukkural.datastore.WidgetHintSettings
 import com.kulothunganug.thirukkural.repository.ThirukkuralRepository
 import com.kulothunganug.thirukkural.viewmodels.BrowseViewModel
 import com.kulothunganug.thirukkural.viewmodels.FavouritesViewModel
@@ -34,10 +35,11 @@ val appModule = module {
     single { ThirukkuralRepository(get()) }
     single { ThemeSettings(androidContext()) }
     single { FavouritesSettings(androidContext()) }
-    viewModel { HomeViewModel(get()) }
+    single { WidgetHintSettings(androidContext()) }
+    viewModel { HomeViewModel(get(), get()) }
     viewModel { BrowseViewModel(get()) }
     viewModel { KuralDetailViewModel(get(), get()) }
     viewModel { FavouritesViewModel(get(), get()) }
     viewModel { SettingsViewModel(get()) }
-    viewModel { (appWidgetId: Int) -> WidgetCustomizationViewModel(androidContext(), appWidgetId) }
+    viewModel { (appWidgetId: Int) -> WidgetCustomizationViewModel(androidContext(), appWidgetId, get(), get()) }
 }
