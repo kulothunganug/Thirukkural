@@ -62,4 +62,24 @@
     <string name="align_end">End</string>
     <string name="widget_loading">Loading…</string>
     <string name="refresh">Refresh</string>
+    <string name="auto_refresh">Auto Refresh</string>
+    <string name="refresh_interval">Refresh Interval</string>
+    <string name="refresh_source">Refresh From</string>
+    <string name="refresh_source_all">All Kurals</string>
+    <string name="refresh_source_category">Specific Categories</string>
+    <string name="refresh_source_favourites">@string/favourites</string>
+    <string name="select_categories">Select Categories</string>
+    <string name="category_selection_count">%1$d %2$s</string>
+    <string name="category_selection_summary">%1$s selected</string>
+    <string name="duration_minutes">%1$d min</string>
+    <string name="duration_hours">%1$d hr</string>
+    <string name="duration_hours_minutes">%1$dh %2$dm</string>
+    <string name="add_widget_to_home_screen">Add widget to Home Screen</string>
+    <string name="add_widget_hint_title">Try the widget!</string>
+    <string name="add_widget_hint_description">Add Thirukkural as a widget to your Home Screen for a Kural at a glance.</string>
+    <string name="thiruvalluvar">Thiruvalluvar</string>
+    <string name="search_kural">Search Kural</string>
+    <string name="clear_search">Clear search</string>
+    <string name="no_kurals_found">No Kurals found for \"%1$s\"</string>
+    <string name="search_results_count">%1$d Kurals</string>
 </resources>

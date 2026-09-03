@@ -2,6 +2,7 @@ package com.kulothunganug.thirukkural.views
 
 import android.app.Activity
 import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -18,14 +19,18 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.FilterList
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.outlined.Colorize
 import androidx.compose.material.icons.rounded.DragHandle
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
@@ -60,14 +65,20 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.core.graphics.toColorInt
 import com.kulothunganug.thirukkural.R
+import com.kulothunganug.thirukkural.shared_ui.CategoryFilterDialog
 import com.kulothunganug.thirukkural.shared_ui.ColorChooserDialog
+import com.kulothunganug.thirukkural.shared_ui.detachedItemShape
 import com.kulothunganug.thirukkural.shared_ui.endItemShape
 import com.kulothunganug.thirukkural.shared_ui.leadingItemShape
 import com.kulothunganug.thirukkural.shared_ui.listItemColors
 import com.kulothunganug.thirukkural.shared_ui.middleItemShape
 import com.kulothunganug.thirukkural.viewmodels.WidgetCustomizationViewModel
 import com.kulothunganug.thirukkural.widget.ContentType
+import com.kulothunganug.thirukkural.widget.MAX_AUTO_REFRESH_INTERVAL_MINUTES
+import com.kulothunganug.thirukkural.widget.MIN_AUTO_REFRESH_INTERVAL_MINUTES
+import com.kulothunganug.thirukkural.widget.RefreshSource
 import com.kulothunganug.thirukkural.widget.SectionConfig
+import com.kulothunganug.thirukkural.widget.THIRUVALLUVAR_TA
 import com.kulothunganug.thirukkural.widget.WidgetConfig
 import com.kulothunganug.thirukkural.widget.WidgetTextAlign
 import kotlinx.coroutines.launch
@@ -75,6 +86,7 @@ import org.koin.androidx.compose.koinViewModel
 import org.koin.core.parameter.parametersOf
 import sh.calvin.reorderable.ReorderableItem
 import sh.calvin.reorderable.rememberReorderableLazyListState
+import kotlin.math.roundToInt
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -88,11 +100,12 @@ fun WidgetCustomizationView(
     val state by vm.uiState.collectAsState()
     val isLoading by vm.isLoading.collectAsState()
     val loadFailed by vm.loadFailed.collectAsState()
+    val pals by vm.pals.collectAsState()
+    val categoryIyals by vm.categoryIyals.collectAsState()
+    val categoryAdikarams by vm.categoryAdikarams.collectAsState()
     val scope = rememberCoroutineScope()
 
     LaunchedEffect(loadFailed) {
-        // The widget id turned out to be unusable (e.g. removed mid-configuration) — there's
-        // nothing to edit or save, so back out as if the user cancelled.
         if (loadFailed) onDone(Activity.RESULT_CANCELED)
     }
 
@@ -100,6 +113,7 @@ fun WidgetCustomizationView(
     val openRefreshColorChooser by vm.openRefreshColorChooser.collectAsState()
     val haptic = LocalHapticFeedback.current
     var editingSection by remember { mutableStateOf<SectionConfig?>(null) }
+    var showCategoryFilterDialog by remember { mutableStateOf(false) }
 
     var reorderableSections by remember(state.contentOrder) {
         mutableStateOf(state.contentOrder)
@@ -153,6 +167,22 @@ fun WidgetCustomizationView(
                 }
             )
         }
+
+        showCategoryFilterDialog -> {
+            CategoryFilterDialog(
+                title = stringResource(R.string.select_categories),
+                pals = pals,
+                iyals = categoryIyals,
+                adikarams = categoryAdikarams,
+                selectedPals = state.refreshCategoryPals,
+                selectedIyals = state.refreshCategoryIyals,
+                selectedAdikarams = state.refreshCategoryAdikarams,
+                onTogglePal = { vm.toggleRefreshCategoryPal(it) },
+                onToggleIyal = { vm.toggleRefreshCategoryIyal(it) },
+                onToggleAdikaram = { vm.toggleRefreshCategoryAdikaram(it) },
+                onDismissRequest = { showCategoryFilterDialog = false }
+            )
+        }
     }
     Scaffold(
         topBar = {
@@ -173,9 +203,6 @@ fun WidgetCustomizationView(
                         enabled = !isLoading,
                         onClick = {
                             scope.launch {
-                                // Only report success to the widget host if the config actually
-                                // made it to disk — saveSettings() can still return false if the
-                                // widget was removed while this screen was open.
                                 if (vm.saveSettings()) {
                                     onDone(Activity.RESULT_OK)
                                 }
@@ -263,6 +290,25 @@ fun WidgetCustomizationView(
                         headlineContent = { Text(stringResource(R.string.refresh_button_color)) },
                     )
                 }
+                Spacer(modifier = Modifier.height(12.dp))
+            }
+
+            item {
+                Text(
+                    stringResource(R.string.auto_refresh),
+                    style = MaterialTheme.typography.titleMedium,
+                    modifier = Modifier.padding(bottom = 8.dp)
+                )
+            }
+
+            item {
+                AutoRefreshSection(
+                    state = state,
+                    onEnabledChange = { vm.updateAutoRefreshEnabled(it) },
+                    onIntervalChange = { vm.updateAutoRefreshInterval(it) },
+                    onSourceChange = { vm.updateRefreshSource(it) },
+                    onOpenCategoryDialog = { showCategoryFilterDialog = true }
+                )
                 Spacer(modifier = Modifier.height(12.dp))
             }
 
@@ -357,6 +403,180 @@ fun WidgetCustomizationView(
 }
 
 
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun AutoRefreshSection(
+    state: WidgetConfig,
+    onEnabledChange: (Boolean) -> Unit,
+    onIntervalChange: (Int) -> Unit,
+    onSourceChange: (RefreshSource) -> Unit,
+    onOpenCategoryDialog: () -> Unit,
+) {
+    val rows = buildList {
+        add("enable")
+        if (state.autoRefreshEnabled) {
+            add("interval")
+            add("source")
+            if (state.refreshSource == RefreshSource.Category) add("categories")
+        }
+    }
+
+    rows.forEachIndexed { index, row ->
+        val shape = when {
+            rows.size == 1 -> detachedItemShape()
+            index == 0 -> leadingItemShape()
+            index == rows.size - 1 -> endItemShape()
+            else -> middleItemShape()
+        }
+
+        Surface(shape = shape, tonalElevation = 2.dp) {
+            when (row) {
+                "enable" -> ListItem(
+                    colors = listItemColors(),
+                    headlineContent = { Text(stringResource(R.string.auto_refresh)) },
+                    trailingContent = {
+                        Switch(
+                            checked = state.autoRefreshEnabled,
+                            onCheckedChange = onEnabledChange
+                        )
+                    }
+                )
+
+                "interval" -> ListItem(
+                    colors = listItemColors(),
+                    headlineContent = { Text(stringResource(R.string.refresh_interval)) },
+                    supportingContent = {
+                        Column {
+                            Text(
+                                formatIntervalMinutes(state.autoRefreshIntervalMinutes),
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.primary
+                            )
+                            Slider(
+                                value = state.autoRefreshIntervalMinutes.toFloat(),
+                                onValueChange = { onIntervalChange(it.roundToInt()) },
+                                valueRange = MIN_AUTO_REFRESH_INTERVAL_MINUTES.toFloat()..
+                                        MAX_AUTO_REFRESH_INTERVAL_MINUTES.toFloat(),
+                                steps = (MAX_AUTO_REFRESH_INTERVAL_MINUTES - MIN_AUTO_REFRESH_INTERVAL_MINUTES) /
+                                        MIN_AUTO_REFRESH_INTERVAL_MINUTES - 1
+                            )
+                        }
+                    }
+                )
+
+                "source" -> ListItem(
+                    colors = listItemColors(),
+                    headlineContent = { Text(stringResource(R.string.refresh_source)) },
+                    trailingContent = {
+                        RefreshSourceDropdown(
+                            selected = state.refreshSource,
+                            onSelected = onSourceChange
+                        )
+                    }
+                )
+
+                "categories" -> ListItem(
+                    colors = listItemColors(),
+                    headlineContent = { Text(stringResource(R.string.select_categories)) },
+                    supportingContent = { Text(categorySummary(state)) },
+                    trailingContent = {
+                        IconButton(onClick = onOpenCategoryDialog) {
+                            Icon(
+                                Icons.Default.FilterList,
+                                contentDescription = stringResource(R.string.select_categories)
+                            )
+                        }
+                    },
+                    modifier = Modifier.clickable(onClick = onOpenCategoryDialog)
+                )
+            }
+        }
+        Spacer(modifier = Modifier.height(2.dp))
+    }
+}
+
+@Composable
+private fun formatIntervalMinutes(minutes: Int): String {
+    val hours = minutes / 60
+    val mins = minutes % 60
+    return when {
+        hours == 0 -> stringResource(R.string.duration_minutes, mins)
+        mins == 0 -> stringResource(R.string.duration_hours, hours)
+        else -> stringResource(R.string.duration_hours_minutes, hours, mins)
+    }
+}
+
+@Composable
+private fun categorySummary(state: WidgetConfig): String {
+    val segments = buildList {
+        state.refreshCategoryPals.size.takeIf { it > 0 }?.let {
+            add(stringResource(R.string.category_selection_count, it, stringResource(R.string.pal)))
+        }
+        state.refreshCategoryIyals.size.takeIf { it > 0 }?.let {
+            add(stringResource(R.string.category_selection_count, it, stringResource(R.string.iyal)))
+        }
+        state.refreshCategoryAdikarams.size.takeIf { it > 0 }?.let {
+            add(
+                stringResource(
+                    R.string.category_selection_count,
+                    it,
+                    stringResource(R.string.adikaram)
+                )
+            )
+        }
+    }
+
+    return if (segments.isEmpty()) {
+        stringResource(R.string.select_label, stringResource(R.string.pal))
+    } else {
+        stringResource(R.string.category_selection_summary, segments.joinToString(", "))
+    }
+}
+
+@Composable
+private fun refreshSourceLabel(source: RefreshSource): String = when (source) {
+    RefreshSource.All -> stringResource(R.string.refresh_source_all)
+    RefreshSource.Category -> stringResource(R.string.refresh_source_category)
+    RefreshSource.Favourites -> stringResource(R.string.refresh_source_favourites)
+}
+
+@Composable
+private fun RefreshSourceDropdown(
+    selected: RefreshSource,
+    onSelected: (RefreshSource) -> Unit
+) {
+    var expanded by remember { mutableStateOf(false) }
+
+    Box {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.clickable { expanded = true }
+        ) {
+            Text(refreshSourceLabel(selected), color = MaterialTheme.colorScheme.primary)
+            Icon(
+                Icons.Default.ArrowDropDown,
+                contentDescription = stringResource(R.string.refresh_source),
+                tint = MaterialTheme.colorScheme.primary
+            )
+        }
+
+        DropdownMenu(
+            expanded = expanded,
+            onDismissRequest = { expanded = false }
+        ) {
+            RefreshSource.entries.forEach { source ->
+                DropdownMenuItem(
+                    text = { Text(refreshSourceLabel(source)) },
+                    onClick = {
+                        onSelected(source)
+                        expanded = false
+                    }
+                )
+            }
+        }
+    }
+}
+
 @Composable
 fun WidgetPreview(state: WidgetConfig) {
     Card(
@@ -389,6 +609,7 @@ fun WidgetPreview(state: WidgetConfig) {
                         ContentType.Adhigaram -> "கடவுள் வாழ்த்து"
                         ContentType.Kural -> "அகர முதல எழுத்தெல்லாம் ஆதி\nபகவன் முதற்றே உலகு."
                         ContentType.Transliteration -> "Akara Mudhala Ezhuththellam Aadhi..."
+                        ContentType.Thiruvalluvar -> THIRUVALLUVAR_TA
                     }
                     PreviewText(
                         text,
@@ -549,6 +770,7 @@ private fun contentTypeLabel(type: ContentType): String = when (type) {
     ContentType.Adhigaram -> stringResource(R.string.adikaram)
     ContentType.Kural -> stringResource(R.string.tamil_kural)
     ContentType.Transliteration -> stringResource(R.string.transliteration)
+    ContentType.Thiruvalluvar -> stringResource(R.string.thiruvalluvar)
 }
 
 @Composable

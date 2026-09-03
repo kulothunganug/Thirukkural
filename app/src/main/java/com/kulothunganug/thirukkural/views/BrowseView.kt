@@ -1,6 +1,7 @@
 package com.kulothunganug.thirukkural.views
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -13,15 +14,11 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.FilterList
-import androidx.compose.material3.AlertDialog
+import androidx.compose.material.icons.rounded.Search
 import androidx.compose.material3.Card
-import androidx.compose.material3.Checkbox
-import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.ExposedDropdownMenuAnchorType
-import androidx.compose.material3.ExposedDropdownMenuBox
-import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -29,7 +26,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -44,6 +40,7 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.compose.ui.res.stringResource
 import com.kulothunganug.thirukkural.R
+import com.kulothunganug.thirukkural.shared_ui.CategoryFilterDialog
 import com.kulothunganug.thirukkural.viewmodels.BrowseViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -63,53 +60,23 @@ fun BrowseView(vm: BrowseViewModel, navController: NavController) {
                             contentDescription = stringResource(R.string.go_back)
                         )
                     }
-                },
-                actions = {
-                    IconButton(onClick = { showFilterDialog = true }) {
-                        Icon(
-                            Icons.Default.FilterList,
-                            contentDescription = stringResource(R.string.filters)
-                        )
-                    }
                 }
             )
         }
     ) { padding ->
         if (showFilterDialog) {
-            AlertDialog(
-                onDismissRequest = { showFilterDialog = false },
-                confirmButton = {
-                    TextButton(onClick = { showFilterDialog = false }) {
-                        Text(stringResource(R.string.done))
-                    }
-                },
-                title = { Text(stringResource(R.string.filters)) },
-                text = {
-                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                        MultiFilterDropdown(
-                            label = stringResource(R.string.pal),
-                            options = uiState.pals,
-                            selectedOptions = uiState.selectedPals,
-                            onOptionToggled = { vm.togglePal(it) }
-                        )
-
-                        MultiFilterDropdown(
-                            label = stringResource(R.string.iyal),
-                            options = uiState.iyals,
-                            selectedOptions = uiState.selectedIyals,
-                            enabled = uiState.selectedPals.isNotEmpty(),
-                            onOptionToggled = { vm.toggleIyal(it) }
-                        )
-
-                        MultiFilterDropdown(
-                            label = stringResource(R.string.adikaram),
-                            options = uiState.adikarams,
-                            selectedOptions = uiState.selectedAdikarams,
-                            enabled = uiState.selectedIyals.isNotEmpty(),
-                            onOptionToggled = { vm.toggleAdikaram(it) }
-                        )
-                    }
-                }
+            CategoryFilterDialog(
+                title = stringResource(R.string.filters),
+                pals = uiState.pals,
+                iyals = uiState.iyals,
+                adikarams = uiState.adikarams,
+                selectedPals = uiState.selectedPals,
+                selectedIyals = uiState.selectedIyals,
+                selectedAdikarams = uiState.selectedAdikarams,
+                onTogglePal = { vm.togglePal(it) },
+                onToggleIyal = { vm.toggleIyal(it) },
+                onToggleAdikaram = { vm.toggleAdikaram(it) },
+                onDismissRequest = { showFilterDialog = false }
             )
         }
 
@@ -117,111 +84,118 @@ fun BrowseView(vm: BrowseViewModel, navController: NavController) {
             modifier = Modifier
                 .padding(padding)
                 .fillMaxSize()
-                .padding(16.dp),
-
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
+                .padding(16.dp)
         ) {
-            if (uiState.kurals.isEmpty()) {
-                Text(
-                    text = stringResource(R.string.select_filters_to_browse),
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = MaterialTheme.colorScheme.secondary
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                OutlinedTextField(
+                    value = uiState.searchQuery,
+                    onValueChange = { vm.onSearchQueryChanged(it) },
+                    modifier = Modifier
+                        .weight(1f),
+                    placeholder = { Text(stringResource(R.string.search_kural)) },
+                    leadingIcon = {
+                        Icon(
+                            Icons.Rounded.Search,
+                            contentDescription = stringResource(R.string.search_kural)
+                        )
+                    },
+                    trailingIcon = {
+                        if (uiState.searchQuery.isNotEmpty()) {
+                            IconButton(onClick = { vm.onSearchQueryChanged("") }) {
+                                Icon(
+                                    Icons.Default.Clear,
+                                    contentDescription = stringResource(R.string.clear_search)
+                                )
+                            }
+                        }
+                    },
+                    singleLine = true
                 )
-                FilledTonalButton(onClick = { showFilterDialog = true }) {
+                Spacer(modifier = Modifier.width(8.dp))
+                IconButton(onClick = { showFilterDialog = true }) {
                     Icon(
                         Icons.Default.FilterList,
                         contentDescription = stringResource(R.string.filters)
                     )
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Text(stringResource(R.string.filters))
                 }
-            } else {
-                LazyColumn(
-                    verticalArrangement = Arrangement.spacedBy(8.dp),
-                    modifier = Modifier.fillMaxSize()
-                ) {
-                    items(uiState.kurals) { kural ->
-                        Card(
-                            onClick = {
-                                navController.navigate("kural_detail/${kural.id}")
-                            },
-                            modifier = Modifier.fillMaxWidth()
-                        ) {
-                            Column(modifier = Modifier.padding(12.dp)) {
-                                Text(
-                                    text = kural.kuralTa.replace("<br />", "\n"),
-                                    fontSize = 16.sp
+            }
+
+            Spacer(modifier = Modifier.height(4.dp))
+
+            Text(
+                text = stringResource(R.string.search_results_count, uiState.kurals.size),
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.secondary
+            )
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            Box(modifier = Modifier.fillMaxSize()) {
+                if (uiState.kurals.isEmpty()) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .align(Alignment.Center),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.Center
+                    ) {
+                        if (uiState.searchQuery.isNotEmpty()) {
+                            Text(
+                                text = stringResource(
+                                    R.string.no_kurals_found,
+                                    uiState.searchQuery
+                                ),
+                                style = MaterialTheme.typography.bodyLarge,
+                                color = MaterialTheme.colorScheme.secondary
+                            )
+                        } else {
+                            Text(
+                                text = stringResource(R.string.select_filters_to_browse),
+                                style = MaterialTheme.typography.bodyLarge,
+                                color = MaterialTheme.colorScheme.secondary
+                            )
+                            Spacer(modifier = Modifier.height(12.dp))
+                            FilledTonalButton(onClick = { showFilterDialog = true }) {
+                                Icon(
+                                    Icons.Default.FilterList,
+                                    contentDescription = stringResource(R.string.filters)
                                 )
-                                Spacer(modifier = Modifier.height(4.dp))
-                                Text(
-                                    text = "${kural.palTa} - ${kural.iyalTa} - ${kural.adikaramTa}",
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.secondary
-                                )
+                                Spacer(modifier = Modifier.width(4.dp))
+                                Text(stringResource(R.string.filters))
+                            }
+                        }
+                    }
+                } else {
+                    LazyColumn(
+                        verticalArrangement = Arrangement.spacedBy(8.dp),
+                        modifier = Modifier.fillMaxSize()
+                    ) {
+                        items(uiState.kurals) { kural ->
+                            Card(
+                                onClick = {
+                                    navController.navigate("kural_detail/${kural.id}")
+                                },
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Column(modifier = Modifier.padding(12.dp)) {
+                                    Text(
+                                        text = kural.kuralTa.replace("<br />", "\n"),
+                                        fontSize = 16.sp
+                                    )
+                                    Spacer(modifier = Modifier.height(4.dp))
+                                    Text(
+                                        text = "${kural.palTa} - ${kural.iyalTa} - ${kural.adikaramTa}",
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.secondary
+                                    )
+                                }
                             }
                         }
                     }
                 }
-            }
-        }
-    }
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun MultiFilterDropdown(
-    label: String,
-    options: List<String>,
-    selectedOptions: List<String>,
-    onOptionToggled: (String) -> Unit,
-    enabled: Boolean = true
-) {
-    var expanded by remember { mutableStateOf(false) }
-    val displayText = when {
-        selectedOptions.isEmpty() -> stringResource(R.string.select_label, label)
-        selectedOptions.size == 1 -> selectedOptions.first()
-        else -> stringResource(R.string.label_selected, selectedOptions.size, label)
-    }
-
-    ExposedDropdownMenuBox(
-        expanded = expanded,
-        onExpandedChange = { if (enabled) expanded = !expanded },
-        modifier = Modifier.fillMaxWidth()
-    ) {
-        OutlinedTextField(
-            value = displayText,
-            onValueChange = {},
-            readOnly = true,
-            label = { Text(label) },
-            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
-            modifier = Modifier
-                .menuAnchor(ExposedDropdownMenuAnchorType.PrimaryNotEditable, true)
-                .fillMaxWidth(),
-            enabled = enabled
-        )
-
-        ExposedDropdownMenu(
-            expanded = expanded,
-            onDismissRequest = { expanded = false }
-        ) {
-            options.forEach { option ->
-                val isSelected = selectedOptions.contains(option)
-                DropdownMenuItem(
-                    text = {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Checkbox(
-                                checked = isSelected,
-                                onCheckedChange = null
-                            )
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Text(option)
-                        }
-                    },
-                    onClick = {
-                        onOptionToggled(option)
-                    }
-                )
             }
         }
     }

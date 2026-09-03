@@ -16,6 +16,13 @@ interface ThirukkuralDao {
     @Query("SELECT DISTINCT pal_ta FROM thirukkural")
     fun getPals(): Flow<List<String>>
 
+    @Query("SELECT id FROM thirukkural WHERE (:usePals = 0 OR pal_ta IN (:pals)) AND (:useIyals = 0 OR iyal_ta IN (:iyals)) AND (:useAdikarams = 0 OR adikaram_ta IN (:adikarams))")
+    suspend fun getIdsFiltered(
+        pals: List<String>, usePals: Boolean,
+        iyals: List<String>, useIyals: Boolean,
+        adikarams: List<String>, useAdikarams: Boolean
+    ): List<Int>
+
     @Query("SELECT DISTINCT iyal_ta FROM thirukkural WHERE pal_ta IN (:pals)")
     fun getIyals(pals: List<String>): Flow<List<String>>
 

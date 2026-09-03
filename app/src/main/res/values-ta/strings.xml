@@ -62,4 +62,24 @@
     <string name="align_end">முடிவு</string>
     <string name="widget_loading">ஏற்றுகிறது…</string>
     <string name="refresh">புதுப்பி</string>
+    <string name="auto_refresh">தானியங்கி புதுப்பிப்பு</string>
+    <string name="refresh_interval">புதுப்பிப்பு இடைவெளி</string>
+    <string name="refresh_source">புதுப்பிப்பு மூலம்</string>
+    <string name="refresh_source_all">அனைத்து குறள்களும்</string>
+    <string name="refresh_source_category">குறிப்பிட்ட வகைகள்</string>
+    <string name="refresh_source_favourites">@string/favourites</string>
+    <string name="select_categories">வகைகளைத் தேர்ந்தெடு</string>
+    <string name="category_selection_count">%1$d %2$s</string>
+    <string name="category_selection_summary">%1$s தேர்ந்தெடுக்கப்பட்டது</string>
+    <string name="duration_minutes">%1$d நிமிடம்</string>
+    <string name="duration_hours">%1$d மணி</string>
+    <string name="duration_hours_minutes">%1$d மணி %2$d நிமிடம்</string>
+    <string name="add_widget_to_home_screen">விட்செட்டை முகப்புத் திரையில் சேர்</string>
+    <string name="add_widget_hint_title">விட்செட்டை முயற்சிக்கவும்!</string>
+    <string name="add_widget_hint_description">ஒரு பார்வையில் குறள் காண, திருக்குறளை உங்கள் முகப்புத் திரையில் விட்செட்டாகச் சேர்க்கவும்.</string>
+    <string name="thiruvalluvar">திருவள்ளுவர்</string>
+    <string name="search_kural">குறள் தேடுக</string>
+    <string name="clear_search">தேடலை அழி</string>
+    <string name="no_kurals_found">\"%1$s\" என்பதற்கு குறள் எதுவும் கிடைக்கவில்லை</string>
+    <string name="search_results_count">%1$d குறள்கள்</string>
 </resources>

@@ -48,6 +48,7 @@ import androidx.glance.text.TextAlign
 import androidx.glance.text.TextStyle
 import com.kulothunganug.thirukkural.MainActivity
 import com.kulothunganug.thirukkural.R
+import com.kulothunganug.thirukkural.datastore.FavouritesSettings
 import com.kulothunganug.thirukkural.models.ThirukkuralModel
 import com.kulothunganug.thirukkural.models.randomKuralId
 import com.kulothunganug.thirukkural.repository.ThirukkuralRepository
@@ -57,15 +58,24 @@ import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 
 @Serializable
-enum class ContentType { Paal, Iyal, Adhigaram, Kural, Transliteration }
+enum class ContentType { Paal, Iyal, Adhigaram, Kural, Transliteration, Thiruvalluvar }
 
 @Serializable
 enum class WidgetTextAlign { Start, Center, End }
 
 @Serializable
+enum class RefreshSource { All, Category, Favourites }
+
+@Serializable
 data class WidgetConfig(
     val bgColor: String = "#000000",
     val refreshButtonColor: String = "#ffffff",
+    val autoRefreshEnabled: Boolean = false,
+    val autoRefreshIntervalMinutes: Int = 60,
+    val refreshSource: RefreshSource = RefreshSource.All,
+    val refreshCategoryPals: List<String> = emptyList(),
+    val refreshCategoryIyals: List<String> = emptyList(),
+    val refreshCategoryAdikarams: List<String> = emptyList(),
     val contentOrder: List<SectionConfig> = listOf(
         SectionConfig(type = ContentType.Paal, show = false),
         SectionConfig(type = ContentType.Iyal, show = false),
@@ -75,7 +85,8 @@ data class WidgetConfig(
             size = 14,
             align = WidgetTextAlign.Start
         ),
-        SectionConfig(type = ContentType.Transliteration, show = false)
+        SectionConfig(type = ContentType.Transliteration, show = false),
+        SectionConfig(type = ContentType.Thiruvalluvar, show = false)
     )
 )
 
@@ -89,6 +100,8 @@ data class SectionConfig(
     val textColor: String = "#ffffff"
 )
 
+const val THIRUVALLUVAR_TA = "திருவள்ளுவர்"
+
 val WIDGET_CONFIG = stringPreferencesKey("widget_config")
 
 object ThirukkuralWidgetKeys {
@@ -98,9 +111,6 @@ object ThirukkuralWidgetKeys {
 class ThirukkuralWidget : GlanceAppWidget(), KoinComponent {
     override val stateDefinition: GlanceStateDefinition<*> = PreferencesGlanceStateDefinition
 
-    // GlanceAppWidget instances aren't constructor-injected by Koin (the Glance runtime
-    // constructs them directly), so this is the composition root's entry point into the same
-    // Koin graph the rest of the app uses, instead of reaching for a separate static db handle.
     private val repository: ThirukkuralRepository by inject()
 
     override suspend fun providePreview(context: Context, widgetCategory: Int) {
@@ -219,6 +229,7 @@ class ThirukkuralWidget : GlanceAppWidget(), KoinComponent {
                         ContentType.Adhigaram -> adhigaram
                         ContentType.Kural -> kural.replace("<br />", "\n")
                         ContentType.Transliteration -> transliteration
+                        ContentType.Thiruvalluvar -> THIRUVALLUVAR_TA
                     }
                     if (text.isNotEmpty()) {
                         val textColor = Color(section.textColor.toColorInt())
@@ -292,16 +303,23 @@ class OpenKuralAction : ActionCallback {
     }
 }
 
-class RefreshKuralAction : ActionCallback {
+class RefreshKuralAction : ActionCallback, KoinComponent {
+
+    private val repository: ThirukkuralRepository by inject()
+    private val favouritesSettings: FavouritesSettings by inject()
+
     override suspend fun onAction(
         context: Context,
         glanceId: GlanceId,
         parameters: ActionParameters
     ) {
-
         updateAppWidgetState(context, PreferencesGlanceStateDefinition, glanceId) { prefs ->
+            val config = prefs[WIDGET_CONFIG]?.let { Json.decodeFromString<WidgetConfig>(it) }
+                ?: WidgetConfig()
+            val currentId = prefs[ThirukkuralWidgetKeys.KURAL_ID]
+            val newId = pickKuralId(config, repository, favouritesSettings, currentId)
             prefs.toMutablePreferences().apply {
-                this[ThirukkuralWidgetKeys.KURAL_ID] = randomKuralId()
+                this[ThirukkuralWidgetKeys.KURAL_ID] = newId
             }
         }
         ThirukkuralWidget().update(context, glanceId)
@@ -310,4 +328,9 @@ class RefreshKuralAction : ActionCallback {
 
 class ThirukkuralWidgetReceiver : GlanceAppWidgetReceiver() {
     override val glanceAppWidget: GlanceAppWidget = ThirukkuralWidget()
+
+    override fun onDeleted(context: Context, appWidgetIds: IntArray) {
+        super.onDeleted(context, appWidgetIds)
+        appWidgetIds.forEach { WidgetRefreshScheduler.cancel(context, it) }
+    }
 }
