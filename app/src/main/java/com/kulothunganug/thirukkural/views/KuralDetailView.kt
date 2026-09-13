@@ -249,13 +249,12 @@ fun KuralDetailView(
 
                     DetailItem(label = stringResource(R.string.explanation), value = k.explanationTa)
                     Spacer(modifier = Modifier.height(8.dp))
-                    DetailItem(label = stringResource(R.string.couplet), value = k.couplet)
-                    Spacer(modifier = Modifier.height(8.dp))
                     DetailItem(
                         label = stringResource(R.string.transliteration),
                         value = k.kuralTl.replace("<br />", "\n")
                     )
-
+                    Spacer(modifier = Modifier.height(8.dp))
+                    DetailItem(label = stringResource(R.string.couplet), value = k.couplet)
                     Spacer(modifier = Modifier.height(16.dp))
 
                     Text(
