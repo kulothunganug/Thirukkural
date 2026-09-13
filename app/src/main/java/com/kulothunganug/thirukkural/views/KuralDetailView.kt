@@ -3,9 +3,11 @@ package com.kulothunganug.thirukkural.views
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
+import android.content.Intent
 import android.os.Build
 import android.widget.Toast
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.expandVertically
@@ -17,12 +19,17 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.TextAutoSize
@@ -34,19 +41,27 @@ import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
+import androidx.compose.material.icons.filled.Share
+import androidx.compose.material.icons.rounded.DragHandle
+import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ElevatedButton
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.ListItem
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -60,7 +75,9 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -69,8 +86,15 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.kulothunganug.thirukkural.R
+import com.kulothunganug.thirukkural.models.ThirukkuralModel
+import com.kulothunganug.thirukkural.shared_ui.endItemShape
+import com.kulothunganug.thirukkural.shared_ui.leadingItemShape
+import com.kulothunganug.thirukkural.shared_ui.listItemColors
+import com.kulothunganug.thirukkural.shared_ui.middleItemShape
 import com.kulothunganug.thirukkural.viewmodels.KuralDetailUiState
 import com.kulothunganug.thirukkural.viewmodels.KuralDetailViewModel
+import sh.calvin.reorderable.ReorderableItem
+import sh.calvin.reorderable.rememberReorderableLazyListState
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -81,6 +105,7 @@ fun KuralDetailView(
 ) {
     val uiState by vm.uiState.collectAsState()
     val context = LocalContext.current
+    var showShareSheet by remember { mutableStateOf(false) }
 
     LaunchedEffect(kuralId) {
         vm.loadKural(kuralId)
@@ -89,6 +114,14 @@ fun KuralDetailView(
     val foundState = uiState as? KuralDetailUiState.Found
     val foundKural = foundState?.kural
     val isFavourite = foundState?.isFavourite ?: false
+
+    if (showShareSheet && foundKural != null) {
+        KuralShareSheet(
+            kural = foundKural,
+            vm = vm,
+            onDismiss = { showShareSheet = false }
+        )
+    }
 
     Scaffold(
         topBar = {
@@ -116,21 +149,11 @@ fun KuralDetailView(
                             )
                         }
                         IconButton(onClick = {
-                            val clipboard =
-                                context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-                            val clip = ClipData.newPlainText(
-                                context.getString(R.string.copy),
-                                foundKural.kuralTa.replace("<br />", "\n")
-                            )
-                            clipboard.setPrimaryClip(clip)
-                            if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.S_V2)
-                                Toast.makeText(context, context.getString(R.string.copied), Toast.LENGTH_SHORT)
-                                    .show()
-
+                            showShareSheet = true
                         }) {
                             Icon(
-                                Icons.Filled.ContentCopy,
-                                contentDescription = stringResource(R.string.copy)
+                                Icons.Filled.Share,
+                                contentDescription = stringResource(R.string.share)
                             )
                         }
                     }
@@ -176,6 +199,7 @@ fun KuralDetailView(
                         .fillMaxSize()
                         .verticalScroll(rememberScrollState())
                 ) {
+                    SelectionContainer {
                     Text(
                         text = k.kuralTa.replace("<br />", "\n"),
                         fontSize = 20.sp,
@@ -184,7 +208,7 @@ fun KuralDetailView(
                         maxLines = 2,
                         autoSize = TextAutoSize.StepBased(10.sp, 20.sp, 1.sp),
                     )
-
+                }
                     Spacer(modifier = Modifier.height(16.dp))
                     HorizontalDivider()
                     Spacer(modifier = Modifier.height(16.dp))
@@ -199,7 +223,7 @@ fun KuralDetailView(
                             modifier = Modifier.weight(1f)
                         )
                         InfoCard(
-                            label = stringResource(R.string.pal),
+                            label = stringResource(R.string.part),
                             value = k.palTa,
                             modifier = Modifier.weight(1f)
                         )
@@ -210,12 +234,12 @@ fun KuralDetailView(
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         InfoCard(
-                            label = stringResource(R.string.iyal),
+                            label = stringResource(R.string.section),
                             value = k.iyalTa,
                             modifier = Modifier.weight(1f)
                         )
                         InfoCard(
-                            label = stringResource(R.string.adikaram),
+                            label = stringResource(R.string.chapter),
                             value = k.adikaramTa,
                             modifier = Modifier.weight(1f)
                         )
@@ -225,12 +249,12 @@ fun KuralDetailView(
 
                     DetailItem(label = stringResource(R.string.explanation), value = k.explanationTa)
                     Spacer(modifier = Modifier.height(8.dp))
+                    DetailItem(label = stringResource(R.string.couplet), value = k.couplet)
+                    Spacer(modifier = Modifier.height(8.dp))
                     DetailItem(
                         label = stringResource(R.string.transliteration),
                         value = k.kuralTl.replace("<br />", "\n")
                     )
-                    Spacer(modifier = Modifier.height(8.dp))
-                    DetailItem(label = stringResource(R.string.couplet), value = k.couplet)
 
                     Spacer(modifier = Modifier.height(16.dp))
 
@@ -264,6 +288,207 @@ fun KuralDetailView(
                         label = stringResource(R.string.karunanidhi),
                         value = k.commentaryKarunanidhi
                     )
+                }
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun KuralShareSheet(
+    kural: ThirukkuralModel,
+    vm: KuralDetailViewModel,
+    onDismiss: () -> Unit
+) {
+    val context = LocalContext.current
+    val haptic = LocalHapticFeedback.current
+    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+
+    val config by vm.shareConfig.collectAsState()
+
+    val explanationLabel = stringResource(R.string.explanation)
+    val coupletLabel = stringResource(R.string.couplet)
+    val sentFromAppLabel = stringResource(R.string.sent_from_app)
+
+    val sharedText = remember(
+        config,
+        explanationLabel,
+        coupletLabel,
+        sentFromAppLabel
+    ) {
+        buildString {
+            config.order.forEach { sectionId ->
+                if (config.enabledSections.contains(sectionId)) {
+                    when (sectionId) {
+                        "header" -> {
+                            append("Thirukkural #${kural.id}\n")
+                            append("${kural.palTa} | ${kural.iyalTa} | ${kural.adikaramTa}\n\n")
+                        }
+                        "kural" -> {
+                            append(kural.kuralTa.replace("<br />", "\n"))
+                            append("\n\n")
+                        }
+                        "transliteration" -> {
+                            append(kural.kuralTl.replace("<br />", "\n"))
+                            append("\n\n")
+                        }
+                        "explanation" -> {
+                            append("$explanationLabel:\n")
+                            append(kural.explanationTa)
+                            append("\n\n")
+                        }
+                        "translation" -> {
+                            append("$coupletLabel:\n")
+                            append(kural.couplet)
+                            append("\n\n")
+                        }
+                    }
+                }
+            }
+            append("- $sentFromAppLabel")
+        }.trim()
+    }
+
+    val lazyListState = rememberLazyListState()
+    val reorderableState = rememberReorderableLazyListState(lazyListState) { from, to ->
+        val newOrder = config.order.toMutableList().apply {
+            val fromIndex = indexOfFirst { it == from.key }
+            val toIndex = indexOfFirst { it == to.key }
+            if (fromIndex != -1 && toIndex != -1) {
+                add(toIndex, removeAt(fromIndex))
+            }
+        }
+        vm.updateShareConfig(config.copy(order = newOrder))
+        haptic.performHapticFeedback(HapticFeedbackType.SegmentFrequentTick)
+    }
+
+    ModalBottomSheet(
+        onDismissRequest = onDismiss,
+        sheetState = sheetState,
+    ) {
+        LazyColumn(
+            state = lazyListState,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(bottom = 32.dp),
+            contentPadding = PaddingValues(horizontal = 16.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(4.dp)
+        ) {
+            item {
+                Text(
+                    text = stringResource(R.string.share_kural),
+                    style = MaterialTheme.typography.titleLarge,
+                    modifier = Modifier.padding(bottom = 16.dp)
+                )
+            }
+
+            /*
+            item {
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 12.dp)
+                        .animateContentSize(),
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+                    )
+                ) {
+                    Text(
+                        text = sharedText,
+                        modifier = Modifier.padding(16.dp),
+                        style = MaterialTheme.typography.bodySmall
+                    )
+                }
+            }
+            */
+
+            itemsIndexed(config.order, key = { _, id -> id }) { index, sectionId ->
+                val labelRes = when (sectionId) {
+                    "header" -> R.string.include_header
+                    "kural" -> R.string.tamil_kural
+                    "transliteration" -> R.string.transliteration
+                    "explanation" -> R.string.explanation
+                    "translation" -> R.string.couplet
+                    else -> R.string.app_name
+                }
+                val enabled = config.enabledSections.contains(sectionId)
+
+                ReorderableItem(reorderableState, key = sectionId) { isDragging ->
+                    val elevation by animateDpAsState(
+                        if (isDragging) 8.dp else 0.dp,
+                        label = "elevation"
+                    )
+
+                    val shape = when (index) {
+                        0 -> leadingItemShape()
+                        config.order.size - 1 -> endItemShape()
+                        else -> middleItemShape()
+                    }
+
+                    Surface(
+                        shape = shape,
+                        tonalElevation = 2.dp,
+                        shadowElevation = elevation,
+                    ) {
+                        ListItem(
+                            colors = listItemColors(),
+                            leadingContent = {
+                                IconButton(
+                                    modifier = Modifier.draggableHandle(
+                                        onDragStarted = {
+                                            haptic.performHapticFeedback(
+                                                HapticFeedbackType.GestureThresholdActivate
+                                            )
+                                        },
+                                        onDragStopped = {
+                                            haptic.performHapticFeedback(HapticFeedbackType.GestureEnd)
+                                        }
+                                    ),
+                                    onClick = {}
+                                ) {
+                                    Icon(
+                                        Icons.Rounded.DragHandle,
+                                        contentDescription = stringResource(R.string.reorder)
+                                    )
+                                }
+                            },
+                            headlineContent = { Text(stringResource(labelRes)) },
+                            trailingContent = {
+                                Switch(
+                                    checked = enabled,
+                                    onCheckedChange = { isEnabled ->
+                                        val newEnabled = config.enabledSections.toMutableSet().apply {
+                                            if (isEnabled) add(sectionId) else remove(sectionId)
+                                        }
+                                        vm.updateShareConfig(config.copy(enabledSections = newEnabled))
+                                    }
+                                )
+                            }
+                        )
+                    }
+                }
+            }
+
+            item {
+                Spacer(modifier = Modifier.height(24.dp))
+
+                val shareTitle = stringResource(R.string.share_kural)
+                ElevatedButton(
+                    onClick = {
+                        val intent = Intent(Intent.ACTION_SEND).apply {
+                            type = "text/plain"
+                            putExtra(Intent.EXTRA_TEXT, sharedText)
+                        }
+                        context.startActivity(Intent.createChooser(intent, shareTitle))
+                        onDismiss()
+                    },
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Icon(Icons.Filled.Share, contentDescription = null)
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(stringResource(R.string.share))
                 }
             }
         }
@@ -348,7 +573,7 @@ fun CollapsibleExplanation(label: String, value: String, modifier: Modifier = Mo
     ) {
         Column(
             verticalArrangement = Arrangement.spacedBy(2.dp),
-            modifier = Modifier.padding(12.dp)
+            modifier = Modifier.padding(16.dp)
         ) {
             // accordion header
             Row(
