@@ -78,7 +78,7 @@
     <string name="add_widget_hint_title">Try the widget!</string>
     <string name="add_widget_hint_description">Add Thirukkural as a widget to your Home Screen for a Kural at a glance.</string>
     <string name="thiruvalluvar">Thiruvalluvar</string>
-    <string name="search_kural">Search Kural</string>
+    <string name="search_kural">Search by Kural no. or text</string>
     <string name="clear_search">Clear search</string>
     <string name="no_kurals_found">No Kurals found for \"%1$s\"</string>
     <string name="search_results_count">%1$d Kurals</string>

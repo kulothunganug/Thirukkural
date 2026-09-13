@@ -86,7 +86,7 @@ class BrowseViewModel(
             list
         } else {
             list.filter { kural ->
-                kural.id.toString() == trimmed ||
+                kural.id.toString().contains(trimmed) ||
                     kural.kuralTa.contains(trimmed, ignoreCase = true) ||
                     kural.kuralTl.contains(trimmed, ignoreCase = true) ||
                     kural.translationEn.contains(trimmed, ignoreCase = true) ||
