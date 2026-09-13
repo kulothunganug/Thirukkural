@@ -13,9 +13,9 @@
     <string name="browse_kurals">Browse Kurals</string>
     <string name="filters">Filters</string>
     <string name="done">Done</string>
-    <string name="pal">Pal</string>
-    <string name="iyal">Iyal</string>
-    <string name="adikaram">Adikaram</string>
+    <string name="part">Part</string>
+    <string name="section">Section</string>
+    <string name="chapter">Chapter</string>
     <string name="select_filters_to_browse">Select filters to browse Kurals</string>
     <string name="select_label">Select %1$s</string>
     <string name="label_selected">%1$d %2$s selected</string>
@@ -82,4 +82,8 @@
     <string name="clear_search">Clear search</string>
     <string name="no_kurals_found">No Kurals found for \"%1$s\"</string>
     <string name="search_results_count">%1$d Kurals</string>
+    <string name="share_kural">Share Kural</string>
+    <string name="share">Share</string>
+    <string name="include_header">Include Header</string>
+    <string name="sent_from_app">Sent from Thirukkural App</string>
 </resources>

@@ -13,9 +13,9 @@
     <string name="browse_kurals">குறள்களைத் தேடுக</string>
     <string name="filters">வடிகட்டிகள்</string>
     <string name="done">முடிந்தது</string>
-    <string name="pal">பால்</string>
-    <string name="iyal">இயல்</string>
-    <string name="adikaram">அதிகாரம்</string>
+    <string name="part">பால்</string>
+    <string name="section">இயல்</string>
+    <string name="chapter">அதிகாரம்</string>
     <string name="select_filters_to_browse">குறள்களைப் பார்க்க வடிகட்டிகளைத் தேர்ந்தெடுக்கவும்</string>
     <string name="select_label">%1$s-ஐத் தேர்ந்தெடு</string>
     <string name="label_selected">%1$d %2$s தேர்ந்தெடுக்கப்பட்டது</string>
@@ -82,4 +82,8 @@
     <string name="clear_search">தேடலை அழி</string>
     <string name="no_kurals_found">\"%1$s\" என்பதற்கு குறள் எதுவும் கிடைக்கவில்லை</string>
     <string name="search_results_count">%1$d குறள்கள்</string>
+    <string name="share_kural">குறளைப் பகிர்</string>
+    <string name="share">பகிர்</string>
+    <string name="include_header">தலைப்பைச் சேர்</string>
+    <string name="sent_from_app">திருக்குறள் செயலியிலிருந்து அனுப்பப்பட்டது</string>
 </resources>

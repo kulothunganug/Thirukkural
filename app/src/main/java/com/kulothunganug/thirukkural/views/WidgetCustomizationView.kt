@@ -510,24 +510,24 @@ private fun formatIntervalMinutes(minutes: Int): String {
 private fun categorySummary(state: WidgetConfig): String {
     val segments = buildList {
         state.refreshCategoryPals.size.takeIf { it > 0 }?.let {
-            add(stringResource(R.string.category_selection_count, it, stringResource(R.string.pal)))
+            add(stringResource(R.string.category_selection_count, it, stringResource(R.string.part)))
         }
         state.refreshCategoryIyals.size.takeIf { it > 0 }?.let {
-            add(stringResource(R.string.category_selection_count, it, stringResource(R.string.iyal)))
+            add(stringResource(R.string.category_selection_count, it, stringResource(R.string.section)))
         }
         state.refreshCategoryAdikarams.size.takeIf { it > 0 }?.let {
             add(
                 stringResource(
                     R.string.category_selection_count,
                     it,
-                    stringResource(R.string.adikaram)
+                    stringResource(R.string.chapter)
                 )
             )
         }
     }
 
     return if (segments.isEmpty()) {
-        stringResource(R.string.select_label, stringResource(R.string.pal))
+        stringResource(R.string.select_label, stringResource(R.string.part))
     } else {
         stringResource(R.string.category_selection_summary, segments.joinToString(", "))
     }
@@ -765,9 +765,9 @@ fun ElementSettingsDialog(
 
 @Composable
 private fun contentTypeLabel(type: ContentType): String = when (type) {
-    ContentType.Paal -> stringResource(R.string.pal)
-    ContentType.Iyal -> stringResource(R.string.iyal)
-    ContentType.Adhigaram -> stringResource(R.string.adikaram)
+    ContentType.Paal -> stringResource(R.string.part)
+    ContentType.Iyal -> stringResource(R.string.section)
+    ContentType.Adhigaram -> stringResource(R.string.chapter)
     ContentType.Kural -> stringResource(R.string.tamil_kural)
     ContentType.Transliteration -> stringResource(R.string.transliteration)
     ContentType.Thiruvalluvar -> stringResource(R.string.thiruvalluvar)

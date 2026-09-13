@@ -58,14 +58,14 @@ fun CategoryFilterDialog(
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 MultiFilterDropdown(
-                    label = stringResource(R.string.pal),
+                    label = stringResource(R.string.part),
                     options = pals,
                     selectedOptions = selectedPals,
                     onOptionToggled = onTogglePal
                 )
 
                 MultiFilterDropdown(
-                    label = stringResource(R.string.iyal),
+                    label = stringResource(R.string.section),
                     options = iyals,
                     selectedOptions = selectedIyals,
                     enabled = selectedPals.isNotEmpty(),
@@ -73,7 +73,7 @@ fun CategoryFilterDialog(
                 )
 
                 MultiFilterDropdown(
-                    label = stringResource(R.string.adikaram),
+                    label = stringResource(R.string.chapter),
                     options = adikarams,
                     selectedOptions = selectedAdikarams,
                     enabled = selectedIyals.isNotEmpty(),
