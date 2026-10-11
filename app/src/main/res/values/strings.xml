@@ -91,4 +91,9 @@
     <string name="share">Share</string>
     <string name="include_header">Include Header</string>
     <string name="sent_from_app">Sent from Thirukkural App</string>
+    <string name="widget_info_title">Thirukkural Widget</string>
+    <string name="widget_gif_placeholder">GIF Placeholder: How to add and customize widget</string>
+    <string name="widget_info_description">Add the Thirukkural widget to your Home Screen for daily Kurals at a glance. You can fully customize colors, fonts, layout, and auto-refresh settings.</string>
+    <string name="widget_how_to_customize_title">How to Customize</string>
+    <string name="widget_how_to_customize_desc">Long-press the widget on your Home Screen to see the settings button and open the customization screen at any time.</string>
 </resources>
