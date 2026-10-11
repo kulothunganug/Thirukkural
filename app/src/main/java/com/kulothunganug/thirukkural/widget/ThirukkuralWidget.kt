@@ -61,15 +61,15 @@ import org.koin.core.component.inject
 enum class ContentType { Paal, Iyal, Adhigaram, Kural, Thiruvalluvar }
 
 @Serializable
-enum class WidgetTextAlign { Start, Center, End }
-
-@Serializable
 enum class RefreshSource { All, Category, Favourites }
 
 @Serializable
 data class WidgetConfig(
     val bgColor: String = "#000000",
+    val textColor: String = "#ffffff",
     val refreshButtonColor: String = "#ffffff",
+    val fontSize: Int = 12,
+    val boldKural: Boolean = false,
     val autoRefreshEnabled: Boolean = false,
     val autoRefreshIntervalMinutes: Int = 60,
     val refreshSource: RefreshSource = RefreshSource.All,
@@ -79,12 +79,8 @@ data class WidgetConfig(
     val contentOrder: List<SectionConfig> = listOf(
         SectionConfig(type = ContentType.Paal, show = false),
         SectionConfig(type = ContentType.Iyal, show = false),
-        SectionConfig(type = ContentType.Adhigaram, bold = true),
-        SectionConfig(
-            type = ContentType.Kural,
-            size = 14,
-            align = WidgetTextAlign.Start
-        ),
+        SectionConfig(type = ContentType.Adhigaram),
+        SectionConfig(type = ContentType.Kural),
         SectionConfig(type = ContentType.Thiruvalluvar, show = false)
     )
 )
@@ -92,11 +88,7 @@ data class WidgetConfig(
 @Serializable
 data class SectionConfig(
     val type: ContentType,
-    val show: Boolean = true,
-    val size: Int = 12,
-    val align: WidgetTextAlign = WidgetTextAlign.Center,
-    val bold: Boolean = false,
-    val textColor: String = "#ffffff"
+    val show: Boolean = true
 )
 
 const val THIRUVALLUVAR_TA = "திருவள்ளுவர்"
@@ -229,6 +221,7 @@ class ThirukkuralWidget : GlanceAppWidget(), KoinComponent {
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalAlignment = Alignment.CenterVertically
             ) {
+                val textColor = Color(config.textColor.toColorInt())
                 config.contentOrder.filter { it.show }.forEach { section ->
                     val text = when (section.type) {
                         ContentType.Paal -> kural.palTa
@@ -238,8 +231,13 @@ class ThirukkuralWidget : GlanceAppWidget(), KoinComponent {
                         ContentType.Thiruvalluvar -> THIRUVALLUVAR_TA
                     }
                     if (text.isNotEmpty()) {
-                        val textColor = Color(section.textColor.toColorInt())
-                        RenderText(text, textColor, section)
+                        RenderText(
+                            text = text,
+                            color = textColor,
+                            fontSize = config.fontSize,
+                            type = section.type,
+                            boldKural = config.boldKural
+                        )
                     }
                 }
             }
@@ -264,8 +262,15 @@ class ThirukkuralWidget : GlanceAppWidget(), KoinComponent {
     private fun RenderText(
         text: String,
         color: Color,
-        sectionConfig: SectionConfig
+        fontSize: Int,
+        type: ContentType,
+        boldKural: Boolean
     ) {
+        val textAlign = when (type) {
+            ContentType.Kural -> TextAlign.Start
+            ContentType.Thiruvalluvar -> TextAlign.End
+            else -> TextAlign.Center
+        }
         Text(
             text = text,
             style = TextStyle(
@@ -273,13 +278,9 @@ class ThirukkuralWidget : GlanceAppWidget(), KoinComponent {
                     day = color,
                     night = color
                 ),
-                fontWeight = if (sectionConfig.bold) FontWeight.Bold else FontWeight.Normal,
-                fontSize = sectionConfig.size.sp,
-                textAlign = when (sectionConfig.align) {
-                    WidgetTextAlign.Start -> TextAlign.Start
-                    WidgetTextAlign.Center -> TextAlign.Center
-                    WidgetTextAlign.End -> TextAlign.End
-                }
+                fontWeight = if (type == ContentType.Kural && boldKural) FontWeight.Bold else FontWeight.Normal,
+                fontSize = fontSize.sp,
+                textAlign = textAlign
             ),
             modifier = GlanceModifier.fillMaxWidth().padding(top = 2.dp)
         )

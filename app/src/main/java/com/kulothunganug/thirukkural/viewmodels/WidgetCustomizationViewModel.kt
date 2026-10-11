@@ -12,7 +12,6 @@ import androidx.lifecycle.viewModelScope
 import com.kulothunganug.thirukkural.datastore.FavouritesSettings
 import com.kulothunganug.thirukkural.models.KuralCategory
 import com.kulothunganug.thirukkural.repository.ThirukkuralRepository
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import com.kulothunganug.thirukkural.widget.ContentType
 import com.kulothunganug.thirukkural.widget.MAX_AUTO_REFRESH_INTERVAL_MINUTES
 import com.kulothunganug.thirukkural.widget.MIN_AUTO_REFRESH_INTERVAL_MINUTES
@@ -23,8 +22,8 @@ import com.kulothunganug.thirukkural.widget.ThirukkuralWidgetKeys
 import com.kulothunganug.thirukkural.widget.WIDGET_CONFIG
 import com.kulothunganug.thirukkural.widget.WidgetConfig
 import com.kulothunganug.thirukkural.widget.WidgetRefreshScheduler
-import com.kulothunganug.thirukkural.widget.WidgetTextAlign
 import com.kulothunganug.thirukkural.widget.pickKuralId
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import kotlinx.serialization.json.Json
@@ -41,10 +40,6 @@ class WidgetCustomizationViewModel(
     private val _uiState = MutableStateFlow(WidgetConfig())
     val uiState: StateFlow<WidgetConfig> = _uiState.asStateFlow()
 
-    // Loading is true until the existing widget config has been read from disk. The view uses
-    // this to keep editing (and saving) disabled until then, so a fast tap on "save" can never
-    // race the initial load and silently no-op, and the initial load can never silently
-    // overwrite edits the user already made while it was still in flight.
     private val _isLoading = MutableStateFlow(true)
     val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
 
@@ -54,6 +49,9 @@ class WidgetCustomizationViewModel(
     private val _openBgColorChooser = MutableStateFlow(false)
     val openBgColorChooser: StateFlow<Boolean> = _openBgColorChooser.asStateFlow()
 
+    private val _openTextColorChooser = MutableStateFlow(false)
+    val openTextColorChooser: StateFlow<Boolean> = _openTextColorChooser.asStateFlow()
+
     private val _openRefreshColorChooser = MutableStateFlow(false)
     val openRefreshColorChooser: StateFlow<Boolean> = _openRefreshColorChooser.asStateFlow()
 
@@ -62,9 +60,6 @@ class WidgetCustomizationViewModel(
     val pals: StateFlow<List<KuralCategory>> = repository.getPals()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
-    // Cascading options for the category refresh-source filter — mirrors BrowseViewModel's
-    // Paal → Iyal → Adhigaram narrowing, but keyed off the selections already living in
-    // _uiState.refreshCategory* rather than a separate set of selection flows.
     @OptIn(ExperimentalCoroutinesApi::class)
     val categoryIyals: StateFlow<List<KuralCategory>> = _uiState
         .map { it.refreshCategoryPals }
@@ -102,11 +97,15 @@ class WidgetCustomizationViewModel(
         }
     }
 
-    fun toggleBgColorChooser(isOpen: Boolean){
+    fun toggleBgColorChooser(isOpen: Boolean) {
         _openBgColorChooser.value = isOpen
     }
 
-    fun toggleRefreshColorChooser(isOpen: Boolean){
+    fun toggleTextColorChooser(isOpen: Boolean) {
+        _openTextColorChooser.value = isOpen
+    }
+
+    fun toggleRefreshColorChooser(isOpen: Boolean) {
         _openRefreshColorChooser.value = isOpen
     }
 
@@ -114,32 +113,31 @@ class WidgetCustomizationViewModel(
         _uiState.update { it.copy(bgColor = color) }
     }
 
+    fun updateTextColor(color: String) {
+        _uiState.update { it.copy(textColor = color) }
+    }
+
     fun updateRefreshButtonColor(color: String) {
         _uiState.update { it.copy(refreshButtonColor = color) }
+    }
+
+    fun updateFontSize(size: Int) {
+        _uiState.update { it.copy(fontSize = size) }
+    }
+
+    fun updateBoldKural(bold: Boolean) {
+        _uiState.update { it.copy(boldKural = bold) }
     }
 
     fun updateContentOrder(order: List<SectionConfig>) {
         _uiState.update { it.copy(contentOrder = order) }
     }
 
-    fun updateSectionSettings(
-        type: ContentType,
-        show: Boolean? = null,
-        size: Int? = null,
-        align: WidgetTextAlign? = null,
-        bold: Boolean? = null,
-        textColor: String? = null
-    ) {
+    fun updateSectionShow(type: ContentType, show: Boolean) {
         _uiState.update { current ->
             val updatedOrder = current.contentOrder.map { section ->
                 if (section.type == type) {
-                    section.copy(
-                        show = show ?: section.show,
-                        size = size ?: section.size,
-                        align = align ?: section.align,
-                        bold = bold ?: section.bold,
-                        textColor = textColor ?: section.textColor
-                    )
+                    section.copy(show = show)
                 } else {
                     section
                 }
@@ -174,7 +172,6 @@ class WidgetCustomizationViewModel(
             } else {
                 current.refreshCategoryPals + pal
             }
-            // Reset dependent selections, same as BrowseViewModel.togglePal.
             current.copy(
                 refreshCategoryPals = updated,
                 refreshCategoryIyals = emptyList(),
@@ -205,12 +202,10 @@ class WidgetCustomizationViewModel(
         }
     }
 
-    /** Returns true if the config was actually persisted, false if there was nothing to save to. */
     suspend fun saveSettings(): Boolean {
         val id = glanceId ?: return false
         val config = uiState.value
         updateAppWidgetState(context, PreferencesGlanceStateDefinition, id) { prefs ->
-            // refresh kural widget on saving
             val currentId = prefs[ThirukkuralWidgetKeys.KURAL_ID]
             val newId = pickKuralId(config, repository, favouritesSettings, currentId)
             prefs.toMutablePreferences().apply {

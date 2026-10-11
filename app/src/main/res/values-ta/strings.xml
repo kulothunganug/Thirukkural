@@ -45,6 +45,7 @@
     <string name="save_changes">மாற்றங்களைச் சேமி</string>
     <string name="colors">நிறங்கள்</string>
     <string name="background_color">பின்னணி நிறம்</string>
+    <string name="text_color">எழுத்து நிறம்</string>
     <string name="refresh_button_color">புதுப்பிப்பு பொத்தான் நிறம்</string>
     <string name="pick_color">நிறத்தைத் தேர்ந்தெடு</string>
     <string name="element_styling_order">உறுப்புகளின் தோற்றமும் வரிசையும்</string>
@@ -53,7 +54,9 @@
     <string name="section_settings">%1$s அமைப்புகள்</string>
     <string name="color">நிறம்</string>
     <string name="bold_text">தடிமனான எழுத்து</string>
+    <string name="bold_kural">தடிமனான குறள்</string>
     <string name="text_size">எழுத்து அளவு</string>
+    <string name="text_settings">எழுத்து அமைப்புகள்</string>
     <string name="alignment">சீரமைப்பு</string>
     <string name="close">மூடு</string>
     <string name="cancel">ரத்துசெய்</string>

@@ -16,12 +16,10 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.Check
-import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.FilterList
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.outlined.Colorize
@@ -32,7 +30,6 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItem
@@ -42,7 +39,6 @@ import androidx.compose.material3.Slider
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -58,17 +54,14 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.window.Dialog
 import androidx.core.graphics.toColorInt
 import com.kulothunganug.thirukkural.R
 import com.kulothunganug.thirukkural.shared_ui.CategoryFilterDialog
 import com.kulothunganug.thirukkural.shared_ui.ColorChooserDialog
-import com.kulothunganug.thirukkural.shared_ui.LanguageAwareLabel
 import com.kulothunganug.thirukkural.shared_ui.detachedItemShape
 import com.kulothunganug.thirukkural.shared_ui.endItemShape
 import com.kulothunganug.thirukkural.shared_ui.leadingItemShape
@@ -82,7 +75,6 @@ import com.kulothunganug.thirukkural.widget.RefreshSource
 import com.kulothunganug.thirukkural.widget.SectionConfig
 import com.kulothunganug.thirukkural.widget.THIRUVALLUVAR_TA
 import com.kulothunganug.thirukkural.widget.WidgetConfig
-import com.kulothunganug.thirukkural.widget.WidgetTextAlign
 import kotlinx.coroutines.launch
 import org.koin.androidx.compose.koinViewModel
 import org.koin.core.parameter.parametersOf
@@ -112,9 +104,9 @@ fun WidgetCustomizationView(
     }
 
     val openBgColorChooser by vm.openBgColorChooser.collectAsState()
+    val openTextColorChooser by vm.openTextColorChooser.collectAsState()
     val openRefreshColorChooser by vm.openRefreshColorChooser.collectAsState()
     val haptic = LocalHapticFeedback.current
-    var editingSection by remember { mutableStateOf<SectionConfig?>(null) }
     var showCategoryFilterDialog by remember { mutableStateOf(false) }
 
     var reorderableSections by remember(state.contentOrder) {
@@ -145,6 +137,16 @@ fun WidgetCustomizationView(
                 })
         }
 
+        openTextColorChooser -> {
+            ColorChooserDialog(
+                stringResource(R.string.text_color),
+                state.textColor,
+                onColorSelected = { vm.updateTextColor(it) },
+                onDismissRequest = {
+                    vm.toggleTextColorChooser(false)
+                })
+        }
+
         openRefreshColorChooser -> {
             ColorChooserDialog(
                 stringResource(R.string.refresh_button_color),
@@ -153,21 +155,6 @@ fun WidgetCustomizationView(
                 onDismissRequest = {
                     vm.toggleRefreshColorChooser(false)
                 })
-        }
-
-        editingSection != null -> {
-            val currentSection = reorderableSections.find { it.type == editingSection!!.type }
-                ?: editingSection!!
-            ElementSettingsDialog(
-                sectionConfig = currentSection,
-                onDismissRequest = { editingSection = null },
-                onSizeChange = { vm.updateSectionSettings(currentSection.type, size = it) },
-                onAlignChange = { vm.updateSectionSettings(currentSection.type, align = it) },
-                onBoldChange = { vm.updateSectionSettings(currentSection.type, bold = it) },
-                onColorChange = {
-                    vm.updateSectionSettings(currentSection.type, textColor = it)
-                }
-            )
         }
 
         showCategoryFilterDialog -> {
@@ -274,6 +261,26 @@ fun WidgetCustomizationView(
                 }
                 Spacer(modifier = Modifier.height(2.dp))
                 Surface(
+                    shape = middleItemShape(),
+                    tonalElevation = 2.dp
+                ) {
+                    ListItem(
+                        colors = listItemColors(),
+                        trailingContent = {
+                            IconButton(
+                                onClick = { vm.toggleTextColorChooser(true) },
+                            ) {
+                                Icon(
+                                    Icons.Outlined.Colorize,
+                                    contentDescription = stringResource(R.string.pick_color),
+                                )
+                            }
+                        },
+                        headlineContent = { Text(stringResource(R.string.text_color)) },
+                    )
+                }
+                Spacer(modifier = Modifier.height(2.dp))
+                Surface(
                     shape = endItemShape(),
                     tonalElevation = 2.dp
                 ) {
@@ -290,6 +297,57 @@ fun WidgetCustomizationView(
                             }
                         },
                         headlineContent = { Text(stringResource(R.string.refresh_button_color)) },
+                    )
+                }
+                Spacer(modifier = Modifier.height(12.dp))
+            }
+
+            item {
+                Text(
+                    stringResource(R.string.text_settings),
+                    style = MaterialTheme.typography.titleMedium,
+                    modifier = Modifier.padding(bottom = 8.dp)
+                )
+            }
+
+            item {
+                Surface(
+                    shape = leadingItemShape(),
+                    tonalElevation = 2.dp
+                ) {
+                    ListItem(
+                        colors = listItemColors(),
+                        headlineContent = { Text(stringResource(R.string.text_size)) },
+                        supportingContent = {
+                            Column {
+                                Text(
+                                    "${state.fontSize}sp",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.primary
+                                )
+                                Slider(
+                                    value = state.fontSize.toFloat(),
+                                    onValueChange = { vm.updateFontSize(it.roundToInt()) },
+                                    valueRange = 10f..24f
+                                )
+                            }
+                        }
+                    )
+                }
+                Spacer(modifier = Modifier.height(2.dp))
+                Surface(
+                    shape = endItemShape(),
+                    tonalElevation = 2.dp
+                ) {
+                    ListItem(
+                        colors = listItemColors(),
+                        headlineContent = { Text(stringResource(R.string.bold_kural)) },
+                        trailingContent = {
+                            Switch(
+                                checked = state.boldKural,
+                                onCheckedChange = { vm.updateBoldKural(it) }
+                            )
+                        }
                     )
                 }
                 Spacer(modifier = Modifier.height(12.dp))
@@ -371,26 +429,15 @@ fun WidgetCustomizationView(
                                 )
                             },
                             trailingContent = {
-                                Row(verticalAlignment = Alignment.CenterVertically) {
-                                    IconButton(
-                                        onClick = { editingSection = sectionConfig },
-                                        enabled = sectionConfig.show
-                                    ) {
-                                        Icon(
-                                            Icons.Default.Edit,
-                                            contentDescription = stringResource(R.string.edit_settings)
-                                        )
-                                    }
-                                    Switch(
-                                        checked = sectionConfig.show,
-                                        onCheckedChange = {
-                                            vm.updateSectionSettings(
-                                                sectionConfig.type,
-                                                show = it
-                                            )
+                                Switch(
+                                    checked = sectionConfig.show,
+                                    onCheckedChange = { show ->
+                                        reorderableSections = reorderableSections.map {
+                                            if (it.type == sectionConfig.type) it.copy(show = show) else it
                                         }
-                                    )
-                                }
+                                        vm.updateSectionShow(sectionConfig.type, show)
+                                    }
+                                )
                             }
                         )
                     }
@@ -614,10 +661,10 @@ fun WidgetPreview(state: WidgetConfig) {
                     }
                     PreviewText(
                         text = text,
-                        color = section.textColor,
-                        size = section.size,
-                        align = section.align,
-                        bold = section.bold
+                        color = state.textColor,
+                        size = state.fontSize,
+                        type = section.type,
+                        boldKural = state.boldKural
                     )
                 }
             }
@@ -630,144 +677,25 @@ fun PreviewText(
     text: String,
     color: String,
     size: Int,
-    align: WidgetTextAlign,
-    bold: Boolean
+    type: ContentType,
+    boldKural: Boolean
 ) {
+    val textAlign = when (type) {
+        ContentType.Kural -> TextAlign.Left
+        ContentType.Thiruvalluvar -> TextAlign.Right
+        else -> TextAlign.Center
+    }
     Text(
         text = text,
         color = Color(color.toColorInt()),
         fontSize = size.sp,
-        fontWeight = if (bold) FontWeight.Bold else FontWeight.Normal,
-        textAlign = when (align) {
-            WidgetTextAlign.Start -> TextAlign.Left
-            WidgetTextAlign.End -> TextAlign.Right
-            WidgetTextAlign.Center -> TextAlign.Center
-        },
+        fontWeight = if (type == ContentType.Kural && boldKural) FontWeight.Bold else FontWeight.Normal,
+        textAlign = textAlign,
         modifier = Modifier
             .fillMaxWidth()
             .padding(top = 2.dp),
         lineHeight = (size + 4).sp
     )
-}
-
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun ElementSettingsDialog(
-    sectionConfig: SectionConfig,
-    onDismissRequest: () -> Unit,
-    onSizeChange: (Int) -> Unit,
-    onAlignChange: (WidgetTextAlign) -> Unit,
-    onBoldChange: (Boolean) -> Unit,
-    onColorChange: (String) -> Unit
-) {
-    var showColorPicker by remember { mutableStateOf(false) }
-    val sectionLabel = contentTypeLabel(sectionConfig.type)
-
-    if (showColorPicker) {
-        ColorChooserDialog(
-            label = stringResource(R.string.section_settings, sectionLabel),
-            initialColor = sectionConfig.textColor,
-            onColorSelected = { onColorChange(it) },
-            onDismissRequest = { showColorPicker = false }
-        )
-    }
-
-    Dialog(onDismissRequest = onDismissRequest) {
-        Card(
-            shape = RoundedCornerShape(24.dp),
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Column(
-                modifier = Modifier.padding(24.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp)
-            ) {
-                Text(
-                    text = stringResource(R.string.section_settings, sectionLabel),
-                    style = MaterialTheme.typography.headlineSmall,
-                )
-
-                // Color Row
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    Text(stringResource(R.string.color))
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        IconButton(
-                            onClick = { showColorPicker = true },
-                        ) {
-                            Icon(
-                                Icons.Outlined.Colorize,
-                                contentDescription = stringResource(R.string.pick_color),
-                            )
-                        }
-                    }
-                }
-
-                // Bold row
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    Text(stringResource(R.string.bold_text))
-                    Switch(
-                        checked = sectionConfig.bold,
-                        onCheckedChange = onBoldChange,
-                    )
-                }
-
-                // Size row
-                Column(modifier = Modifier.fillMaxWidth()) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(stringResource(R.string.text_size))
-                        Text(
-                            "${sectionConfig.size}sp",
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.primary
-                        )
-                    }
-                    Slider(
-                        value = sectionConfig.size.toFloat(),
-                        onValueChange = { onSizeChange(it.toInt()) },
-                        valueRange = 10f..24f,
-                    )
-                }
-
-                // Align row
-                Column(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    Text(stringResource(R.string.alignment))
-                    Row(
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        WidgetTextAlign.entries.forEach {
-                            FilterChip(
-                                selected = sectionConfig.align == it,
-                                onClick = { onAlignChange(it) },
-                                label = { Text(widgetTextAlignLabel(it)) }
-                            )
-                        }
-                    }
-                }
-
-                TextButton(
-                    onClick = onDismissRequest,
-                    modifier = Modifier.align(Alignment.End)
-                ) {
-                    Text(stringResource(R.string.close))
-                }
-            }
-        }
-    }
 }
 
 @Composable
@@ -777,11 +705,4 @@ private fun contentTypeLabel(type: ContentType): String = when (type) {
     ContentType.Adhigaram -> stringResource(R.string.chapter)
     ContentType.Kural -> stringResource(R.string.tamil_kural)
     ContentType.Thiruvalluvar -> stringResource(R.string.thiruvalluvar)
-}
-
-@Composable
-private fun widgetTextAlignLabel(align: WidgetTextAlign): String = when (align) {
-    WidgetTextAlign.Start -> stringResource(R.string.align_start)
-    WidgetTextAlign.Center -> stringResource(R.string.align_center)
-    WidgetTextAlign.End -> stringResource(R.string.align_end)
 }
