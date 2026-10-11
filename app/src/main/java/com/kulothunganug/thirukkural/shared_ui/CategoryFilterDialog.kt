@@ -13,6 +13,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuAnchorType
 import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuDefaults
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -23,9 +24,12 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalLocale
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.kulothunganug.thirukkural.R
+import com.kulothunganug.thirukkural.models.KuralCategory
+import com.kulothunganug.thirukkural.shared_ui.LanguageAwareLabel
 
 /**
  * Pal → Iyal → Adhigaram cascading filter dialog, shared by BrowseView (browsing Kurals) and
@@ -36,9 +40,9 @@ import com.kulothunganug.thirukkural.R
 @Composable
 fun CategoryFilterDialog(
     title: String,
-    pals: List<String>,
-    iyals: List<String>,
-    adikarams: List<String>,
+    pals: List<KuralCategory>,
+    iyals: List<KuralCategory>,
+    adikarams: List<KuralCategory>,
     selectedPals: List<String>,
     selectedIyals: List<String>,
     selectedAdikarams: List<String>,
@@ -88,15 +92,26 @@ fun CategoryFilterDialog(
 @Composable
 fun MultiFilterDropdown(
     label: String,
-    options: List<String>,
+    options: List<KuralCategory>,
     selectedOptions: List<String>,
     onOptionToggled: (String) -> Unit,
     enabled: Boolean = true
 ) {
     var expanded by remember { mutableStateOf(false) }
+    val currentLanguage = LocalLocale.current.platformLocale.language
+    val isTamil = currentLanguage == "ta"
+
     val displayText = when {
         selectedOptions.isEmpty() -> stringResource(R.string.select_label, label)
-        selectedOptions.size == 1 -> selectedOptions.first()
+        selectedOptions.size == 1 -> {
+            val selectedTa = selectedOptions.first()
+            val category = options.find { it.ta == selectedTa }
+            if (category != null) {
+                if (isTamil) category.ta else category.en
+            } else {
+                selectedTa
+            }
+        }
         else -> stringResource(R.string.label_selected, selectedOptions.size, label)
     }
 
@@ -122,7 +137,7 @@ fun MultiFilterDropdown(
             onDismissRequest = { expanded = false }
         ) {
             options.forEach { option ->
-                val isSelected = selectedOptions.contains(option)
+                val isSelected = selectedOptions.contains(option.ta)
                 DropdownMenuItem(
                     text = {
                         Row(verticalAlignment = Alignment.CenterVertically) {
@@ -131,11 +146,17 @@ fun MultiFilterDropdown(
                                 onCheckedChange = null
                             )
                             Spacer(modifier = Modifier.width(8.dp))
-                            Text(option)
+                            LanguageAwareLabel(
+                                ta = option.ta,
+                                en = option.en,
+                                tl = option.tl,
+                                primaryStyle = MaterialTheme.typography.bodyLarge,
+                                secondaryStyle = MaterialTheme.typography.bodySmall
+                            )
                         }
                     },
                     onClick = {
-                        onOptionToggled(option)
+                        onOptionToggled(option.ta)
                     }
                 )
             }

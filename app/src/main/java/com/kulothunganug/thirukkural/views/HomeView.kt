@@ -1,8 +1,10 @@
 package com.kulothunganug.thirukkural.views
 
+import android.app.PendingIntent
 import android.appwidget.AppWidgetManager
 import android.content.ComponentName
 import android.content.Context
+import android.content.Intent
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -35,6 +37,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalLocale
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -42,6 +45,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.kulothunganug.thirukkural.R
+import com.kulothunganug.thirukkural.WidgetCustomizationActivity
+import com.kulothunganug.thirukkural.shared_ui.LanguageAwareLabel
 import com.kulothunganug.thirukkural.viewmodels.HomeViewModel
 import com.kulothunganug.thirukkural.widget.ThirukkuralWidgetReceiver
 
@@ -141,15 +146,19 @@ fun HomeView(vm: HomeViewModel, navController: NavController) {
                         Text(
                             text = kural.kuralTa.replace("<br />", "\n"),
                             fontWeight = FontWeight.Bold,
-                            textAlign = TextAlign.Left,
+                            textAlign = TextAlign.Start,
                             lineHeight = 28.sp,
+                            style = MaterialTheme.typography.bodyLarge
                         )
                         Spacer(modifier = Modifier.height(8.dp))
-                        Text(
-                            text = "— ${kural.adikaramTa}",
-                            style = MaterialTheme.typography.labelMedium,
-                            color = MaterialTheme.colorScheme.secondary,
-                            textAlign = TextAlign.Left,
+                        LanguageAwareLabel(
+                            ta = "— ${kural.adikaramTa}",
+                            en = "— ${kural.adikaramEn}",
+                            tl = kural.adikaramTl,
+                            primaryStyle = MaterialTheme.typography.labelMedium,
+                            secondaryStyle = MaterialTheme.typography.bodySmall,
+                            textAlign = TextAlign.Start,
+                            modifier = Modifier.fillMaxWidth()
                         )
                     }
                 }
@@ -235,11 +244,27 @@ private fun WidgetHintCard(
 /**
  * Asks the launcher to pin the Thirukkural widget to the Home Screen, if the launcher supports it
  * (Android 8+ and most launchers, though support isn't guaranteed on every device).
+ *
+ * Unlike a manual drag-from-picker add, [AppWidgetManager.requestPinAppWidget] does NOT launch the
+ * widget's `android:configure` activity on its own — the launcher hands control straight back to
+ * us once pinning succeeds. Since the widget declares a configure activity, the system defers its
+ * very first update until that activity finishes with RESULT_OK, so without a [successCallback]
+ * that starts it ourselves, the widget would be pinned but never actually rendered (stuck showing
+ * "Can't load widget"). The callback must be mutable so the system can fill in
+ * [AppWidgetManager.EXTRA_APPWIDGET_ID] on the launched intent.
  */
 private fun requestPinThirukkuralWidget(context: Context) {
     val appWidgetManager = AppWidgetManager.getInstance(context)
     val provider = ComponentName(context, ThirukkuralWidgetReceiver::class.java)
     if (appWidgetManager.isRequestPinAppWidgetSupported) {
-        appWidgetManager.requestPinAppWidget(provider, null, null)
+        val configureIntent = Intent(context, WidgetCustomizationActivity::class.java)
+            .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        val successCallback = PendingIntent.getActivity(
+            context,
+            0,
+            configureIntent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_MUTABLE
+        )
+        appWidgetManager.requestPinAppWidget(provider, null, successCallback)
     }
 }

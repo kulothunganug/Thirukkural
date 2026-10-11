@@ -10,6 +10,7 @@ import androidx.glance.state.PreferencesGlanceStateDefinition
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.kulothunganug.thirukkural.datastore.FavouritesSettings
+import com.kulothunganug.thirukkural.models.KuralCategory
 import com.kulothunganug.thirukkural.repository.ThirukkuralRepository
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import com.kulothunganug.thirukkural.widget.ContentType
@@ -58,14 +59,14 @@ class WidgetCustomizationViewModel(
 
     private var glanceId: GlanceId? = null
 
-    val pals: StateFlow<List<String>> = repository.getPals()
+    val pals: StateFlow<List<KuralCategory>> = repository.getPals()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     // Cascading options for the category refresh-source filter — mirrors BrowseViewModel's
     // Paal → Iyal → Adhigaram narrowing, but keyed off the selections already living in
     // _uiState.refreshCategory* rather than a separate set of selection flows.
     @OptIn(ExperimentalCoroutinesApi::class)
-    val categoryIyals: StateFlow<List<String>> = _uiState
+    val categoryIyals: StateFlow<List<KuralCategory>> = _uiState
         .map { it.refreshCategoryPals }
         .distinctUntilChanged()
         .flatMapLatest { pals ->
@@ -73,7 +74,7 @@ class WidgetCustomizationViewModel(
         }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     @OptIn(ExperimentalCoroutinesApi::class)
-    val categoryAdikarams: StateFlow<List<String>> = _uiState
+    val categoryAdikarams: StateFlow<List<KuralCategory>> = _uiState
         .map { it.refreshCategoryPals to it.refreshCategoryIyals }
         .distinctUntilChanged()
         .flatMapLatest { (pals, iyals) ->

@@ -1,11 +1,6 @@
 package com.kulothunganug.thirukkural.views
 
-import android.content.ClipData
-import android.content.ClipboardManager
-import android.content.Context
 import android.content.Intent
-import android.os.Build
-import android.widget.Toast
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloatAsState
@@ -32,18 +27,15 @@ import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.TextAutoSize
 import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
-import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.rounded.DragHandle
-import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -78,6 +70,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.platform.LocalLocale
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -87,6 +80,7 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.kulothunganug.thirukkural.R
 import com.kulothunganug.thirukkural.models.ThirukkuralModel
+import com.kulothunganug.thirukkural.shared_ui.LanguageAwareLabel
 import com.kulothunganug.thirukkural.shared_ui.endItemShape
 import com.kulothunganug.thirukkural.shared_ui.leadingItemShape
 import com.kulothunganug.thirukkural.shared_ui.listItemColors
@@ -104,7 +98,6 @@ fun KuralDetailView(
     navController: NavController
 ) {
     val uiState by vm.uiState.collectAsState()
-    val context = LocalContext.current
     var showShareSheet by remember { mutableStateOf(false) }
 
     LaunchedEffect(kuralId) {
@@ -200,15 +193,15 @@ fun KuralDetailView(
                         .verticalScroll(rememberScrollState())
                 ) {
                     SelectionContainer {
-                    Text(
-                        text = k.kuralTa.replace("<br />", "\n"),
-                        fontSize = 20.sp,
-                        fontWeight = FontWeight.Bold,
-                        lineHeight = 28.sp,
-                        maxLines = 2,
-                        autoSize = TextAutoSize.StepBased(10.sp, 20.sp, 1.sp),
-                    )
-                }
+                        Text(
+                            text = k.kuralTa.replace("<br />", "\n"),
+                            style = MaterialTheme.typography.headlineSmall.copy(
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 20.sp,
+                                lineHeight = 28.sp
+                            )
+                        )
+                    }
                     Spacer(modifier = Modifier.height(16.dp))
                     HorizontalDivider()
                     Spacer(modifier = Modifier.height(16.dp))
@@ -219,12 +212,16 @@ fun KuralDetailView(
                     ) {
                         InfoCard(
                             label = stringResource(R.string.kural_no),
-                            value = k.id.toString(),
+                            taValue = k.id.toString(),
+                            enValue = k.id.toString(),
+                            tlValue = "",
                             modifier = Modifier.weight(1f)
                         )
                         InfoCard(
                             label = stringResource(R.string.part),
-                            value = k.palTa,
+                            taValue = k.palTa,
+                            enValue = k.palEn,
+                            tlValue = k.palTl,
                             modifier = Modifier.weight(1f)
                         )
                     }
@@ -235,26 +232,41 @@ fun KuralDetailView(
                     ) {
                         InfoCard(
                             label = stringResource(R.string.section),
-                            value = k.iyalTa,
+                            taValue = k.iyalTa,
+                            enValue = k.iyalEn,
+                            tlValue = k.iyalTl,
                             modifier = Modifier.weight(1f)
                         )
                         InfoCard(
                             label = stringResource(R.string.chapter),
-                            value = k.adikaramTa,
+                            taValue = k.adikaramTa,
+                            enValue = k.adikaramEn,
+                            tlValue = k.adikaramTl,
                             modifier = Modifier.weight(1f)
                         )
                     }
 
                     Spacer(modifier = Modifier.height(16.dp))
 
-                    DetailItem(label = stringResource(R.string.explanation), value = k.explanationTa)
+                    DetailItem(
+                        label = stringResource(R.string.explanation_ta),
+                        value = k.explanationTa
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    DetailItem(
+                        label = stringResource(R.string.explanation_en),
+                        value = k.explanationEn
+                    )
                     Spacer(modifier = Modifier.height(8.dp))
                     DetailItem(
                         label = stringResource(R.string.transliteration),
                         value = k.kuralTl.replace("<br />", "\n")
                     )
                     Spacer(modifier = Modifier.height(8.dp))
-                    DetailItem(label = stringResource(R.string.couplet), value = k.couplet)
+                    DetailItem(
+                        label = stringResource(R.string.couplet),
+                        value = k.couplet
+                    )
                     Spacer(modifier = Modifier.height(16.dp))
 
                     Text(
@@ -263,30 +275,42 @@ fun KuralDetailView(
                     )
                     Spacer(modifier = Modifier.height(8.dp))
 
-                    CollapsibleExplanation(
-                        label = stringResource(R.string.mu_varadarasanar),
-                        value = k.commentaryMuVaratharasanar
-                    )
-                    CollapsibleExplanation(
-                        label = stringResource(R.string.parimelazhagar),
-                        value = k.commentaryParimelazhagar
-                    )
-                    CollapsibleExplanation(
-                        label = stringResource(R.string.solomon_pappaiah),
-                        value = k.commentarySalamanPappaiya
-                    )
-                    CollapsibleExplanation(
-                        label = stringResource(R.string.manakkudavar),
-                        value = k.commentaryManakudavar
-                    )
-                    CollapsibleExplanation(
-                        label = stringResource(R.string.munusami),
-                        value = k.commentaryMunusami
-                    )
-                    CollapsibleExplanation(
-                        label = stringResource(R.string.karunanidhi),
-                        value = k.commentaryKarunanidhi
-                    )
+                    if (k.commentaryMuVaratharasanar.isNotBlank()) {
+                        CollapsibleExplanation(
+                            label = stringResource(R.string.mu_varadarasanar),
+                            value = k.commentaryMuVaratharasanar
+                        )
+                    }
+                    if (k.commentaryParimelazhagar.isNotBlank()) {
+                        CollapsibleExplanation(
+                            label = stringResource(R.string.parimelazhagar),
+                            value = k.commentaryParimelazhagar
+                        )
+                    }
+                    if (k.commentarySalamanPappaiya.isNotBlank()) {
+                        CollapsibleExplanation(
+                            label = stringResource(R.string.solomon_pappaiah),
+                            value = k.commentarySalamanPappaiya
+                        )
+                    }
+                    if (k.commentaryManakudavar.isNotBlank()) {
+                        CollapsibleExplanation(
+                            label = stringResource(R.string.manakkudavar),
+                            value = k.commentaryManakudavar
+                        )
+                    }
+                    if (k.commentaryMunusami.isNotBlank()) {
+                        CollapsibleExplanation(
+                            label = stringResource(R.string.munusami),
+                            value = k.commentaryMunusami
+                        )
+                    }
+                    if (k.commentaryKarunanidhi.isNotBlank()) {
+                        CollapsibleExplanation(
+                            label = stringResource(R.string.karunanidhi),
+                            value = k.commentaryKarunanidhi
+                        )
+                    }
                 }
             }
         }
@@ -310,11 +334,15 @@ fun KuralShareSheet(
     val coupletLabel = stringResource(R.string.couplet)
     val sentFromAppLabel = stringResource(R.string.sent_from_app)
 
+    val currentLanguage = LocalLocale.current.platformLocale.language
+    val isTamil = currentLanguage == "ta"
+
     val sharedText = remember(
         config,
         explanationLabel,
         coupletLabel,
-        sentFromAppLabel
+        sentFromAppLabel,
+        isTamil
     ) {
         buildString {
             config.order.forEach { sectionId ->
@@ -322,21 +350,33 @@ fun KuralShareSheet(
                     when (sectionId) {
                         "header" -> {
                             append("Thirukkural #${kural.id}\n")
-                            append("${kural.palTa} | ${kural.iyalTa} | ${kural.adikaramTa}\n\n")
+                            if (isTamil) {
+                                append("${kural.palTa} | ${kural.iyalTa} | ${kural.adikaramTa}\n\n")
+                            } else {
+                                append("${kural.palEn} (${kural.palTl}) | ${kural.iyalEn} (${kural.iyalTl}) | ${kural.adikaramEn} (${kural.adikaramTl})\n\n")
+                            }
                         }
+
                         "kural" -> {
                             append(kural.kuralTa.replace("<br />", "\n"))
                             append("\n\n")
+                            if (!isTamil) {
+                                append(kural.kuralTl.replace("<br />", "\n"))
+                                append("\n\n")
+                            }
                         }
+
                         "transliteration" -> {
                             append(kural.kuralTl.replace("<br />", "\n"))
                             append("\n\n")
                         }
+
                         "explanation" -> {
                             append("$explanationLabel:\n")
-                            append(kural.explanationTa)
+                            append(if (isTamil) kural.explanationTa else kural.explanationEn)
                             append("\n\n")
                         }
+
                         "translation" -> {
                             append("$coupletLabel:\n")
                             append(kural.couplet)
@@ -458,9 +498,10 @@ fun KuralShareSheet(
                                 Switch(
                                     checked = enabled,
                                     onCheckedChange = { isEnabled ->
-                                        val newEnabled = config.enabledSections.toMutableSet().apply {
-                                            if (isEnabled) add(sectionId) else remove(sectionId)
-                                        }
+                                        val newEnabled =
+                                            config.enabledSections.toMutableSet().apply {
+                                                if (isEnabled) add(sectionId) else remove(sectionId)
+                                            }
                                         vm.updateShareConfig(config.copy(enabledSections = newEnabled))
                                     }
                                 )
@@ -495,7 +536,11 @@ fun KuralShareSheet(
 }
 
 @Composable
-fun DetailItem(label: String, value: String, modifier: Modifier = Modifier) {
+fun DetailItem(
+    label: String,
+    value: String,
+    modifier: Modifier = Modifier
+) {
     Card(
         modifier = modifier.fillMaxWidth(), colors = CardDefaults.cardColors().copy(
             containerColor =
@@ -507,11 +552,11 @@ fun DetailItem(label: String, value: String, modifier: Modifier = Modifier) {
                 text = label,
                 style = MaterialTheme.typography.labelLarge,
             )
+            Spacer(modifier = Modifier.height(4.dp))
             SelectionContainer {
                 Text(
                     text = value,
                     style = MaterialTheme.typography.bodyMedium,
-                    modifier = Modifier.padding(top = 4.dp)
                 )
             }
         }
@@ -519,7 +564,13 @@ fun DetailItem(label: String, value: String, modifier: Modifier = Modifier) {
 }
 
 @Composable
-fun InfoCard(label: String, value: String, modifier: Modifier = Modifier) {
+fun InfoCard(
+    label: String,
+    taValue: String,
+    enValue: String,
+    tlValue: String,
+    modifier: Modifier = Modifier
+) {
     Card(
         modifier = modifier,
         colors = CardDefaults.cardColors().copy(
@@ -540,12 +591,14 @@ fun InfoCard(label: String, value: String, modifier: Modifier = Modifier) {
             )
             Spacer(modifier = Modifier.height(4.dp))
             SelectionContainer {
-
-                Text(
-                    text = value,
-                    style = MaterialTheme.typography.bodyLarge,
-                    fontWeight = FontWeight.Bold,
+                LanguageAwareLabel(
+                    ta = taValue,
+                    en = enValue,
+                    tl = tlValue,
+                    primaryStyle = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Bold),
+                    secondaryStyle = MaterialTheme.typography.bodySmall,
                     textAlign = TextAlign.Center,
+                    modifier = Modifier.fillMaxWidth()
                 )
             }
         }

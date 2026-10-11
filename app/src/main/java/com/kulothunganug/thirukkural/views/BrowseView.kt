@@ -41,6 +41,7 @@ import androidx.navigation.NavController
 import androidx.compose.ui.res.stringResource
 import com.kulothunganug.thirukkural.R
 import com.kulothunganug.thirukkural.shared_ui.CategoryFilterDialog
+import com.kulothunganug.thirukkural.shared_ui.LanguageAwareLabel
 import com.kulothunganug.thirukkural.viewmodels.BrowseViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -183,13 +184,15 @@ fun BrowseView(vm: BrowseViewModel, navController: NavController) {
                                 Column(modifier = Modifier.padding(12.dp)) {
                                     Text(
                                         text = kural.kuralTa.replace("<br />", "\n"),
-                                        fontSize = 16.sp
+                                        style = MaterialTheme.typography.bodyLarge
                                     )
                                     Spacer(modifier = Modifier.height(4.dp))
-                                    Text(
-                                        text = "${kural.palTa} - ${kural.iyalTa} - ${kural.adikaramTa}",
-                                        style = MaterialTheme.typography.bodySmall,
-                                        color = MaterialTheme.colorScheme.secondary
+                                    LanguageAwareLabel(
+                                        ta = "${kural.palTa} • ${kural.iyalTa} • ${kural.adikaramTa}",
+                                        en = "${kural.palEn} • ${kural.iyalEn} • ${kural.adikaramEn}",
+                                        tl = "${kural.palTl} • ${kural.iyalTl} • ${kural.adikaramTl}",
+                                        primaryStyle = MaterialTheme.typography.bodySmall,
+                                        secondaryStyle = MaterialTheme.typography.labelSmall
                                     )
                                 }
                             }

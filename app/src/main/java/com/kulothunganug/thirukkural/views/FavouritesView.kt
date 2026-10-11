@@ -32,6 +32,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.kulothunganug.thirukkural.R
+import com.kulothunganug.thirukkural.shared_ui.LanguageAwareLabel
 import com.kulothunganug.thirukkural.viewmodels.FavouritesViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -107,12 +108,14 @@ fun FavouritesView(vm: FavouritesViewModel, navController: NavController) {
                                 Column(modifier = Modifier.weight(1f)) {
                                     Text(
                                         text = kural.kuralTa.replace("<br />", "\n"),
-                                        fontSize = 16.sp
+                                        style = MaterialTheme.typography.bodyLarge
                                     )
-                                    Text(
-                                        text = "${kural.palTa} - ${kural.iyalTa} - ${kural.adikaramTa}",
-                                        style = MaterialTheme.typography.bodySmall,
-                                        color = MaterialTheme.colorScheme.secondary
+                                    LanguageAwareLabel(
+                                        ta = "${kural.palTa} • ${kural.iyalTa} • ${kural.adikaramTa}",
+                                        en = "${kural.palEn} • ${kural.iyalEn} • ${kural.adikaramEn}",
+                                        tl = "${kural.palTl} • ${kural.iyalTl} • ${kural.adikaramTl}",
+                                        primaryStyle = MaterialTheme.typography.bodySmall,
+                                        secondaryStyle = MaterialTheme.typography.labelSmall
                                     )
                                 }
                                 IconButton(onClick = { vm.removeFavourite(kural.id) }) {

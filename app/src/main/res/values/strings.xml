@@ -21,6 +21,8 @@
     <string name="label_selected">%1$d %2$s selected</string>
     <string name="kural_no">Kural No</string>
     <string name="explanation">Explanation</string>
+    <string name="explanation_ta">Tamil Explanation</string>
+    <string name="explanation_en">English Explanation</string>
     <string name="transliteration">Transliteration</string>
     <string name="couplet">Couplet</string>
     <string name="commentators">Commentators</string>

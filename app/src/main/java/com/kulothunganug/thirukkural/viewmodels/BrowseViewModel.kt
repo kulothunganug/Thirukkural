@@ -2,6 +2,7 @@ package com.kulothunganug.thirukkural.viewmodels
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.kulothunganug.thirukkural.models.KuralCategory
 import com.kulothunganug.thirukkural.models.ThirukkuralModel
 import com.kulothunganug.thirukkural.repository.ThirukkuralRepository
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -16,9 +17,9 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
 data class BrowseUiState(
-    val pals: List<String> = emptyList(),
-    val iyals: List<String> = emptyList(),
-    val adikarams: List<String> = emptyList(),
+    val pals: List<KuralCategory> = emptyList(),
+    val iyals: List<KuralCategory> = emptyList(),
+    val adikarams: List<KuralCategory> = emptyList(),
     val selectedPals: List<String> = emptyList(),
     val selectedIyals: List<String> = emptyList(),
     val selectedAdikarams: List<String> = emptyList(),
@@ -44,17 +45,17 @@ class BrowseViewModel(
     private val _selectedAdikarams = MutableStateFlow<List<String>>(emptyList())
     private val _searchQuery = MutableStateFlow("")
 
-    val pals: StateFlow<List<String>> = repository.getPals()
+    val pals: StateFlow<List<KuralCategory>> = repository.getPals()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     @OptIn(ExperimentalCoroutinesApi::class)
-    val iyals: StateFlow<List<String>> = _selectedPals
+    val iyals: StateFlow<List<KuralCategory>> = _selectedPals
         .flatMapLatest { pals ->
             if (pals.isNotEmpty()) repository.getIyals(pals) else flowOf(emptyList())
         }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     @OptIn(ExperimentalCoroutinesApi::class)
-    val adikarams: StateFlow<List<String>> = combine(_selectedPals, _selectedIyals) { pals, iyals ->
+    val adikarams: StateFlow<List<KuralCategory>> = combine(_selectedPals, _selectedIyals) { pals, iyals ->
         pals to iyals
     }.flatMapLatest { (pals, iyals) ->
         if (pals.isNotEmpty() && iyals.isNotEmpty()) repository.getAdikarams(pals, iyals)
@@ -122,11 +123,11 @@ class BrowseViewModel(
         // means no restriction" semantics honest (it visibly shows everything as selected,
         // instead of looking like nothing was chosen while secretly matching everything).
         viewModelScope.launch {
-            val allPals = repository.getPals().first()
+            val allPals = repository.getPals().first().map { it.ta }
             _selectedPals.value = allPals
-            val allIyals = repository.getIyals(allPals).first()
+            val allIyals = repository.getIyals(allPals).first().map { it.ta }
             _selectedIyals.value = allIyals
-            val allAdikarams = repository.getAdikarams(allPals, allIyals).first()
+            val allAdikarams = repository.getAdikarams(allPals, allIyals).first().map { it.ta }
             _selectedAdikarams.value = allAdikarams
         }
     }

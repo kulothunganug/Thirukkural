@@ -58,7 +58,7 @@ import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 
 @Serializable
-enum class ContentType { Paal, Iyal, Adhigaram, Kural, Transliteration, Thiruvalluvar }
+enum class ContentType { Paal, Iyal, Adhigaram, Kural, Thiruvalluvar }
 
 @Serializable
 enum class WidgetTextAlign { Start, Center, End }
@@ -85,7 +85,6 @@ data class WidgetConfig(
             size = 14,
             align = WidgetTextAlign.Start
         ),
-        SectionConfig(type = ContentType.Transliteration, show = false),
         SectionConfig(type = ContentType.Thiruvalluvar, show = false)
     )
 )
@@ -116,12 +115,30 @@ class ThirukkuralWidget : GlanceAppWidget(), KoinComponent {
     override suspend fun providePreview(context: Context, widgetCategory: Int) {
         provideContent {
             WidgetContent(
-                0,
-                paal = "",
-                iyal = "",
-                adhigaram = "கடவுள் வாழ்த்து",
-                kural = "அகர முதல எழுத்தெல்லாம் ஆதி\nபகவன் முதற்றே உலகு.",
-                transliteration = "",
+                kural = ThirukkuralModel(
+                    id = 1,
+                    palTa = "அறத்துப்பால்",
+                    palEn = "Virtue",
+                    palTl = "Araththuppaal",
+                    iyalTa = "பாயிரவியல்",
+                    iyalEn = "Preface",
+                    iyalTl = "Paayiraviyal",
+                    adikaramTa = "கடவுள் வாழ்த்து",
+                    adikaramEn = "The Praise of God",
+                    adikaramTl = "Kadavul Vaazhthu",
+                    kuralTa = "அகர முதல எழுத்தெல்லாம் ஆதி\nபகவன் முதற்றே உலகு.",
+                    kuralTl = "Akara Mudhala Ezhuththellam Aadhi Bhagavan Mudhatre Ulaku.",
+                    translationEn = "A, as its first of letters, every speech maintains; The Primal Deity is First through all the world's domains.",
+                    couplet = "A, as its first of letters, every speech maintains; The Primal Deity is First through all the world's domains.",
+                    explanationTa = "எழுத்துக்கள் எல்லாம் அகரத்தை அடிப்படையாக கொண்டிருக்கின்றன. அதுபோல உலகம் கடவுளை அடிப்படையாக கொண்டிருக்கிறது.",
+                    explanationEn = "As the letter A is the first of all letters, so the eternal God is the first in the world.",
+                    commentaryMuVaratharasanar = "",
+                    commentaryParimelazhagar = "",
+                    commentarySalamanPappaiya = "",
+                    commentaryManakudavar = "",
+                    commentaryMunusami = "",
+                    commentaryKarunanidhi = ""
+                ),
                 config = WidgetConfig()
             )
         }
@@ -181,12 +198,7 @@ class ThirukkuralWidget : GlanceAppWidget(), KoinComponent {
             }
 
             WidgetContent(
-                kuralId = kuralId,
-                paal = currentKural.palTa,
-                iyal = currentKural.iyalTa,
-                adhigaram = currentKural.adikaramTa,
-                kural = currentKural.kuralTa,
-                transliteration = currentKural.kuralTl,
+                kural = currentKural,
                 config = config
             )
         }
@@ -195,12 +207,7 @@ class ThirukkuralWidget : GlanceAppWidget(), KoinComponent {
 
     @Composable
     private fun WidgetContent(
-        kuralId: Int,
-        paal: String,
-        iyal: String,
-        adhigaram: String,
-        kural: String,
-        transliteration: String,
+        kural: ThirukkuralModel,
         config: WidgetConfig,
     ) {
         val backgroundColor = Color(config.bgColor.toColorInt())
@@ -211,7 +218,7 @@ class ThirukkuralWidget : GlanceAppWidget(), KoinComponent {
                 .clickable(
                     actionRunCallback<OpenKuralAction>(
                         parameters = actionParametersOf(
-                            OpenKuralAction.kuralIdKey to kuralId
+                            OpenKuralAction.kuralIdKey to kural.id
                         )
                     )
                 ),
@@ -224,11 +231,10 @@ class ThirukkuralWidget : GlanceAppWidget(), KoinComponent {
             ) {
                 config.contentOrder.filter { it.show }.forEach { section ->
                     val text = when (section.type) {
-                        ContentType.Paal -> paal
-                        ContentType.Iyal -> iyal
-                        ContentType.Adhigaram -> adhigaram
-                        ContentType.Kural -> kural.replace("<br />", "\n")
-                        ContentType.Transliteration -> transliteration
+                        ContentType.Paal -> kural.palTa
+                        ContentType.Iyal -> kural.iyalTa
+                        ContentType.Adhigaram -> kural.adikaramTa
+                        ContentType.Kural -> kural.kuralTa.replace("<br />", "\n")
                         ContentType.Thiruvalluvar -> THIRUVALLUVAR_TA
                     }
                     if (text.isNotEmpty()) {

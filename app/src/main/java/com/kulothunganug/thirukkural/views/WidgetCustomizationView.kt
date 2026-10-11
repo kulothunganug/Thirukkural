@@ -58,6 +58,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -67,6 +68,7 @@ import androidx.core.graphics.toColorInt
 import com.kulothunganug.thirukkural.R
 import com.kulothunganug.thirukkural.shared_ui.CategoryFilterDialog
 import com.kulothunganug.thirukkural.shared_ui.ColorChooserDialog
+import com.kulothunganug.thirukkural.shared_ui.LanguageAwareLabel
 import com.kulothunganug.thirukkural.shared_ui.detachedItemShape
 import com.kulothunganug.thirukkural.shared_ui.endItemShape
 import com.kulothunganug.thirukkural.shared_ui.leadingItemShape
@@ -608,15 +610,14 @@ fun WidgetPreview(state: WidgetConfig) {
                         ContentType.Iyal -> "பாயிரவியல்"
                         ContentType.Adhigaram -> "கடவுள் வாழ்த்து"
                         ContentType.Kural -> "அகர முதல எழுத்தெல்லாம் ஆதி\nபகவன் முதற்றே உலகு."
-                        ContentType.Transliteration -> "Akara Mudhala Ezhuththellam Aadhi..."
                         ContentType.Thiruvalluvar -> THIRUVALLUVAR_TA
                     }
                     PreviewText(
-                        text,
-                        section.textColor,
-                        section.size,
-                        section.align,
-                        section.bold
+                        text = text,
+                        color = section.textColor,
+                        size = section.size,
+                        align = section.align,
+                        bold = section.bold
                     )
                 }
             }
@@ -625,7 +626,13 @@ fun WidgetPreview(state: WidgetConfig) {
 }
 
 @Composable
-fun PreviewText(text: String, color: String, size: Int, align: WidgetTextAlign, bold: Boolean) {
+fun PreviewText(
+    text: String,
+    color: String,
+    size: Int,
+    align: WidgetTextAlign,
+    bold: Boolean
+) {
     Text(
         text = text,
         color = Color(color.toColorInt()),
@@ -769,7 +776,6 @@ private fun contentTypeLabel(type: ContentType): String = when (type) {
     ContentType.Iyal -> stringResource(R.string.section)
     ContentType.Adhigaram -> stringResource(R.string.chapter)
     ContentType.Kural -> stringResource(R.string.tamil_kural)
-    ContentType.Transliteration -> stringResource(R.string.transliteration)
     ContentType.Thiruvalluvar -> stringResource(R.string.thiruvalluvar)
 }
 

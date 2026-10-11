@@ -1,6 +1,7 @@
 package com.kulothunganug.thirukkural.repository
 
 import com.kulothunganug.thirukkural.dao.ThirukkuralDao
+import com.kulothunganug.thirukkural.models.KuralCategory
 
 class ThirukkuralRepository(private val dao: ThirukkuralDao) {
     suspend fun getById(number: Int) = dao.getById(number)
