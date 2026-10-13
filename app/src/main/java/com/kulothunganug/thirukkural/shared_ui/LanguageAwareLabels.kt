@@ -5,12 +5,23 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalLocale
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextAlign
+import com.kulothunganug.thirukkural.datastore.LanguageSettings
+import com.kulothunganug.thirukkural.datastore.SecondaryScript
+import com.kulothunganug.thirukkural.datastore.coerced
+import com.kulothunganug.thirukkural.datastore.text
+import org.koin.compose.koinInject
 
+/**
+ * Renders a primary line in the app language (Tamil or English) with a smaller
+ * secondary line in the user-chosen [SecondaryScript].
+ */
 @Composable
 fun LanguageAwareLabel(
     ta: String,
@@ -23,20 +34,26 @@ fun LanguageAwareLabel(
     secondaryColor: Color = MaterialTheme.colorScheme.secondary,
     textAlign: TextAlign? = null
 ) {
-    val currentLanguage = LocalLocale.current.platformLocale.language
-    val isTamil = currentLanguage == "ta"
+    val isTamilPrimary = LocalLocale.current.platformLocale.language == "ta"
+    val languageSettings: LanguageSettings = koinInject()
+    val storedSecondary by languageSettings.secondaryStream.collectAsState(
+        initial = SecondaryScript.TRANSLITERATION
+    )
+
+    val primaryText = if (isTamilPrimary) ta else en
+    val secondaryText = storedSecondary.coerced(isTamilPrimary).text(ta, en, tl)
 
     Column(modifier = modifier) {
         Text(
-            text = if (isTamil) ta else en,
+            text = primaryText,
             style = primaryStyle,
             color = primaryColor,
             textAlign = textAlign,
             modifier = if (textAlign == TextAlign.Center || textAlign == TextAlign.End) Modifier.fillMaxWidth() else Modifier
         )
-        if (!isTamil && tl.isNotEmpty()) {
+        if (secondaryText.isNotEmpty() && secondaryText != primaryText) {
             Text(
-                text = tl,
+                text = secondaryText,
                 style = secondaryStyle,
                 color = secondaryColor,
                 textAlign = textAlign,

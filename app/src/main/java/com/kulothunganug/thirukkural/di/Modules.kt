@@ -3,6 +3,7 @@ package com.kulothunganug.thirukkural.di
 import androidx.room.Room
 import com.kulothunganug.thirukkural.ThirukkuralDatabase
 import com.kulothunganug.thirukkural.datastore.FavouritesSettings
+import com.kulothunganug.thirukkural.datastore.LanguageSettings
 import com.kulothunganug.thirukkural.datastore.ShareSettings
 import com.kulothunganug.thirukkural.datastore.ThemeSettings
 import com.kulothunganug.thirukkural.datastore.WidgetHintSettings
@@ -37,11 +38,12 @@ val appModule = module {
     single { ThemeSettings(androidContext()) }
     single { FavouritesSettings(androidContext()) }
     single { ShareSettings(androidContext()) }
+    single { LanguageSettings(androidContext()) }
     single { WidgetHintSettings(androidContext()) }
     viewModel { HomeViewModel(get(), get()) }
     viewModel { BrowseViewModel(get()) }
     viewModel { KuralDetailViewModel(get(), get(), get()) }
     viewModel { FavouritesViewModel(get(), get()) }
-    viewModel { SettingsViewModel(get()) }
+    viewModel { SettingsViewModel(get(), get()) }
     viewModel { WidgetCustomizationViewModel(androidContext(), get(), get()) }
 }

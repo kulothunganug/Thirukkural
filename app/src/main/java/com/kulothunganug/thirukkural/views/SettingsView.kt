@@ -36,6 +36,9 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.kulothunganug.thirukkural.R
 import com.kulothunganug.thirukkural.datastore.AppTheme
+import com.kulothunganug.thirukkural.datastore.SecondaryScript
+import com.kulothunganug.thirukkural.datastore.availableSecondaries
+import com.kulothunganug.thirukkural.datastore.coerced
 import com.kulothunganug.thirukkural.shared_ui.endItemShape
 import com.kulothunganug.thirukkural.shared_ui.leadingItemShape
 import com.kulothunganug.thirukkural.shared_ui.listItemColors
@@ -51,7 +54,9 @@ fun SettingsView(
     vm: SettingsViewModel = koinViewModel()
 ) {
     val currentTheme by vm.theme.collectAsState()
+    val secondaryScript by vm.secondaryScript.collectAsState()
     val currentLanguage = LocalLocale.current.platformLocale.language
+    val isTamilPrimary = currentLanguage == "ta"
     val context = LocalContext.current
 
     fun setAppLanguage(languageTag: String) {
@@ -82,14 +87,14 @@ fun SettingsView(
         Column(
             modifier = Modifier
                 .padding(padding)
-                .padding(8.dp)
+                .padding(12.dp)
                 .fillMaxSize(),
             verticalArrangement = Arrangement.spacedBy(2.dp)
         ) {
             Text(
                 text = stringResource(R.string.theme),
                 style = MaterialTheme.typography.titleMedium,
-                modifier = Modifier.padding(16.dp)
+                modifier = Modifier.padding(12.dp)
             )
 
             ThemeOption(
@@ -111,12 +116,12 @@ fun SettingsView(
                 onClick = { vm.setTheme(AppTheme.DARK) }
             )
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(8.dp))
 
             Text(
-                text = stringResource(R.string.language),
+                text = stringResource(R.string.app_language),
                 style = MaterialTheme.typography.titleMedium,
-                modifier = Modifier.padding(16.dp)
+                modifier = Modifier.padding(12.dp)
             )
 
             val languageSwitchSupported = Build.VERSION.SDK_INT >= 33
@@ -148,7 +153,59 @@ fun SettingsView(
                     modifier = Modifier.padding(16.dp)
                 )
             }
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            Text(
+                text = stringResource(R.string.secondary_text),
+                style = MaterialTheme.typography.titleMedium,
+                modifier = Modifier.padding(12.dp)
+            )
+
+            // Only offer scripts that differ from the primary app language —
+            // the primary is already the main line, so repeating it as the
+            // supporting line would be redundant.
+            val secondaryOptions = availableSecondaries(isTamilPrimary).map { it to it.label() }
+
+            SingleSelectGroup(
+                options = secondaryOptions,
+                selected = secondaryScript.coerced(isTamilPrimary),
+                onSelect = { vm.setSecondaryScript(it) }
+            )
         }
+    }
+}
+
+@Composable
+private fun SecondaryScript.label(): String = when (this) {
+    SecondaryScript.TAMIL -> stringResource(R.string.tamil)
+    SecondaryScript.ENGLISH -> stringResource(R.string.english)
+    SecondaryScript.TRANSLITERATION -> stringResource(R.string.transliteration)
+    SecondaryScript.NONE -> stringResource(R.string.none)
+}
+
+/** Renders a radio group with grouped-list shapes (rounded ends, square middle). */
+@Composable
+private fun <T> SingleSelectGroup(
+    options: List<Pair<T, String>>,
+    selected: T,
+    onSelect: (T) -> Unit,
+    enabled: Boolean = true
+) {
+    options.forEachIndexed { index, (value, label) ->
+        val shape = when {
+            options.size == 1 -> leadingItemShape()
+            index == 0 -> leadingItemShape()
+            index == options.lastIndex -> endItemShape()
+            else -> middleItemShape()
+        }
+        ThemeOption(
+            label = label,
+            selected = selected == value,
+            shape = shape,
+            enabled = enabled,
+            onClick = { onSelect(value) }
+        )
     }
 }
 

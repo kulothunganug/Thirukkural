@@ -7,6 +7,9 @@
     <string name="light">Light</string>
     <string name="dark">Dark</string>
     <string name="language">Language</string>
+    <string name="app_language">App language</string>
+    <string name="secondary_text">Secondary text</string>
+    <string name="none">None</string>
     <string name="english">English</string>
     <string name="tamil">Tamil</string>
     <string name="kural_of_the_moment">Kural of the Moment</string>

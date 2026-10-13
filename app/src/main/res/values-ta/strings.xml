@@ -7,6 +7,9 @@
     <string name="light">பகல்</string>
     <string name="dark">இரவு</string>
     <string name="language">மொழி</string>
+    <string name="app_language">செயலி மொழி</string>
+    <string name="secondary_text">துணை உரை</string>
+    <string name="none">எதுவும் இல்லை</string>
     <string name="english">ஆங்கிலம்</string>
     <string name="tamil">தமிழ்</string>
     <string name="kural_of_the_moment">இப்போதைய குறள்</string>
