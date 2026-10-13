@@ -41,7 +41,6 @@ import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -77,7 +76,6 @@ import com.kulothunganug.thirukkural.widget.THIRUVALLUVAR_TA
 import com.kulothunganug.thirukkural.widget.WidgetConfig
 import kotlinx.coroutines.launch
 import org.koin.androidx.compose.koinViewModel
-import org.koin.core.parameter.parametersOf
 import sh.calvin.reorderable.ReorderableItem
 import sh.calvin.reorderable.rememberReorderableLazyListState
 import kotlin.math.roundToInt
@@ -86,22 +84,16 @@ import kotlin.math.roundToInt
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun WidgetCustomizationView(
-    appWidgetId: Int,
     onDone: (Int) -> Unit,
 ) {
-    val vm: WidgetCustomizationViewModel = koinViewModel(parameters = { parametersOf(appWidgetId) })
+    val vm: WidgetCustomizationViewModel = koinViewModel()
 
     val state by vm.uiState.collectAsState()
     val isLoading by vm.isLoading.collectAsState()
-    val loadFailed by vm.loadFailed.collectAsState()
     val pals by vm.pals.collectAsState()
     val categoryIyals by vm.categoryIyals.collectAsState()
     val categoryAdikarams by vm.categoryAdikarams.collectAsState()
     val scope = rememberCoroutineScope()
-
-    LaunchedEffect(loadFailed) {
-        if (loadFailed) onDone(Activity.RESULT_CANCELED)
-    }
 
     val openBgColorChooser by vm.openBgColorChooser.collectAsState()
     val openTextColorChooser by vm.openTextColorChooser.collectAsState()

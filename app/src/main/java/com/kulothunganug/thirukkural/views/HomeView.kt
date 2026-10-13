@@ -35,6 +35,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -55,8 +56,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import com.kulothunganug.thirukkural.MainActivity
 import com.kulothunganug.thirukkural.R
-import com.kulothunganug.thirukkural.WidgetCustomizationActivity
 import com.kulothunganug.thirukkural.shared_ui.LanguageAwareLabel
 import com.kulothunganug.thirukkural.viewmodels.HomeViewModel
 import com.kulothunganug.thirukkural.widget.ThirukkuralWidgetReceiver
@@ -74,6 +75,10 @@ fun HomeView(vm: HomeViewModel, navController: NavController) {
             onAddWidget = {
                 requestPinThirukkuralWidget(context)
                 showWidgetBottomSheet = false
+            },
+            onOpenWidgetSettings = {
+                showWidgetBottomSheet = false
+                navController.navigate("widget_customization")
             }
         )
     }
@@ -268,6 +273,7 @@ private fun WidgetHintCard(
 private fun WidgetInfoBottomSheet(
     onDismissRequest: () -> Unit,
     onAddWidget: () -> Unit,
+    onOpenWidgetSettings: () -> Unit,
 ) {
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
@@ -335,31 +341,6 @@ private fun WidgetInfoBottomSheet(
                 modifier = Modifier.padding(bottom = 20.dp)
             )
 
-            // How to Open Customization Screen
-            Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(bottom = 24.dp),
-                colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f)
-                )
-            ) {
-                Column(modifier = Modifier.padding(16.dp)) {
-                    Text(
-                        text = stringResource(R.string.widget_how_to_customize_title),
-                        style = MaterialTheme.typography.titleSmall,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onPrimaryContainer
-                    )
-                    Spacer(modifier = Modifier.height(4.dp))
-                    Text(
-                        text = stringResource(R.string.widget_how_to_customize_desc),
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onPrimaryContainer
-                    )
-                }
-            }
-
             // Action Button
             Button(
                 onClick = onAddWidget,
@@ -377,6 +358,25 @@ private fun WidgetInfoBottomSheet(
                     fontWeight = FontWeight.Bold
                 )
             }
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            OutlinedButton(
+                onClick = onOpenWidgetSettings,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(50.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.Outlined.Colorize,
+                    contentDescription = null
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    text = stringResource(R.string.widget_customization_title),
+                    fontWeight = FontWeight.Bold
+                )
+            }
         }
     }
 }
@@ -386,19 +386,24 @@ private fun WidgetInfoBottomSheet(
  * (Android 8+ and most launchers, though support isn't guaranteed on every device).
  *
  * Unlike a manual drag-from-picker add, [AppWidgetManager.requestPinAppWidget] does NOT launch the
- * widget's `android:configure` activity on its own — the launcher hands control straight back to
- * us once pinning succeeds. Since the widget declares a configure activity, the system defers its
- * very first update until that activity finishes with RESULT_OK, so without a [successCallback]
- * that starts it ourselves, the widget would be pinned but never actually rendered (stuck showing
- * "Can't load widget"). The callback must be mutable so the system can fill in
- * [AppWidgetManager.EXTRA_APPWIDGET_ID] on the launched intent.
+ * widget's `android:configure` entry on its own — the launcher hands control straight back to
+ * us once pinning succeeds. Since the widget declares MainActivity as its configure activity,
+ * the system defers its very first update until that activity finishes with RESULT_OK, so without
+ * a [successCallback] that opens it ourselves, the widget would be pinned but never actually
+ * rendered (stuck showing "Can't load widget"). The callback targets MainActivity with
+ * ACTION_APPWIDGET_CONFIGURE so it opens directly on the in-app customization screen, and must
+ * be mutable so the system can fill in [AppWidgetManager.EXTRA_APPWIDGET_ID].
  */
 private fun requestPinThirukkuralWidget(context: Context) {
     val appWidgetManager = AppWidgetManager.getInstance(context)
     val provider = ComponentName(context, ThirukkuralWidgetReceiver::class.java)
     if (appWidgetManager.isRequestPinAppWidgetSupported) {
-        val configureIntent = Intent(context, WidgetCustomizationActivity::class.java)
-            .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        val configureIntent = Intent(
+            AppWidgetManager.ACTION_APPWIDGET_CONFIGURE,
+            null,
+            context,
+            MainActivity::class.java
+        ).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
         val successCallback = PendingIntent.getActivity(
             context,
             0,

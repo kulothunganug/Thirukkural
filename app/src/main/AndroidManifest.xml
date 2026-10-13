@@ -26,14 +26,10 @@
                 <category android:name="android.intent.category.BROWSABLE" />
                 <data android:scheme="thirukkural_app" android:host="kural" />
             </intent-filter>
-
-        </activity>
-
-        <activity android:name=".WidgetCustomizationActivity"
-            android:exported="true">
             <intent-filter>
-                <action android:name="android.appwidget.action.APPWIDGET_CONFIGURE"/>
+                <action android:name="android.appwidget.action.APPWIDGET_CONFIGURE" />
             </intent-filter>
+
         </activity>
 
 

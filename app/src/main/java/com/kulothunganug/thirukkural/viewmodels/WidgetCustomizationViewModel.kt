@@ -2,7 +2,6 @@ package com.kulothunganug.thirukkural.viewmodels
 
 import android.content.Context
 import android.util.Log
-import androidx.glance.GlanceId
 import androidx.glance.appwidget.GlanceAppWidgetManager
 import androidx.glance.appwidget.state.getAppWidgetState
 import androidx.glance.appwidget.state.updateAppWidgetState
@@ -32,7 +31,6 @@ private const val TAG = "WidgetCustomizationVM"
 
 class WidgetCustomizationViewModel(
     private val context: Context,
-    private val appWidgetId: Int,
     private val repository: ThirukkuralRepository,
     private val favouritesSettings: FavouritesSettings
 ) : ViewModel() {
@@ -43,9 +41,6 @@ class WidgetCustomizationViewModel(
     private val _isLoading = MutableStateFlow(true)
     val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
 
-    private val _loadFailed = MutableStateFlow(false)
-    val loadFailed: StateFlow<Boolean> = _loadFailed.asStateFlow()
-
     private val _openBgColorChooser = MutableStateFlow(false)
     val openBgColorChooser: StateFlow<Boolean> = _openBgColorChooser.asStateFlow()
 
@@ -54,8 +49,6 @@ class WidgetCustomizationViewModel(
 
     private val _openRefreshColorChooser = MutableStateFlow(false)
     val openRefreshColorChooser: StateFlow<Boolean> = _openRefreshColorChooser.asStateFlow()
-
-    private var glanceId: GlanceId? = null
 
     val pals: StateFlow<List<KuralCategory>> = repository.getPals()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
@@ -80,17 +73,26 @@ class WidgetCustomizationViewModel(
     init {
         viewModelScope.launch {
             try {
-                val id = GlanceAppWidgetManager(context).getGlanceIdBy(appWidgetId)
-                glanceId = id
-                val prefs = getAppWidgetState(context, PreferencesGlanceStateDefinition, id)
-                val json = prefs[WIDGET_CONFIG]
-                val config = json?.let {
-                    Json.decodeFromString<WidgetConfig>(it)
-                } ?: WidgetConfig()
-                _uiState.value = config
+                // Global customization: one config shared by all widget instances.
+                // Load the current shared config from the first available widget;
+                // a fresh install with no widgets yet just starts from defaults.
+                val manager = GlanceAppWidgetManager(context)
+                val glanceIds = manager.getGlanceIds(ThirukkuralWidget::class.java)
+                val firstId = glanceIds.firstOrNull()
+
+                if (firstId != null) {
+                    val prefs = getAppWidgetState(context, PreferencesGlanceStateDefinition, firstId)
+                    val json = prefs[WIDGET_CONFIG]
+                    val config = json?.let {
+                        Json.decodeFromString<WidgetConfig>(it)
+                    } ?: WidgetConfig()
+                    _uiState.value = config
+                } else {
+                    _uiState.value = WidgetConfig()
+                }
             } catch (e: Exception) {
-                Log.w(TAG, "failed to load existing config for widget $appWidgetId", e)
-                _loadFailed.value = true
+                Log.w(TAG, "failed to load shared widget config", e)
+                _uiState.value = WidgetConfig()
             } finally {
                 _isLoading.value = false
             }
@@ -203,22 +205,43 @@ class WidgetCustomizationViewModel(
     }
 
     suspend fun saveSettings(): Boolean {
-        val id = glanceId ?: return false
         val config = uiState.value
-        updateAppWidgetState(context, PreferencesGlanceStateDefinition, id) { prefs ->
-            val currentId = prefs[ThirukkuralWidgetKeys.KURAL_ID]
-            val newId = pickKuralId(config, repository, favouritesSettings, currentId)
-            prefs.toMutablePreferences().apply {
-                this[WIDGET_CONFIG] = Json.encodeToString(config)
-                this[ThirukkuralWidgetKeys.KURAL_ID] = newId
+        val manager = GlanceAppWidgetManager(context)
+
+        // Global customization: apply the same config to every widget instance.
+        // Each widget keeps its own current kural (only re-picked against the new
+        // refresh rules) and its own refresh schedule.
+        val targetGlanceIds = manager.getGlanceIds(ThirukkuralWidget::class.java)
+
+        if (targetGlanceIds.isNotEmpty()) {
+            val encoded = Json.encodeToString(config)
+            for (id in targetGlanceIds) {
+                val targetAppWidgetId = try {
+                    manager.getAppWidgetId(id)
+                } catch (e: Exception) {
+                    android.appwidget.AppWidgetManager.INVALID_APPWIDGET_ID
+                }
+
+                updateAppWidgetState(context, PreferencesGlanceStateDefinition, id) { prefs ->
+                    val currentId = prefs[ThirukkuralWidgetKeys.KURAL_ID]
+                    val newId = pickKuralId(config, repository, favouritesSettings, currentId)
+                    prefs.toMutablePreferences().apply {
+                        this[WIDGET_CONFIG] = encoded
+                        this[ThirukkuralWidgetKeys.KURAL_ID] = newId
+                    }
+                }
+
+                if (targetAppWidgetId != android.appwidget.AppWidgetManager.INVALID_APPWIDGET_ID) {
+                    if (config.autoRefreshEnabled) {
+                        WidgetRefreshScheduler.schedule(context, targetAppWidgetId, config.autoRefreshIntervalMinutes)
+                    } else {
+                        WidgetRefreshScheduler.cancel(context, targetAppWidgetId)
+                    }
+                }
+                ThirukkuralWidget().update(context, id)
             }
         }
-        if (config.autoRefreshEnabled) {
-            WidgetRefreshScheduler.schedule(context, appWidgetId, config.autoRefreshIntervalMinutes)
-        } else {
-            WidgetRefreshScheduler.cancel(context, appWidgetId)
-        }
-        ThirukkuralWidget().update(context, id)
+
         return true
     }
 }

@@ -43,5 +43,5 @@ val appModule = module {
     viewModel { KuralDetailViewModel(get(), get(), get()) }
     viewModel { FavouritesViewModel(get(), get()) }
     viewModel { SettingsViewModel(get()) }
-    viewModel { (appWidgetId: Int) -> WidgetCustomizationViewModel(androidContext(), appWidgetId, get(), get()) }
+    viewModel { WidgetCustomizationViewModel(androidContext(), get(), get()) }
 }
