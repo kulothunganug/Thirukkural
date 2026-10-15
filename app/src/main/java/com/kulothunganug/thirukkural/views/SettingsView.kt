@@ -1,19 +1,26 @@
 package com.kulothunganug.thirukkural.views
 
 import android.app.LocaleManager
-import android.content.Context
+import android.content.Intent
+import android.content.pm.PackageManager
 import android.os.Build
 import android.os.LocaleList
-import androidx.annotation.RequiresApi
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Email
+import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Public
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -27,12 +34,16 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLocale
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.core.net.toUri
 import androidx.navigation.NavController
 import com.kulothunganug.thirukkural.R
 import com.kulothunganug.thirukkural.datastore.AppTheme
@@ -47,6 +58,11 @@ import com.kulothunganug.thirukkural.viewmodels.SettingsViewModel
 import org.koin.androidx.compose.koinViewModel
 import java.util.Locale
 
+private const val GITHUB_REPO_URL = "https://github.com/kulothunganug/Thirukkural"
+private const val GITHUB_PROFILE_URL = "https://github.com/kulothunganug"
+private const val WEBSITE_URL = "https://kulothunganug.github.io/"
+private const val EMAIL_ADDRESS = "kulothunganug@gmail.com"
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsView(
@@ -58,6 +74,37 @@ fun SettingsView(
     val currentLanguage = LocalLocale.current.platformLocale.language
     val isTamilPrimary = currentLanguage == "ta"
     val context = LocalContext.current
+
+    val versionName = remember {
+        try {
+            val packageInfo = if (Build.VERSION.SDK_INT >= 33) {
+                context.packageManager.getPackageInfo(
+                    context.packageName,
+                    PackageManager.PackageInfoFlags.of(0)
+                )
+            } else {
+                @Suppress("DEPRECATION")
+                context.packageManager.getPackageInfo(context.packageName, 0)
+            }
+            packageInfo.versionName ?: "—"
+        } catch (_: Exception) {
+            "—"
+        }
+    }
+
+    fun openUrl(url: String) {
+        try {
+            context.startActivity(Intent(Intent.ACTION_VIEW, url.toUri()))
+        } catch (_: Exception) {
+        }
+    }
+
+    fun sendEmail() {
+        try {
+            context.startActivity(Intent(Intent.ACTION_SENDTO, "mailto:$EMAIL_ADDRESS".toUri()))
+        } catch (_: Exception) {
+        }
+    }
 
     fun setAppLanguage(languageTag: String) {
         if (Build.VERSION.SDK_INT >= 33) {
@@ -88,7 +135,8 @@ fun SettingsView(
             modifier = Modifier
                 .padding(padding)
                 .padding(12.dp)
-                .fillMaxSize(),
+                .fillMaxSize()
+                .verticalScroll(rememberScrollState()),
             verticalArrangement = Arrangement.spacedBy(2.dp)
         ) {
             Text(
@@ -157,7 +205,7 @@ fun SettingsView(
             Spacer(modifier = Modifier.height(8.dp))
 
             Text(
-                text = stringResource(R.string.secondary_text),
+                text = stringResource(R.string.secondary_text_language),
                 style = MaterialTheme.typography.titleMedium,
                 modifier = Modifier.padding(12.dp)
             )
@@ -172,6 +220,73 @@ fun SettingsView(
                 selected = secondaryScript.coerced(isTamilPrimary),
                 onSelect = { vm.setSecondaryScript(it) }
             )
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            Text(
+                text = stringResource(R.string.about),
+                style = MaterialTheme.typography.titleMedium,
+                modifier = Modifier.padding(12.dp)
+            )
+
+            Surface(shape = leadingItemShape()) {
+                ListItem(
+                    colors = listItemColors(),
+                    leadingContent = {
+                        Icon(
+                            imageVector = Icons.Filled.Info,
+                            contentDescription = null
+                        )
+                    },
+                    headlineContent = { Text(text = stringResource(R.string.app_name)) },
+                    supportingContent = { Text(text = stringResource(R.string.app_version, versionName)) },
+                    trailingContent = {
+                        IconButton(onClick = { openUrl(GITHUB_REPO_URL) }) {
+                            Icon(
+                                painter = painterResource(R.drawable.ic_github),
+                                contentDescription = stringResource(R.string.open_github_repository)
+                            )
+                        }
+                    }
+                )
+            }
+            Surface(shape = endItemShape()) {
+                ListItem(
+                    colors = listItemColors(),
+                    leadingContent = {
+                        Icon(
+                            imageVector = Icons.Filled.Person,
+                            contentDescription = null
+                        )
+                    },
+                    headlineContent = { Text(text = stringResource(R.string.developer_name)) },
+                    supportingContent = { Text(text = stringResource(R.string.developer)) },
+                    trailingContent = {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            IconButton(onClick = { openUrl(GITHUB_PROFILE_URL) }) {
+                                Icon(
+                                    painter = painterResource(R.drawable.ic_github),
+                                    contentDescription = stringResource(R.string.open_github_profile)
+                                )
+                            }
+                            IconButton(onClick = { openUrl(WEBSITE_URL) }) {
+                                Icon(
+                                    imageVector = Icons.Filled.Public,
+                                    contentDescription = stringResource(R.string.open_website)
+                                )
+                            }
+                            IconButton(onClick = { sendEmail() }) {
+                                Icon(
+                                    imageVector = Icons.Filled.Email,
+                                    contentDescription = stringResource(R.string.open_email)
+                                )
+                            }
+                        }
+                    }
+                )
+            }
+
+            Spacer(modifier = Modifier.height(8.dp))
         }
     }
 }

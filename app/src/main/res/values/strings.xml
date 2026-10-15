@@ -8,7 +8,7 @@
     <string name="dark">Dark</string>
     <string name="language">Language</string>
     <string name="app_language">App language</string>
-    <string name="secondary_text">Secondary text</string>
+    <string name="secondary_text_language">Secondary text language</string>
     <string name="none">None</string>
     <string name="english">English</string>
     <string name="tamil">Tamil</string>
@@ -51,7 +51,7 @@
     <string name="text_color">Text Color</string>
     <string name="refresh_button_color">Refresh Button Color</string>
     <string name="pick_color">Pick color</string>
-    <string name="element_styling_order">Element Styling &amp; Order</string>
+    <string name="elements_visbility_order">Element Visibility &amp; Order</string>
     <string name="reorder">Reorder</string>
     <string name="edit_settings">Edit settings</string>
     <string name="section_settings">%1$s Settings</string>
@@ -97,4 +97,13 @@
     <string name="widget_info_title">Thirukkural Widget</string>
     <string name="widget_gif_placeholder">GIF Placeholder: How to add and customize widget</string>
     <string name="widget_info_description">Add the Thirukkural widget to your Home Screen for daily Kurals at a glance. You can fully customize colors, fonts, layout, and auto-refresh settings.</string>
+    <string name="about">About</string>
+    <string name="app_version">Version %1$s</string>
+    <string name="view_source_on_github">View source on GitHub</string>
+    <string name="developer">Developer</string>
+    <string name="developer_name">Kulothungan U G</string>
+    <string name="open_github_repository">Open GitHub repository</string>
+    <string name="open_github_profile">Open GitHub profile</string>
+    <string name="open_website">Open website</string>
+    <string name="open_email">Send email</string>
 </resources>

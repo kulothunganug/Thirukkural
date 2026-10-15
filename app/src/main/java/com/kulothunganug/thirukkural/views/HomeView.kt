@@ -297,43 +297,6 @@ private fun WidgetInfoBottomSheet(
                 modifier = Modifier.padding(bottom = 16.dp)
             )
 
-            // TODO: Replace this placeholder container with a GIF animation showing how to add and customize the widget.
-            Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(180.dp)
-                    .padding(bottom = 20.dp),
-                colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.surfaceContainerHigh
-                ),
-                shape = RoundedCornerShape(16.dp)
-            ) {
-                Box(
-                    modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Column(
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.Center,
-                        modifier = Modifier.padding(16.dp)
-                    ) {
-                        Icon(
-                            imageVector = Icons.Outlined.Colorize,
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier.size(40.dp)
-                        )
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Text(
-                            text = stringResource(R.string.widget_gif_placeholder),
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            textAlign = TextAlign.Center
-                        )
-                    }
-                }
-            }
-
             Text(
                 text = stringResource(R.string.widget_info_description),
                 style = MaterialTheme.typography.bodyMedium,

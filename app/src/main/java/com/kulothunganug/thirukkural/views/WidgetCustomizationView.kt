@@ -71,7 +71,6 @@ import com.kulothunganug.thirukkural.widget.ContentType
 import com.kulothunganug.thirukkural.widget.MAX_AUTO_REFRESH_INTERVAL_MINUTES
 import com.kulothunganug.thirukkural.widget.MIN_AUTO_REFRESH_INTERVAL_MINUTES
 import com.kulothunganug.thirukkural.widget.RefreshSource
-import com.kulothunganug.thirukkural.widget.SectionConfig
 import com.kulothunganug.thirukkural.widget.THIRUVALLUVAR_TA
 import com.kulothunganug.thirukkural.widget.WidgetConfig
 import kotlinx.coroutines.launch
@@ -227,7 +226,7 @@ fun WidgetCustomizationView(
                 Text(
                     stringResource(R.string.colors),
                     style = MaterialTheme.typography.titleMedium,
-                    modifier = Modifier.padding(bottom = 8.dp)
+                            modifier = Modifier.padding(12.dp)
                 )
             }
 
@@ -298,7 +297,7 @@ fun WidgetCustomizationView(
                 Text(
                     stringResource(R.string.text_settings),
                     style = MaterialTheme.typography.titleMedium,
-                    modifier = Modifier.padding(bottom = 8.dp)
+                    modifier = Modifier.padding(12.dp)
                 )
             }
 
@@ -309,6 +308,7 @@ fun WidgetCustomizationView(
                 ) {
                     ListItem(
                         colors = listItemColors(),
+                        modifier = Modifier.padding(top=4.dp),
                         headlineContent = { Text(stringResource(R.string.text_size)) },
                         supportingContent = {
                             Column {
@@ -349,7 +349,7 @@ fun WidgetCustomizationView(
                 Text(
                     stringResource(R.string.auto_refresh),
                     style = MaterialTheme.typography.titleMedium,
-                    modifier = Modifier.padding(bottom = 8.dp)
+                    modifier = Modifier.padding(12.dp)
                 )
             }
 
@@ -366,9 +366,9 @@ fun WidgetCustomizationView(
 
             item {
                 Text(
-                    stringResource(R.string.element_styling_order),
+                    stringResource(R.string.elements_visbility_order),
                     style = MaterialTheme.typography.titleMedium,
-                    modifier = Modifier.padding(bottom = 8.dp)
+                    modifier = Modifier.padding(12.dp)
                 )
             }
 
