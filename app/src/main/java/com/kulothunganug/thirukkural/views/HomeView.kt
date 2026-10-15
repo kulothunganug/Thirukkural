@@ -156,18 +156,19 @@ fun HomeView(vm: HomeViewModel, navController: NavController) {
                 ) {
                     Column(
                         modifier = Modifier.padding(16.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally
+                        horizontalAlignment = Alignment.Start
                     ) {
                         Text(
                             text = stringResource(R.string.kural_of_the_moment),
                             style = MaterialTheme.typography.labelLarge,
-                            fontWeight = FontWeight.Bold
+                            fontWeight = FontWeight.Bold,
+                            textAlign = TextAlign.Center,
+                            modifier = Modifier.fillMaxWidth()
                         )
                         Spacer(modifier = Modifier.height(12.dp))
                         Text(
                             text = kural.kuralTa.replace("<br />", "\n"),
                             fontWeight = FontWeight.Bold,
-                            textAlign = TextAlign.Start,
                             lineHeight = 28.sp,
                             style = MaterialTheme.typography.bodyLarge
                         )
@@ -178,7 +179,6 @@ fun HomeView(vm: HomeViewModel, navController: NavController) {
                             tl = kural.adikaramTl,
                             primaryStyle = MaterialTheme.typography.labelMedium,
                             secondaryStyle = MaterialTheme.typography.bodySmall,
-                            textAlign = TextAlign.Start,
                             modifier = Modifier.fillMaxWidth()
                         )
                     }

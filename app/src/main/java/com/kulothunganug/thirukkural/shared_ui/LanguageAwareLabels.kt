@@ -1,5 +1,6 @@
 package com.kulothunganug.thirukkural.shared_ui
 
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material3.MaterialTheme
@@ -12,6 +13,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalLocale
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.dp
 import com.kulothunganug.thirukkural.datastore.LanguageSettings
 import com.kulothunganug.thirukkural.datastore.SecondaryScript
 import com.kulothunganug.thirukkural.datastore.coerced
@@ -43,7 +45,7 @@ fun LanguageAwareLabel(
     val primaryText = if (isTamilPrimary) ta else en
     val secondaryText = storedSecondary.coerced(isTamilPrimary).text(ta, en, tl)
 
-    Column(modifier = modifier) {
+    Column(modifier = modifier, verticalArrangement = Arrangement.spacedBy(4.dp)) {
         Text(
             text = primaryText,
             style = primaryStyle,
