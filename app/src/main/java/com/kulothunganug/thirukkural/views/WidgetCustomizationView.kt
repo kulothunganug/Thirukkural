@@ -347,7 +347,7 @@ fun WidgetCustomizationView(
 
             item {
                 Text(
-                    stringResource(R.string.auto_refresh),
+                    stringResource(R.string.refresh),
                     style = MaterialTheme.typography.titleMedium,
                     modifier = Modifier.padding(12.dp)
                 )
@@ -457,9 +457,9 @@ private fun AutoRefreshSection(
         add("enable")
         if (state.autoRefreshEnabled) {
             add("interval")
-            add("source")
-            if (state.refreshSource == RefreshSource.Category) add("categories")
         }
+        add("source")
+        if (state.refreshSource == RefreshSource.Category) add("categories")
     }
 
     rows.forEachIndexed { index, row ->

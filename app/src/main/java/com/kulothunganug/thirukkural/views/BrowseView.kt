@@ -3,7 +3,6 @@ package com.kulothunganug.thirukkural.views
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -87,41 +86,42 @@ fun BrowseView(vm: BrowseViewModel, navController: NavController) {
                 .fillMaxSize()
                 .padding(16.dp)
         ) {
-            Row(
+            OutlinedTextField(
+                value = uiState.searchQuery,
+                onValueChange = { vm.onSearchQueryChanged(it) },
                 modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                OutlinedTextField(
-                    value = uiState.searchQuery,
-                    onValueChange = { vm.onSearchQueryChanged(it) },
-                    modifier = Modifier
-                        .weight(1f),
-                    placeholder = { Text(stringResource(R.string.search_kural)) },
-                    leadingIcon = {
-                        Icon(
-                            Icons.Rounded.Search,
-                            contentDescription = stringResource(R.string.search_kural)
-                        )
-                    },
-                    trailingIcon = {
-                        if (uiState.searchQuery.isNotEmpty()) {
-                            IconButton(onClick = { vm.onSearchQueryChanged("") }) {
-                                Icon(
-                                    Icons.Default.Clear,
-                                    contentDescription = stringResource(R.string.clear_search)
-                                )
-                            }
-                        }
-                    },
-                    singleLine = true
-                )
-                Spacer(modifier = Modifier.width(8.dp))
-                IconButton(onClick = { showFilterDialog = true }) {
+                placeholder = { Text(stringResource(R.string.search_kural)) },
+                leadingIcon = {
                     Icon(
-                        Icons.Default.FilterList,
-                        contentDescription = stringResource(R.string.filters)
+                        Icons.Rounded.Search,
+                        contentDescription = stringResource(R.string.search_kural)
                     )
-                }
+                },
+                trailingIcon = {
+                    if (uiState.searchQuery.isNotEmpty()) {
+                        IconButton(onClick = { vm.onSearchQueryChanged("") }) {
+                            Icon(
+                                Icons.Default.Clear,
+                                contentDescription = stringResource(R.string.clear_search)
+                            )
+                        }
+                    }
+                },
+                singleLine = true
+            )
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            FilledTonalButton(
+                onClick = { showFilterDialog = true },
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Icon(
+                    Icons.Default.FilterList,
+                    contentDescription = null
+                )
+                Spacer(modifier = Modifier.width(4.dp))
+                Text(stringResource(R.string.filters))
             }
 
             Spacer(modifier = Modifier.height(4.dp))
@@ -159,7 +159,10 @@ fun BrowseView(vm: BrowseViewModel, navController: NavController) {
                                 color = MaterialTheme.colorScheme.secondary
                             )
                             Spacer(modifier = Modifier.height(12.dp))
-                            FilledTonalButton(onClick = { showFilterDialog = true }) {
+            FilledTonalButton(
+                onClick = { showFilterDialog = true },
+                modifier = Modifier.fillMaxWidth()
+            ) {
                                 Icon(
                                     Icons.Default.FilterList,
                                     contentDescription = stringResource(R.string.filters)

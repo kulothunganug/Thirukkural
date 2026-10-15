@@ -96,14 +96,6 @@ fun HomeView(vm: HomeViewModel, navController: NavController) {
                         )
                     }
                     IconButton(
-                        onClick = { navController.navigate("favourites") }
-                    ) {
-                        Icon(
-                            Icons.Default.Favorite,
-                            contentDescription = stringResource(R.string.favourites)
-                        )
-                    }
-                    IconButton(
                         onClick = { navController.navigate("settings") }
                     ) {
                         Icon(
@@ -124,16 +116,8 @@ fun HomeView(vm: HomeViewModel, navController: NavController) {
                 .padding(16.dp)
                 .fillMaxSize(),
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
+            verticalArrangement = Arrangement.Top
         ) {
-            Text(
-                text = stringResource(R.string.app_name),
-                style = MaterialTheme.typography.headlineLarge,
-                fontWeight = FontWeight.Bold,
-                fontSize = 48.sp,
-            )
-            Spacer(modifier = Modifier.height(90.dp))
-
             if (uiState.showWidgetHint) {
                 WidgetHintCard(
                     onAddWidget = {
@@ -146,6 +130,16 @@ fun HomeView(vm: HomeViewModel, navController: NavController) {
                         .padding(bottom = 16.dp)
                 )
             }
+
+            Spacer(modifier = Modifier.weight(1f))
+
+            Text(
+                text = stringResource(R.string.app_name),
+                style = MaterialTheme.typography.headlineLarge,
+                fontWeight = FontWeight.Bold,
+                fontSize = 48.sp,
+            )
+            Spacer(modifier = Modifier.height(90.dp))
 
             uiState.randomKural?.let { kural ->
                 Card(
@@ -208,6 +202,22 @@ fun HomeView(vm: HomeViewModel, navController: NavController) {
                     fontWeight = FontWeight.Bold
                 )
             }
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            OutlinedButton(
+                onClick = { navController.navigate("favourites") },
+                modifier = Modifier.fillMaxWidth().height(60.dp),
+            ) {
+                Icon(
+                    Icons.Default.Favorite,
+                    contentDescription = null
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(stringResource(R.string.favourites), fontSize = 20.sp,)
+            }
+
+            Spacer(modifier = Modifier.weight(1f))
         }
     }
 }
