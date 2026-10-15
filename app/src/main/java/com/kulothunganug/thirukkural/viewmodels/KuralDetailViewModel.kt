@@ -3,8 +3,8 @@ package com.kulothunganug.thirukkural.viewmodels
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.kulothunganug.thirukkural.datastore.FavouritesSettings
-import com.kulothunganug.thirukkural.datastore.ShareConfig
-import com.kulothunganug.thirukkural.datastore.ShareSettings
+import com.kulothunganug.thirukkural.datastore.LanguageSettings
+import com.kulothunganug.thirukkural.datastore.SecondaryScript
 import com.kulothunganug.thirukkural.models.ThirukkuralModel
 import com.kulothunganug.thirukkural.repository.ThirukkuralRepository
 import kotlinx.coroutines.Job
@@ -27,20 +27,14 @@ sealed interface KuralDetailUiState {
 class KuralDetailViewModel(
     private val repository: ThirukkuralRepository,
     private val favouritesSettings: FavouritesSettings,
-    private val shareSettings: ShareSettings
+    languageSettings: LanguageSettings
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow<KuralDetailUiState>(KuralDetailUiState.Loading)
     val uiState: StateFlow<KuralDetailUiState> = _uiState
 
-    val shareConfig: StateFlow<ShareConfig> = shareSettings.configStream
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), ShareConfig(ShareSettings.DEFAULT_ORDER, ShareSettings.DEFAULT_ENABLED))
-
-    fun updateShareConfig(config: ShareConfig) {
-        viewModelScope.launch {
-            shareSettings.saveConfig(config)
-        }
-    }
+    val secondaryScript: StateFlow<SecondaryScript> = languageSettings.secondaryStream
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), SecondaryScript.TRANSLITERATION)
 
     // Tracks the favourite-status observer for the currently loaded kural so it can be
     // cancelled when a new kural is loaded (e.g. via a fresh deep link) instead of leaking or

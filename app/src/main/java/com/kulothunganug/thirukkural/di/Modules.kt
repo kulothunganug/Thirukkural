@@ -4,7 +4,6 @@ import androidx.room.Room
 import com.kulothunganug.thirukkural.ThirukkuralDatabase
 import com.kulothunganug.thirukkural.datastore.FavouritesSettings
 import com.kulothunganug.thirukkural.datastore.LanguageSettings
-import com.kulothunganug.thirukkural.datastore.ShareSettings
 import com.kulothunganug.thirukkural.datastore.ThemeSettings
 import com.kulothunganug.thirukkural.datastore.WidgetHintSettings
 import com.kulothunganug.thirukkural.repository.ThirukkuralRepository
@@ -37,7 +36,6 @@ val appModule = module {
     single { ThirukkuralRepository(get()) }
     single { ThemeSettings(androidContext()) }
     single { FavouritesSettings(androidContext()) }
-    single { ShareSettings(androidContext()) }
     single { LanguageSettings(androidContext()) }
     single { WidgetHintSettings(androidContext()) }
     viewModel { HomeViewModel(get(), get()) }

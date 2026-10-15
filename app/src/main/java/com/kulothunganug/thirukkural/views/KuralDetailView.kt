@@ -2,7 +2,6 @@ package com.kulothunganug.thirukkural.views
 
 import android.content.Intent
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.expandVertically
@@ -14,17 +13,12 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.itemsIndexed
-import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.selection.SelectionContainer
@@ -35,25 +29,19 @@ import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.Share
-import androidx.compose.material.icons.rounded.DragHandle
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.ElevatedButton
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.ListItem
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
-import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -67,9 +55,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.LocalLocale
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -79,16 +65,13 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.kulothunganug.thirukkural.R
+import com.kulothunganug.thirukkural.datastore.SecondaryScript
+import com.kulothunganug.thirukkural.datastore.coerced
+import com.kulothunganug.thirukkural.datastore.text
 import com.kulothunganug.thirukkural.models.ThirukkuralModel
 import com.kulothunganug.thirukkural.shared_ui.LanguageAwareLabel
-import com.kulothunganug.thirukkural.shared_ui.endItemShape
-import com.kulothunganug.thirukkural.shared_ui.leadingItemShape
-import com.kulothunganug.thirukkural.shared_ui.listItemColors
-import com.kulothunganug.thirukkural.shared_ui.middleItemShape
 import com.kulothunganug.thirukkural.viewmodels.KuralDetailUiState
 import com.kulothunganug.thirukkural.viewmodels.KuralDetailViewModel
-import sh.calvin.reorderable.ReorderableItem
-import sh.calvin.reorderable.rememberReorderableLazyListState
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -98,7 +81,9 @@ fun KuralDetailView(
     navController: NavController
 ) {
     val uiState by vm.uiState.collectAsState()
-    var showShareSheet by remember { mutableStateOf(false) }
+    val secondaryScript by vm.secondaryScript.collectAsState()
+    val context = LocalContext.current
+    val isTamilPrimary = LocalLocale.current.platformLocale.language == "ta"
 
     LaunchedEffect(kuralId) {
         vm.loadKural(kuralId)
@@ -108,12 +93,32 @@ fun KuralDetailView(
     val foundKural = foundState?.kural
     val isFavourite = foundState?.isFavourite ?: false
 
-    if (showShareSheet && foundKural != null) {
-        KuralShareSheet(
-            kural = foundKural,
-            vm = vm,
-            onDismiss = { showShareSheet = false }
-        )
+    val explanationTaLabel = stringResource(R.string.explanation_ta)
+    val explanationEnLabel = stringResource(R.string.explanation_en)
+    val sentFromAppLabel = stringResource(R.string.sent_from_app)
+    val shareTitle = stringResource(R.string.share_kural)
+
+    // The shared text follows the app's primary/secondary language settings: the header
+    // is rendered in those languages, the Tamil kural is always included, the
+    // transliteration only when enabled as secondary, and both explanations always.
+    val sharedText = foundKural?.let { kural ->
+        remember(
+            kural,
+            secondaryScript,
+            isTamilPrimary,
+            explanationTaLabel,
+            explanationEnLabel,
+            sentFromAppLabel
+        ) {
+            buildSharedKuralText(
+                kural = kural,
+                secondaryScript = secondaryScript,
+                isTamilPrimary = isTamilPrimary,
+                explanationTaLabel = explanationTaLabel,
+                explanationEnLabel = explanationEnLabel,
+                sentFromAppLabel = sentFromAppLabel
+            )
+        }
     }
 
     Scaffold(
@@ -142,7 +147,13 @@ fun KuralDetailView(
                             )
                         }
                         IconButton(onClick = {
-                            showShareSheet = true
+                            sharedText?.let { text ->
+                                val intent = Intent(Intent.ACTION_SEND).apply {
+                                    type = "text/plain"
+                                    putExtra(Intent.EXTRA_TEXT, text)
+                                }
+                                context.startActivity(Intent.createChooser(intent, shareTitle))
+                            }
                         }) {
                             Icon(
                                 Icons.Filled.Share,
@@ -317,222 +328,58 @@ fun KuralDetailView(
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun KuralShareSheet(
+/**
+ * Builds the shared kural text from the app's primary/secondary language settings: the
+ * header is rendered in those languages, the Tamil kural is always included, the
+ * transliteration only when enabled as secondary, and both explanations always.
+ */
+private const val PLAY_STORE_URL =
+    "https://play.google.com/store/apps/details?id=com.kulothunganug.thirukkural"
+
+private fun buildSharedKuralText(
     kural: ThirukkuralModel,
-    vm: KuralDetailViewModel,
-    onDismiss: () -> Unit
-) {
-    val context = LocalContext.current
-    val haptic = LocalHapticFeedback.current
-    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
-
-    val config by vm.shareConfig.collectAsState()
-
-    val explanationLabel = stringResource(R.string.explanation)
-    val coupletLabel = stringResource(R.string.couplet)
-    val sentFromAppLabel = stringResource(R.string.sent_from_app)
-
-    val currentLanguage = LocalLocale.current.platformLocale.language
-    val isTamil = currentLanguage == "ta"
-
-    val sharedText = remember(
-        config,
-        explanationLabel,
-        coupletLabel,
-        sentFromAppLabel,
-        isTamil
-    ) {
-        buildString {
-            config.order.forEach { sectionId ->
-                if (config.enabledSections.contains(sectionId)) {
-                    when (sectionId) {
-                        "header" -> {
-                            append("Thirukkural #${kural.id}\n")
-                            if (isTamil) {
-                                append("${kural.palTa} | ${kural.iyalTa} | ${kural.adikaramTa}\n\n")
-                            } else {
-                                append("${kural.palEn} (${kural.palTl}) | ${kural.iyalEn} (${kural.iyalTl}) | ${kural.adikaramEn} (${kural.adikaramTl})\n\n")
-                            }
-                        }
-
-                        "kural" -> {
-                            append(kural.kuralTa.replace("<br />", "\n"))
-                            append("\n\n")
-                            if (!isTamil) {
-                                append(kural.kuralTl.replace("<br />", "\n"))
-                                append("\n\n")
-                            }
-                        }
-
-                        "transliteration" -> {
-                            append(kural.kuralTl.replace("<br />", "\n"))
-                            append("\n\n")
-                        }
-
-                        "explanation" -> {
-                            append("$explanationLabel:\n")
-                            append(if (isTamil) kural.explanationTa else kural.explanationEn)
-                            append("\n\n")
-                        }
-
-                        "translation" -> {
-                            append("$coupletLabel:\n")
-                            append(kural.couplet)
-                            append("\n\n")
-                        }
-                    }
-                }
-            }
-            append("- $sentFromAppLabel")
-        }.trim()
-    }
-
-    val lazyListState = rememberLazyListState()
-    val reorderableState = rememberReorderableLazyListState(lazyListState) { from, to ->
-        val newOrder = config.order.toMutableList().apply {
-            val fromIndex = indexOfFirst { it == from.key }
-            val toIndex = indexOfFirst { it == to.key }
-            if (fromIndex != -1 && toIndex != -1) {
-                add(toIndex, removeAt(fromIndex))
-            }
+    secondaryScript: SecondaryScript,
+    isTamilPrimary: Boolean,
+    explanationTaLabel: String,
+    explanationEnLabel: String,
+    sentFromAppLabel: String
+): String {
+    val secondary = secondaryScript.coerced(isTamilPrimary)
+    return buildString {
+        append("Thirukkural #${kural.id}\n")
+        val primaryHeader = if (isTamilPrimary) {
+            "${kural.palTa} | ${kural.iyalTa} | ${kural.adikaramTa}"
+        } else {
+            "${kural.palEn} | ${kural.iyalEn} | ${kural.adikaramEn}"
         }
-        vm.updateShareConfig(config.copy(order = newOrder))
-        haptic.performHapticFeedback(HapticFeedbackType.SegmentFrequentTick)
-    }
-
-    ModalBottomSheet(
-        onDismissRequest = onDismiss,
-        sheetState = sheetState,
-    ) {
-        LazyColumn(
-            state = lazyListState,
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(bottom = 32.dp),
-            contentPadding = PaddingValues(horizontal = 16.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(4.dp)
-        ) {
-            item {
-                Text(
-                    text = stringResource(R.string.share_kural),
-                    style = MaterialTheme.typography.titleLarge,
-                    modifier = Modifier.padding(bottom = 16.dp)
-                )
-            }
-
-            /*
-            item {
-                Card(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(bottom = 12.dp)
-                        .animateContentSize(),
-                    colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
-                    )
-                ) {
-                    Text(
-                        text = sharedText,
-                        modifier = Modifier.padding(16.dp),
-                        style = MaterialTheme.typography.bodySmall
-                    )
-                }
-            }
-            */
-
-            itemsIndexed(config.order, key = { _, id -> id }) { index, sectionId ->
-                val labelRes = when (sectionId) {
-                    "header" -> R.string.include_header
-                    "kural" -> R.string.tamil_kural
-                    "transliteration" -> R.string.transliteration
-                    "explanation" -> R.string.explanation
-                    "translation" -> R.string.couplet
-                    else -> R.string.app_name
-                }
-                val enabled = config.enabledSections.contains(sectionId)
-
-                ReorderableItem(reorderableState, key = sectionId) { isDragging ->
-                    val elevation by animateDpAsState(
-                        if (isDragging) 8.dp else 0.dp,
-                        label = "elevation"
-                    )
-
-                    val shape = when (index) {
-                        0 -> leadingItemShape()
-                        config.order.size - 1 -> endItemShape()
-                        else -> middleItemShape()
-                    }
-
-                    Surface(
-                        shape = shape,
-                        tonalElevation = 2.dp,
-                        shadowElevation = elevation,
-                    ) {
-                        ListItem(
-                            colors = listItemColors(),
-                            leadingContent = {
-                                IconButton(
-                                    modifier = Modifier.draggableHandle(
-                                        onDragStarted = {
-                                            haptic.performHapticFeedback(
-                                                HapticFeedbackType.GestureThresholdActivate
-                                            )
-                                        },
-                                        onDragStopped = {
-                                            haptic.performHapticFeedback(HapticFeedbackType.GestureEnd)
-                                        }
-                                    ),
-                                    onClick = {}
-                                ) {
-                                    Icon(
-                                        Icons.Rounded.DragHandle,
-                                        contentDescription = stringResource(R.string.reorder)
-                                    )
-                                }
-                            },
-                            headlineContent = { Text(stringResource(labelRes)) },
-                            trailingContent = {
-                                Switch(
-                                    checked = enabled,
-                                    onCheckedChange = { isEnabled ->
-                                        val newEnabled =
-                                            config.enabledSections.toMutableSet().apply {
-                                                if (isEnabled) add(sectionId) else remove(sectionId)
-                                            }
-                                        vm.updateShareConfig(config.copy(enabledSections = newEnabled))
-                                    }
-                                )
-                            }
-                        )
-                    }
-                }
-            }
-
-            item {
-                Spacer(modifier = Modifier.height(24.dp))
-
-                val shareTitle = stringResource(R.string.share_kural)
-                ElevatedButton(
-                    onClick = {
-                        val intent = Intent(Intent.ACTION_SEND).apply {
-                            type = "text/plain"
-                            putExtra(Intent.EXTRA_TEXT, sharedText)
-                        }
-                        context.startActivity(Intent.createChooser(intent, shareTitle))
-                        onDismiss()
-                    },
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Icon(Icons.Filled.Share, contentDescription = null)
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(stringResource(R.string.share))
-                }
-            }
+        append(primaryHeader)
+        append("\n")
+        val secondaryHeader = secondary.text(
+            "${kural.palTa} | ${kural.iyalTa} | ${kural.adikaramTa}",
+            "${kural.palEn} | ${kural.iyalEn} | ${kural.adikaramEn}",
+            "${kural.palTl} | ${kural.iyalTl} | ${kural.adikaramTl}"
+        )
+        if (secondaryHeader.isNotEmpty() && secondaryHeader != primaryHeader) {
+            append(secondaryHeader)
+            append("\n")
         }
-    }
+        append("\n")
+        append(kural.kuralTa.replace("<br />", "\n"))
+        append("\n\n")
+        if (secondary == SecondaryScript.TRANSLITERATION) {
+            append(kural.kuralTl.replace("<br />", "\n"))
+            append("\n\n")
+        }
+        append("$explanationTaLabel:\n")
+        append(kural.explanationTa)
+        append("\n\n")
+        append("$explanationEnLabel:\n")
+        append(kural.explanationEn)
+        append("\n\n")
+        append("- $sentFromAppLabel")
+        append("\n")
+        append(PLAY_STORE_URL)
+    }.trim()
 }
 
 @Composable
