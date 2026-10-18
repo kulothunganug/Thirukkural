@@ -3,6 +3,8 @@ package com.kulothunganug.thirukkural.widget
 import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
+import android.graphics.Bitmap
+import android.graphics.Canvas
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.produceState
@@ -14,7 +16,6 @@ import androidx.core.net.toUri
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
-import androidx.glance.ColorFilter
 import androidx.glance.GlanceId
 import androidx.glance.GlanceModifier
 import androidx.glance.GlanceTheme
@@ -242,20 +243,28 @@ class ThirukkuralWidget : GlanceAppWidget(), KoinComponent {
                 }
             }
             Image(
-                provider = ImageProvider(R.drawable.refresh_24px),
-                contentDescription = context.getString(R.string.refresh),
-                colorFilter = ColorFilter.tint(
-                    ColorProvider(
-                        day = Color(config.refreshButtonColor.toColorInt()),
-                        night = Color(config.refreshButtonColor.toColorInt())
-                    )
+                provider = tintedIconProvider(
+                    context, R.drawable.refresh_24px, config.refreshButtonColor.toColorInt()
                 ),
+                contentDescription = context.getString(R.string.refresh),
                 modifier = GlanceModifier.cornerRadius(12.dp).padding(6.dp)
                     .clickable(actionRunCallback<RefreshKuralAction>())
 
             )
         }
     }
+
+@Suppress("MagicNumber")
+private fun tintedIconProvider(context: Context, resId: Int, tint: Int): ImageProvider {
+    val drawable = androidx.core.content.ContextCompat.getDrawable(context, resId)!!
+        .mutate().apply { setTint(tint) }
+    val width = drawable.intrinsicWidth.coerceAtLeast(1)
+    val height = drawable.intrinsicHeight.coerceAtLeast(1)
+    val bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
+    drawable.setBounds(0, 0, width, height)
+    drawable.draw(Canvas(bitmap))
+    return ImageProvider(bitmap)
+}
 
     @SuppressLint("RestrictedApi")
     @Composable
