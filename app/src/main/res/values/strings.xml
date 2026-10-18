@@ -98,6 +98,8 @@
     <string name="widget_gif_placeholder">GIF Placeholder: How to add and customize widget</string>
     <string name="widget_info_description">Add the Thirukkural widget to your Home Screen for daily Kurals at a glance. You can fully customize colors, fonts, layout, and auto-refresh settings.</string>
     <string name="about">About</string>
+    <string name="widget">Widget</string>
+    <string name="customize_widget_look">Customize widget look</string>
     <string name="app_version">Version %1$s</string>
     <string name="view_source_on_github">View source on GitHub</string>
     <string name="developer">Developer</string>

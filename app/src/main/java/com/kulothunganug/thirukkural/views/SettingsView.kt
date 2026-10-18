@@ -21,6 +21,7 @@ import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Public
+import androidx.compose.material.icons.filled.Widgets
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -50,6 +51,7 @@ import com.kulothunganug.thirukkural.datastore.AppTheme
 import com.kulothunganug.thirukkural.datastore.SecondaryScript
 import com.kulothunganug.thirukkural.datastore.availableSecondaries
 import com.kulothunganug.thirukkural.datastore.coerced
+import com.kulothunganug.thirukkural.shared_ui.detachedItemShape
 import com.kulothunganug.thirukkural.shared_ui.endItemShape
 import com.kulothunganug.thirukkural.shared_ui.leadingItemShape
 import com.kulothunganug.thirukkural.shared_ui.listItemColors
@@ -220,6 +222,24 @@ fun SettingsView(
                 selected = secondaryScript.coerced(isTamilPrimary),
                 onSelect = { vm.setSecondaryScript(it) }
             )
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            Text(
+                text = stringResource(R.string.widget),
+                style = MaterialTheme.typography.titleMedium,
+                modifier = Modifier.padding(12.dp)
+            )
+
+            Surface(shape = detachedItemShape()) {
+                ListItem(
+                    colors = listItemColors(),
+                    modifier = Modifier.clickable {
+                        navController.navigate("widget_customization")
+                    },
+                    headlineContent = { Text(text = stringResource(R.string.customize_widget_look)) }
+                )
+            }
 
             Spacer(modifier = Modifier.height(8.dp))
 

@@ -98,6 +98,8 @@
     <string name="widget_gif_placeholder">GIF இடம்: விட்செட்டைச் சேர்ப்பது மற்றும் தனிப்பயனாக்குவது எப்படி</string>
     <string name="widget_info_description">முகப்புத் திரையில் திருக்குறள் விட்செட்டைச் சேர்த்து தினமும் குறள்களைப் பாருங்கள். நிறங்கள், எழுத்துருக்கள், வடிவமைப்பு மற்றும் புதுப்பிப்பு அமைப்புகளை உங்களால் தனிப்பயனாக்க முடியும்.</string>
     <string name="about">பற்றி</string>
+    <string name="widget">விட்செட்</string>
+    <string name="customize_widget_look">விட்செட் தோற்றத்தை தனிப்பயனாக்கு</string>
     <string name="app_version">பதிப்பு %1$s</string>
     <string name="view_source_on_github">மூலக் குறியீட்டை GitHub-இல் காண்க</string>
     <string name="developer">உருவாக்குநர்</string>
